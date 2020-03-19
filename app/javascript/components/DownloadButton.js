@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDownload } from '@fortawesome/free-solid-svg-icons'
 import Modal from 'react-bootstrap/lib/Modal'
 import Tooltip from 'react-bootstrap/lib/Tooltip'
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger'
-import Clipboard from 'react-clipboard.js'
 
 import { useContextStudySearch } from './search/StudySearchProvider'
 import { useContextUser } from './UserProvider'
@@ -50,16 +49,17 @@ async function generateDownloadConfig(matchingAccessions) {
 }
 
 /**
- * Get preview of download sizes
- *
- * @param {*} downloadSize
- */
-
-/**
  * Container for curl command to download files
  */
 function DownloadCommandContainer(props) {
   const [downloadConfig, setDownloadConfig] = useState({})
+  const textInputRef = useRef(null)
+
+  // eweitz 2020-03-19: WIP to show "Copied!" on clipboard copy button click
+  // const [copyTooltipText, setCopyTooltipText] = useState('Copy to clipboard')
+  // const [target, setTarget] = useState(null)
+
+  // const copyButtonRef = useRef(null)
 
   /**
    * Fetch new download command, update state accordingly
@@ -76,12 +76,13 @@ function DownloadCommandContainer(props) {
     updateDownloadConfig(props.matchingAccessions)
   }, [])
 
-  /**
-   * TODO (SCP-2167): Add polish to show "Copied!" upon clicking "Copy"
-   * button, then hide.  As in Bulk Download modal in study View / Explore.
-   */
-  function onClipboardCopySuccess(event) {
-    console.log('TODO')
+  /** Copy download command to user's system clipboard */
+  function copyToClipboard(event) {
+    // setCopyTooltipText('Copied!')
+    textInputRef.current.select()
+    document.execCommand('copy')
+    event.target.focus()
+    // copyButtonRef.current.select()
   }
 
   return (
@@ -89,26 +90,45 @@ function DownloadCommandContainer(props) {
       <div className='input-group'>
         <input
           id={`command-${downloadConfig.authCode}`}
+          ref={textInputRef}
           className='form-control curl-download-command'
           value={downloadConfig.downloadCommand || ''}
           readOnly
         />
         <span className='input-group-btn'>
-          <Clipboard
-            data-clipboard-target={`#command-${downloadConfig.authCode}`}
-            onSuccess={onClipboardCopySuccess}
+          {/*
+            eweitz 2020-03-19:
+            WIP to show "Copied!" on click.  This is commented out because
+            that text transiently shifts ~30px to the left; not sure why.
+            Uncomment `OverlayTrigger` and `setCopyTooltipText` to experiment.
+          */}
+          {/*
+            <OverlayTrigger
+            placement='top'
+            target={target}
+            delay={{ hide: 400 }}
+            overlay={<Tooltip id='copy-tooltip'>{copyTooltipText}</Tooltip>}
+          > */}
+          <button
             className='btn btn-default btn-copy'
+            onClick={event => {copyToClipboard(event)}}
             data-toggle='tooltip'
-            button-title='Copy to clipboard'
+            title='Copy to clipboard'
+            // ref={copyButtonRef}
           >
             <i className='far fa-copy'></i>
-          </Clipboard>
+          </button>
+          {/* </OverlayTrigger> */}
           <button
             id={`refresh-button-${downloadConfig.authCode}`}
             className='download-refresh-button btn btn-default btn-refresh glyphicon glyphicon-refresh' // eslint-disable-line max-len
             data-toggle='tooltip'
-            onClick={() => {updateDownloadConfig(props.matchingAccessions)}}
-            title='Refresh download command'>
+            title='Refresh download command'
+            onClick={() => {
+              updateDownloadConfig(props.matchingAccessions)
+              // setCopyTooltipText('Copy to clipboard')
+            }}
+          >
           </button>
         </span>
       </div>
@@ -183,7 +203,7 @@ function hasSearchParams(params) {
  *
  * UI spec: https://projects.invisionapp.com/d/main#/console/19272801/402387755/preview
  */
-export default function DownloadButton(props) {
+export default function DownloadButton() {
   const searchContext = useContextStudySearch()
   const userContext = useContextUser()
 
@@ -211,13 +231,11 @@ export default function DownloadButton(props) {
   return (
     <>
       <OverlayTrigger
-        placement="top"
-        overlay={<Tooltip id="download-tooltip">{hint}</Tooltip>}
-      >
+        placement='top'
+        overlay={<Tooltip id='download-tooltip'>{hint}</Tooltip>}>
         <button
           id='download-button'
-          className={`btn btn-primary ${active ? 'active' : 'disabled'}`}
-        >
+          className={`btn btn-primary ${active ? 'active' : 'disabled'}`}>
           <span onClick={() => {if (active) setShow(!show)}}>
             <FontAwesomeIcon className="icon-left" icon={faDownload}/>
           Download
@@ -229,12 +247,10 @@ export default function DownloadButton(props) {
         show={show}
         onHide={handleClose}
         animation={false}
-        bsSize='large'
-      >
+        bsSize='large'>
         <Modal.Header closeButton>
           <h2 className='text-center'>Bulk Download</h2>
         </Modal.Header>
-
         <Modal.Body>
           <p className='lead'>
             {getLeadText(downloadSize)}
