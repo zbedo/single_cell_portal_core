@@ -240,7 +240,7 @@ export default function DownloadButton(props) {
         <button
           id='download-button'
           className={`btn btn-primary ${active ? 'active' : 'disabled'}`}>
-          <span onClick={() => {if (active) setShow(!show)}}>
+          <span onClick={() => {setShow(true)}}>
             <FontAwesomeIcon className="icon-left" icon={faDownload}/>
           Download
           </span>

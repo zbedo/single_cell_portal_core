@@ -158,7 +158,7 @@ export async function fetchDownloadSize(accessions, fileTypes, mock=false) {
   const fileTypesString = fileTypes.join(',')
   const queryString = `?accessions=${accessions}&file_types=${fileTypesString}`
   const pathAndQueryString = `/search/bulk_download_size/${queryString}`
-  return await scpApi(pathAndQueryString)
+  return await scpApi(pathAndQueryString, defaultInit, mock)
 }
 
 /**
