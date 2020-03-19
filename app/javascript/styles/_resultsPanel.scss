@@ -21,7 +21,7 @@
 
 .results-content {
   min-height: 50vh;
-  > table {
+  .result-table {
     width: 100%;
   }
   .loading-panel, .error-panel {
@@ -36,7 +36,6 @@
 }
 
 .result-row {
-  width: 100%;
   border-bottom: 7px solid #eee;
   td {
     padding: 10px;

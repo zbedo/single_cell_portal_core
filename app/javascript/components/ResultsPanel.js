@@ -1,6 +1,6 @@
 import React, { useContext } from 'react'
 import { StudySearchContext } from 'components/search/StudySearchProvider'
-import StudyResultsContainer from './StudyResultsContainer'
+import { StudiesResults } from './StudyResultsContainer'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDna, faExclamationCircle } from '@fortawesome/free-solid-svg-icons'
 
@@ -23,9 +23,9 @@ const ResultsPanel = props => {
         Loading &nbsp;
         <FontAwesomeIcon icon={faDna} className="gene-load-spinner"/>
       </div>
-  } else if (searchContext.results.studies.length > 0) {
+  } else if (searchContext.results.studies && searchContext.results.studies.length > 0) {
     panelContent =
-      <StudyResultsContainer
+      <StudiesResults
         results={searchContext.results}
         changePage={pageNum => {searchContext.updateSearch({ page: pageNum })}}
       />
