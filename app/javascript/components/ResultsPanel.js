@@ -1,6 +1,6 @@
 import React, { useContext } from 'react'
 import { StudySearchContext } from 'components/search/StudySearchProvider'
-import StudyResultsContainer from './StudyResults'
+import StudyResultsContainer from './StudyResultsContainer'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDna, faExclamationCircle } from '@fortawesome/free-solid-svg-icons'
 
