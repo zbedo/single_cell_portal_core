@@ -1,6 +1,15 @@
 .results-panel {
   padding-top: 14px;
 
+  .search-query {
+    margin-left: 1em;
+    .filter-name, .search-term {
+      font-weight: bold;
+    }
+    .join-text {
+      font-style: italic;
+    }
+  }
 }
 
 .results-panel > div > ul {
