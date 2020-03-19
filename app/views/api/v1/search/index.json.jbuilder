@@ -1,5 +1,6 @@
 json.set! :type, params[:type]
 json.set! :terms, params[:terms]
+json.set! :term_list, @term_list
 json.set! :current_page, @results.current_page.to_i
 json.set! :total_studies, @results.total_entries
 json.set! :total_pages, @results.total_pages
