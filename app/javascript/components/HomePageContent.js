@@ -6,7 +6,7 @@ import SearchFacetProvider from 'components/search/SearchFacetProvider'
 import UserProvider from 'components/UserProvider'
 
 /**
- * Wrapper component search and result panels
+ * Wrapper component for search and result panels
  */
 export default function HomePageContent() {
   return (

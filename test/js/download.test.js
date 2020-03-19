@@ -9,6 +9,8 @@ import DownloadButton from '../../app/javascript/components/DownloadButton'
 import * as UserProvider from '../../app/javascript/components/UserProvider'
 import * as StudySearchProvider
   from '../../app/javascript/components/search/StudySearchProvider'
+import * as DownloadProvider
+  from '../../app/javascript/components/search/DownloadProvider'
 
 describe('Download components for faceted search', () => {
   beforeAll(() => {
@@ -16,7 +18,24 @@ describe('Download components for faceted search', () => {
 
     const userContext = { accessToken: 'test' }
     const studySearchContext = {
-      results: { matchingAccessions: ['SCP1', 'SCP2'] }
+      results: { matchingAccessions: ['SCP1', 'SCP2'] },
+      params: {
+        terms: 'test',
+        facets: {},
+        page: 1
+      }
+    }
+    const downloadContext = {
+      downloadSize: {
+        metadata: { total_bytes: 200, total_files: 2 },
+        expression: { total_bytes: 201, total_files: 3 },
+        isLoaded: true
+      },
+      params: {
+        terms: 'test',
+        facets: {},
+        page: 1
+      }
     }
 
     jest.spyOn(UserProvider, 'useContextUser')
@@ -27,6 +46,11 @@ describe('Download components for faceted search', () => {
     jest.spyOn(StudySearchProvider, 'useContextStudySearch')
       .mockImplementation(() => {
         return studySearchContext
+      })
+
+    jest.spyOn(DownloadProvider, 'useContextDownload')
+      .mockImplementation(() => {
+        return downloadContext
       })
   })
 
@@ -43,7 +67,6 @@ describe('Download components for faceted search', () => {
     // more succinct approach that captures updates.
     expect(wrapper.find('Modal').first().prop('show')).toEqual(false)
     wrapper.find('#download-button > span').simulate('click')
-
     expect(wrapper.find('Modal').first().prop('show')).toEqual(true)
   })
 })

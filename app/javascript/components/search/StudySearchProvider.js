@@ -1,14 +1,13 @@
 import React, { useContext, useState } from 'react'
-import {
-  fetchSearch, buildSearchQueryString, buildFacetsFromQueryString
-} from 'lib/scp-api'
-import SearchSelectionProvider from 'components/search/SearchSelectionProvider'
 import _cloneDeep from 'lodash/cloneDeep'
 import _isEqual from 'lodash/isEqual'
 import { Router, navigate } from '@reach/router'
 import * as queryString from 'query-string'
 
-
+import {
+  fetchSearch, buildSearchQueryString, buildFacetsFromQueryString
+} from 'lib/scp-api'
+import SearchSelectionProvider from 'components/search/SearchSelectionProvider'
 
 const emptySearch = {
   params: {
@@ -16,10 +15,12 @@ const emptySearch = {
     facets: {},
     page: 1
   },
+
   results: [],
   isLoading: false,
   isLoaded: false,
   isError: false,
+
   updateSearch: () => {
     throw new Error(
       'You are trying to use this context outside of a Provider container'
@@ -29,9 +30,11 @@ const emptySearch = {
 
 export const StudySearchContext = React.createContext(emptySearch)
 
+/** Wrapper for deep mocking via Jest / Enzyme */
 export function useContextStudySearch() {
   return useContext(StudySearchContext)
 }
+
 /**
   * renders a StudySearchContext tied to its props,
   * fires route navigate on changes to params
@@ -60,10 +63,12 @@ export function PropsStudySearchProvider(props) {
   async function performSearch(params) {
     // reset the scroll in case they scrolled down to read prior results
     window.scrollTo(0, 0)
+
     const results = await fetchSearch('study',
       params.terms,
       params.facets,
       params.page)
+
     setSearchState({
       params,
       isError: false,
@@ -74,10 +79,12 @@ export function PropsStudySearchProvider(props) {
     })
   }
 
+  // Search done on initial page load
   if (!_isEqual(searchParams, searchState.params) ||
       !searchState.isLoading &&
       !searchState.isLoaded) {
     performSearch(searchParams)
+
     setSearchState({
       params: searchParams,
       isError: false,
@@ -97,10 +104,10 @@ export function PropsStudySearchProvider(props) {
 }
 
 /**
-  * Self-contained component for providing a url-routable
-  * StudySearchContext and rendering children.
-  * The routing is all via query params
-  */
+ * Self-contained component for providing a url-routable
+ * StudySearchContext and rendering children.
+ * The routing is all via query params
+ */
 export default function StudySearchProvider(props) {
   // create a wrapper component for the search display since <Router>
   // assumes that all of its unwrapped children (even nested) be routes
