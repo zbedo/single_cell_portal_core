@@ -11,8 +11,16 @@ if @studies_by_facet.present?
   json.set! :facet_matches, @studies_by_facet[study.accession]
 end
 if params[:terms].present?
-  json.set! :term_matches, @search_terms
-  json.set! :term_search_weight, study.search_weight(@search_terms.split)
+  search_weight = study.search_weight(@term_list)
+  json.set! :term_matches, search_weight[:terms].keys
+  json.set! :term_search_weight, search_weight[:total]
+end
+# if this is an inferred match, use :term_matches for highlighting, but set :inferred_match to true
+if @inferred_accessions.present? && @inferred_accessions.include?(study.accession)
+  json.set! :inferred_match, true
+  inferred_weight = study.search_weight(@inferred_terms)
+  json.set! :term_matches, inferred_weight[:terms].keys
+  json.set! :term_search_weight, inferred_weight[:total]
 end
 if study.detached
   json.set! :study_files, 'Unavailable (cannot load study workspace or bucket)'

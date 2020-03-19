@@ -1,53 +1,65 @@
-import React from 'react';
-import FilterSlider from './FilterSlider';
-
+import React from 'react'
+import FilterSlider from './FilterSlider'
+import _remove from 'lodash/remove'
 /**
  * Component for a list of checkbox filters, e.g. disease, species
  */
 function FilterCheckboxes(props) {
-  return (
-    <ul>
-    {
-      props.filters.map((filter) => {
-        return (
-          <li key={'li-' + filter.id}>
-            <input
-              type='checkbox'
-              aria-label='checkbox'
-              onChange={(e) => {props.onChange(filter.id, e.target.checked)}}
-              id={filter.id}
-              name={filter.id}
-              checked={props.selection.includes(filter.id)}
-            />
-            <label htmlFor={filter.id}>{filter.name}</label>
-          </li>
-        );
-      })
+
+  function updateSelection(filterId, value) {
+    const newSelection = props.selection.slice()
+    if (value && !newSelection.includes(filterId)) {
+      newSelection.push(filterId)
     }
+    if (!value) {
+      _remove(newSelection, id => {return id === filterId})
+    }
+    props.setSelection(newSelection)
+  }
+
+  return (
+    <ul className="facet-filter-list">
+      {
+        props.filters.map(filter => {
+          return (
+            <li key={`li-${filter.id}`}>
+              <input
+                type='checkbox'
+                aria-label='checkbox'
+                onChange={e => {updateSelection(filter.id, e.target.checked)}}
+                id={filter.id}
+                name={filter.id}
+                checked={props.selection.includes(filter.id)}
+              />
+              <label htmlFor={filter.id}>{filter.name}</label>
+            </li>
+          )
+        })
+      }
     </ul>
-  );
+  )
 }
 
 /**
  * Component for filter list and filter slider
  */
 export default function Filters(props) {
-  const filters = props.filters;
+  const filters = props.filters
   if (props.facet.type !== 'number') {
     return (
       <FilterCheckboxes
         filters={filters}
-        onChange={props.updateSelectionForFilterCheckboxes}
+        setSelection={props.setSelection}
         selection={props.selection}
       />
-    );
+    )
   } else {
     return (
       <FilterSlider
         facet={props.facet}
-        onChange={props.updateSelectionForFilterSlider}
+        setSelection={props.setSelection}
         selection={props.selection}
       />
-    );
+    )
   }
 }

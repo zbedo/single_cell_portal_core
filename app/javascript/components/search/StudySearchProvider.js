@@ -1,84 +1,132 @@
 import React, { useContext, useState } from 'react'
-import { fetchSearch, buildSearchQueryString, buildFacetsFromQueryString } from 'lib/scp-api'
 import _cloneDeep from 'lodash/cloneDeep'
-import _assign from 'lodash/assign'
 import _isEqual from 'lodash/isEqual'
-import { navigate, useParams } from '@reach/router'
+import { Router, navigate } from '@reach/router'
 import * as queryString from 'query-string'
-/* eslint-disable */
-/*
-  This is a single component and paired context that manages the search params and data
-*/
+
+import {
+  fetchSearch, buildSearchQueryString, buildFacetsFromQueryString
+} from 'lib/scp-api'
+import SearchSelectionProvider from 'components/search/SearchSelectionProvider'
+
 const emptySearch = {
   params: {
     terms: '',
     facets: {},
     page: 1
   },
+
   results: [],
   isLoading: false,
   isLoaded: false,
   isError: false,
-  updateSearch: () => { throw new Error('You are trying to use this context outside of a Provider container') }
+
+  updateSearch: () => {
+    throw new Error(
+      'You are trying to use this context outside of a Provider container'
+    )
+  }
 }
 
 export const StudySearchContext = React.createContext(emptySearch)
 
+/** Wrapper for deep mocking via Jest / Enzyme */
 export function useContextStudySearch() {
   return useContext(StudySearchContext)
 }
 
-export default function StudySearchProvider(props) {
-  let defaultState = _cloneDeep(emptySearch)
+/**
+  * renders a StudySearchContext tied to its props,
+  * fires route navigate on changes to params
+  */
+export function PropsStudySearchProvider(props) {
+  const defaultState = _cloneDeep(emptySearch)
   defaultState.updateSearch = updateSearch
-  let [searchState, setSearchState] = useState(defaultState)
-  const queryParams = queryString.parse(props.location.search);
-  let updatedParams = {
-    page: queryParams.page ? queryParams.page : 1,
-    terms: queryParams.terms ? queryParams.terms : '',
-    facets: buildFacetsFromQueryString(queryParams.facets)
-  }
+  const [searchState, setSearchState] = useState(defaultState)
+  const searchParams = props.searchParams
 
-  // update the search criteria
-  async function updateSearch(searchParams) {
-    const effectiveFacets = Object.assign({}, updatedParams.facets, searchParams.facets)
-    const effectiveTerms = ('terms' in searchParams) ? searchParams.terms : updatedParams.terms
+  /**
+   * Update search parameters in URL
+   *
+   * @param {Object} newParams Parameters to update
+   */
+  async function updateSearch(newParams) {
+    const facets = Object.assign({}, searchParams.facets, newParams.facets)
+    const terms = ('terms' in newParams) ? newParams.terms : searchParams.terms
     // reset the page to 1 for new searches, unless otherwise specified
-    const effectivePage = searchParams.page ? searchParams.page : 1
-
-    navigate('?' + buildSearchQueryString('study', effectiveTerms, effectiveFacets, effectivePage))
+    const page = newParams.page ? newParams.page : 1
+    const queryString = buildSearchQueryString('study', terms, facets, page)
+    navigate(`?${queryString}`)
   }
 
-  //perform the actual API search
-  async function performSearch(searchParams) {
+  /** perform the actual API search */
+  async function performSearch(params) {
     // reset the scroll in case they scrolled down to read prior results
-    window.scrollTo(0,0)
-    const results = await fetchSearch('study', searchParams.terms, searchParams.facets, searchParams.page)
+    window.scrollTo(0, 0)
+
+    const results = await fetchSearch('study',
+      params.terms,
+      params.facets,
+      params.page)
+
     setSearchState({
-      params: searchParams,
+      params,
       isError: false,
       isLoading: false,
       isLoaded: true,
-      results: results,
-      updateSearch: updateSearch
+      results,
+      updateSearch
     })
   }
 
-  if (!_isEqual(updatedParams, searchState.params) || !searchState.isLoading && !searchState.isLoaded) {
-    performSearch(updatedParams)
+  // Search done on initial page load
+  if (!_isEqual(searchParams, searchState.params) ||
+      !searchState.isLoading &&
+      !searchState.isLoaded) {
+    performSearch(searchParams)
+
     setSearchState({
-      params: updatedParams,
+      params: searchParams,
       isError: false,
       isLoading: true,
       isLoaded: false,
       results: [],
-      updateSearch: updateSearch
+      updateSearch
     })
   }
-
   return (
     <StudySearchContext.Provider value={searchState}>
-      { props.children }
+      <SearchSelectionProvider>
+        { props.children }
+      </SearchSelectionProvider>
     </StudySearchContext.Provider>
+  )
+}
+
+/**
+ * Self-contained component for providing a url-routable
+ * StudySearchContext and rendering children.
+ * The routing is all via query params
+ */
+export default function StudySearchProvider(props) {
+  // create a wrapper component for the search display since <Router>
+  // assumes that all of its unwrapped children (even nested) be routes
+  const SearchRoute = routerProps => {
+    const queryParams = queryString.parse(routerProps.location.search)
+    const searchParams = {
+      page: queryParams.page ? queryParams.page : 1,
+      terms: queryParams.terms ? queryParams.terms : '',
+      facets: buildFacetsFromQueryString(queryParams.facets)
+    }
+    return (
+      <PropsStudySearchProvider searchParams={searchParams}>
+        {props.children}
+      </PropsStudySearchProvider>
+    )
+  }
+  return (
+    <Router>
+      <SearchRoute default/>
+    </Router>
   )
 }
