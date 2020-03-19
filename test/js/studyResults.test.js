@@ -1,5 +1,5 @@
 import React from 'react'
-import StudyResultsContainer, { StudiesResults, StudiesList, Study } from '../../app/javascript/components/StudyResults'
+import StudyResultsContainer, { StudiesResults, StudiesList, Study } from '../../app/javascript/components/StudyResultsContainer'
 import { shallow } from 'enzyme'
 import Tab from 'react-bootstrap/lib/Tab'
 import { useTable, usePagination } from 'react-table'
@@ -11,13 +11,6 @@ describe('<StudyResultsContainer/> rendering>', () => {
     studyResultsContainer = shallow(<StudyResultsContainer/>)
   })
 
-  it('should render 1 <Tab.container/>', () => {
-    expect(studyResultsContainer.find(Tab.Container)).toHaveLength(1)
-  })
-
-  it('should render 2 <Tab/>s', () => {
-    expect(studyResultsContainer.find(Tab)).toHaveLength(2)
-  })
   it('should render 1 <StudiesResults/>', () => {
     expect(studyResultsContainer.find(StudiesResults)).toHaveLength(1)
   })
