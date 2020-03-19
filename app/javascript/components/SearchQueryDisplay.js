@@ -3,8 +3,13 @@ import React from 'react'
 export default function SearchQueryDisplay({terms, facets}) {
   const hasFacets = facets.length > 0
   const hasTerms = terms && terms.length > 0
+  if (!hasFacets && !hasTerms) {
+    return <></>
+  }
+
   let facetsDisplay = <span></span>
   let termsDisplay = <span></span>
+
   if (hasFacets) {
     let FacetContainer = (props) => <>{props.children}</>
     if (hasTerms) {
