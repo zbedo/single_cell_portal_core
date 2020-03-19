@@ -1,7 +1,9 @@
 import React, { useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faExternalLinkAlt } from '@fortawesome/free-solid-svg-icons'
+import { faExternalLinkAlt, faTimesCircle } from '@fortawesome/free-solid-svg-icons'
 import pluralize from 'pluralize'
+import _find from 'lodash/find'
+import _remove from 'lodash/remove'
 
 import { fetchFacetFilters } from 'lib/scp-api'
 import FiltersBox from './FiltersBox'
@@ -10,9 +12,9 @@ import FiltersSearchBar from './FiltersSearchBar'
 /**
  * Component for filter search and filter lists
  */
-export default function FiltersBoxSearchable(props) {
+export default function FiltersBoxSearchable({facet, selection, setSelection, show, setShow}) {
   // State that is specific to FiltersBox
-  const [matchingFilters, setMatchingFilters] = useState(props.facet.filters)
+  const [matchingFilters, setMatchingFilters] = useState(facet.filters.slice(0, 15))
   const [hasFilterSearchResults, setHasFilterSearchResults] = useState(false)
 
   /*
@@ -30,8 +32,8 @@ export default function FiltersBoxSearchable(props) {
    *   * apply-facet-species (for calls-to-action use ID: <action> <component>)
    *   * filter-species-NCBItaxon9606
    */
-  const facetName = props.facet.name
-  const facetId = props.facet.id
+  const facetName = facet.name
+  const facetId = facet.id
   const componentName = 'filters-box-searchable'
   const componentId = `${componentName}-${facetId}`
 
@@ -42,7 +44,7 @@ export default function FiltersBoxSearchable(props) {
    * for filters matching the term "tuberculosis".
    */
   async function searchFilters(terms) {
-    const apiData = await fetchFacetFilters(props.facet.id, terms)
+    const apiData = await fetchFacetFilters(facet.id, terms)
     const matchingFilters = apiData.filters
     const hasResults = apiData.query !== '' && matchingFilters.length > 0
 
@@ -65,17 +67,40 @@ export default function FiltersBoxSearchable(props) {
     return filtersSummary
   }
 
-  const showSearchBar = props.facet.links.length > 0
+  function removeFilter(filterId) {
+    let newSelections = selection.slice()
+    _remove(newSelections, id => {return id === filterId})
+    setSelection(newSelections)
+  }
+
+  const showSearchBar = facet.links.length > 0
+  let selectedFilterBadges = <></>
+  if (selection.length && facet.type != 'number') {
+    selectedFilterBadges = (
+      <div className="filter-badge-list">
+        { selection.map(filterId => {
+          const matchedFilter = _find(facet.filters, {id: filterId})
+          return (
+            <span key={filterId}
+                  className="badge"
+                  onClick={() => removeFilter(filterId)}>
+              {matchedFilter.name} <FontAwesomeIcon icon={faTimesCircle}/>
+            </span>
+          )
+        }) }
+      </div>
+    )
+  }
 
   return (
     <>
       {
-        props.show && <div className={componentName} id={componentId}>
+        show && <div className={componentName} id={componentId}>
           { showSearchBar && (
             <>
               <div className='facet-ontology-links'>
                 {
-                  props.facet.links.map((link, i) => {
+                  facet.links.map((link, i) => {
                     return (
                       <a
                         key={`link-${i}`}
@@ -94,6 +119,7 @@ export default function FiltersBoxSearchable(props) {
                 filtersBoxId={componentId}
                 searchFilters={searchFilters}
               />
+              { selectedFilterBadges }
               <p className='filters-box-header'>
                 <span className='default-filters-list-name'>
                   {getFiltersSummary()}
@@ -101,12 +127,13 @@ export default function FiltersBoxSearchable(props) {
               </p>
             </>
           )}
+          { !showSearchBar && selectedFilterBadges }
           <FiltersBox
-            facet={props.facet}
+            facet={facet}
             filters={matchingFilters}
-            setShow={props.setShow}
-            selection={props.selection}
-            setSelection={props.setSelection}
+            setShow={setShow}
+            selection={selection}
+            setSelection={setSelection}
           />
         </div>
       }

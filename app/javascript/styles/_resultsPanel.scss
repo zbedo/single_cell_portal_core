@@ -38,7 +38,7 @@
 .result-row {
   width: 100%;
   border-bottom: 7px solid #eee;
-  #result-cell {
+  td {
     padding: 10px;
     background: #fff;
     border-radius: 5px;
@@ -61,6 +61,20 @@
   }
   #cell-count {
     background-color: green;
+  }
+  &.inferred-match {
+    border-left: 4px dotted #bbb;
+    td {
+      background: #f6f6f6;
+    }
+    .soft-badge {
+      background-color: #f6f6f6;
+      font-weight: normal;
+      font-style: italic;
+      margin-bottom: 5px;
+      border: 1px solid #ddd;
+      color: #888;
+    }
   }
 }
 .pagination{

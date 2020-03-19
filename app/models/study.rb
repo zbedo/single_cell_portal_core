@@ -571,12 +571,20 @@ class Study
       key :description, 'SearchFacet filter matches'
     end
     property :term_matches do
-      key :type, :string
+      key :type, :array
       key :description, 'Keyword term matches'
+      items do
+        key :title, 'TermMatch'
+        key :type, :string
+      end
     end
     property :term_search_weight do
       key :type, :integer
       key :description, 'Relevance of term match'
+    end
+    property :inferred_match do
+      key :type, :boolean
+      key :description, 'Indication if match is inferred (e.g. converting facet filter value to keyword search)'
     end
     property :study_files do
       key :type, :object
@@ -584,7 +592,7 @@ class Study
       key :description, 'Available StudyFiles for download, by type'
       StudyFile::BULK_DOWNLOAD_TYPES.each do |file_type|
         property file_type do
-          key :title, "#{file_type} Files"
+          key :description, "#{file_type} Files"
           key :type, :array
           items do
             key :title, 'StudyFile'
@@ -819,12 +827,19 @@ class Study
 
   # compute a simplistic relevance score by counting instances of terms in names/descriptions
   def search_weight(terms)
-    score = 0
+    weights = {
+        total: 0,
+        terms: {}
+    }
     terms.each do |term|
       text_blob = "#{self.name} #{self.description}"
-      score += text_blob.scan(/#{term}/i).size
+      score = text_blob.scan(/#{term}/i).size
+      if score > 0
+        weights[:total] += score
+        weights[:terms][term] = score
+      end
     end
-    score
+    weights
   end
 
   ###

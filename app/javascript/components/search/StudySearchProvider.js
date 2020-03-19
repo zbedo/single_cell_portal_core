@@ -2,10 +2,12 @@ import React, { useContext, useState } from 'react'
 import {
   fetchSearch, buildSearchQueryString, buildFacetsFromQueryString
 } from 'lib/scp-api'
+import SearchSelectionProvider from 'components/search/SearchSelectionProvider'
 import _cloneDeep from 'lodash/cloneDeep'
 import _isEqual from 'lodash/isEqual'
 import { Router, navigate } from '@reach/router'
 import * as queryString from 'query-string'
+
 
 
 const emptySearch = {
@@ -34,27 +36,24 @@ export function useContextStudySearch() {
   * renders a StudySearchContext tied to its props,
   * fires route navigate on changes to params
   */
-function StudySearchProvider(props) {
+export function PropsStudySearchProvider(props) {
   const defaultState = _cloneDeep(emptySearch)
   defaultState.updateSearch = updateSearch
   const [searchState, setSearchState] = useState(defaultState)
   const searchParams = props.searchParams
 
-  /** update the search criteria */
-  async function updateSearch(updatedParams) {
-    const effectiveFacets = Object.assign({},
-      searchParams.facets,
-      updatedParams.facets)
-    const effectiveTerms = ('terms' in updatedParams) ?
-      updatedParams.terms :
-      searchParams.terms
+  /**
+   * Update search parameters in URL
+   *
+   * @param {Object} newParams Parameters to update
+   */
+  async function updateSearch(newParams) {
+    const facets = Object.assign({}, searchParams.facets, newParams.facets)
+    const terms = ('terms' in newParams) ? newParams.terms : searchParams.terms
     // reset the page to 1 for new searches, unless otherwise specified
-    const effectivePage = updatedParams.page ? updatedParams.page : 1
-    const qstring = buildSearchQueryString('study',
-      effectiveTerms,
-      effectiveFacets,
-      effectivePage)
-    navigate(`?${qstring}`)
+    const page = newParams.page ? newParams.page : 1
+    const queryString = buildSearchQueryString('study', terms, facets, page)
+    navigate(`?${queryString}`)
   }
 
   /** perform the actual API search */
@@ -90,7 +89,9 @@ function StudySearchProvider(props) {
   }
   return (
     <StudySearchContext.Provider value={searchState}>
-      { props.children }
+      <SearchSelectionProvider>
+        { props.children }
+      </SearchSelectionProvider>
     </StudySearchContext.Provider>
   )
 }
@@ -100,7 +101,7 @@ function StudySearchProvider(props) {
   * StudySearchContext and rendering children.
   * The routing is all via query params
   */
-export default function RoutableStudySearchProvider(props) {
+export default function StudySearchProvider(props) {
   // create a wrapper component for the search display since <Router>
   // assumes that all of its unwrapped children (even nested) be routes
   const SearchRoute = routerProps => {
@@ -111,9 +112,9 @@ export default function RoutableStudySearchProvider(props) {
       facets: buildFacetsFromQueryString(queryParams.facets)
     }
     return (
-      <StudySearchProvider searchParams={searchParams}>
+      <PropsStudySearchProvider searchParams={searchParams}>
         {props.children}
-      </StudySearchProvider>
+      </PropsStudySearchProvider>
     )
   }
   return (

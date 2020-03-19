@@ -4,6 +4,7 @@ import FiltersBoxSearchable from './FiltersBoxSearchable'
 import { StudySearchContext } from 'components/search/StudySearchProvider'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTimesCircle } from '@fortawesome/free-solid-svg-icons'
+import { SearchSelectionContext } from './search/SearchSelectionProvider'
 
 /**
  * Converts string value to lowercase, hyphen-delimited version
@@ -23,8 +24,12 @@ export default function FacetControl(props) {
   const facetId = `facet-${slug(facetName)}`
   const searchContext = useContext(StudySearchContext)
   const appliedSelection = searchContext.params.facets[props.facet.id]
-  const [selection, setSelection] =
-    useState(appliedSelection ? appliedSelection : [])
+  const selectionContext = useContext(SearchSelectionContext)
+  let selection = []
+  if (selectionContext.facets[props.facet.id]) {
+    selection = selectionContext.facets[props.facet.id]
+  }
+
   let selectedFilterString
   if (appliedSelection && appliedSelection.length) {
     const selectedFilters =
@@ -35,7 +40,8 @@ export default function FacetControl(props) {
       selectedFilterString = selectedFilters[0].name
     } else {
       // it's a numeric range filter
-      selectedFilterString = `${appliedSelection[0]}-${appliedSelection[1]}
+      selectedFilterString = `${facetName}:
+                              ${appliedSelection[0]}-${appliedSelection[1]}
                               ${appliedSelection[2]}`
     }
   }
@@ -56,10 +62,7 @@ export default function FacetControl(props) {
     * Clear the selection and update search results
     */
   function clearFacet() {
-    const clearedFacet = {}
-    clearedFacet[facetName] = []
-    setSelection([])
-    searchContext.updateSearch({ facets: clearedFacet })
+    selectionContext.updateFacet(props.facet.id, [], true)
   }
 
 
@@ -112,7 +115,9 @@ export default function FacetControl(props) {
         facet={props.facet}
         setShow={setShowFilters}
         selection={selection}
-        setSelection={setSelection}/>
+        setSelection={selection =>
+          selectionContext.updateFacet(props.facet.id, selection)
+        }/>
     </span>
   )
 }

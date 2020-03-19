@@ -13,6 +13,10 @@ $('#study-file-<%= study_file.id %>').on('change', '.file-type', function() {
     if (fileType === 'Cluster') {
         extraInfo.html("<%= j(render partial: 'cluster_axis_fields', locals: {f: f.dup}) %>");
         nameField.attr('readonly', false);
+    } else if (fileType === 'Metadata') {
+        extraInfo.html("<%= j(render partial: 'metadata_file_fields', locals: {f: f.dup}) %>");
+        nameField.val(fileName);
+        nameField.attr('readonly', 'readonly');
     } else if (fileType === 'Expression Matrix') {
         extraInfo.html("<%= j(render partial: 'expression_file_fields', locals: {f: f.dup}) %>");
         taxonTarget.html("<%= j(render partial: 'taxon_fields', locals: {f: f.dup}) %>");

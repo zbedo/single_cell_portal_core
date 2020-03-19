@@ -31,7 +31,9 @@
     background-color: $action-color;
     border: none;
     border-radius: 0px 15px 15px  0px;
-
+    &:hover {
+      background-color: lighten($action-color, 10%);
+    }
     svg {
       color: white;
     }
