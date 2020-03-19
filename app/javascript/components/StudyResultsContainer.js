@@ -75,7 +75,7 @@ export function StudiesResults(props) {
           />
         </div>
       </div>
-      <table {...getTableProps()}>
+      <table {...getTableProps({className: 'result-table'})}>
         <tbody {...getTableBodyProps()}>
           {rows.map((row, i) => {
             prepareRow(row)

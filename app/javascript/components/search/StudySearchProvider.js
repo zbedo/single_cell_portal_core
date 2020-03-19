@@ -30,6 +30,39 @@ const emptySearch = {
 
 export const StudySearchContext = React.createContext(emptySearch)
 
+
+/**
+ * Count terms, i.e. space-delimited strings, and consider [""] to have 0 terms
+ */
+export function getNumberOfTerms(terms) {
+  let numTerms = 0
+  const splitTerms = terms.split(' ')
+  if (splitTerms.length > 0 && splitTerms[0] !== '') {
+    numTerms = splitTerms.length
+  }
+  return numTerms
+}
+
+/**
+ * Counts facets (e.g. species, disease) and filters (e.g. human, COVID-19)
+ */
+export function getNumFacetsAndFilters(facets) {
+  const numFacets = Object.keys(facets).length
+  const numFilters =
+    Object.values(facets).reduce((prevNumFilters, filterArray) => {
+      return prevNumFilters + filterArray.length
+    }, 0)
+
+  return [numFacets, numFilters]
+}
+
+/** Determine if search has any parameters, i.e. terms or filters */
+export function hasSearchParams(params) {
+  const numTerms = getNumberOfTerms(params.terms)
+  const [numFacets, numFilters] = getNumFacetsAndFilters(params.facets)
+  return (numTerms + numFacets + numFilters) > 0
+}
+
 /** Wrapper for deep mocking via Jest / Enzyme */
 export function useContextStudySearch() {
   return useContext(StudySearchContext)

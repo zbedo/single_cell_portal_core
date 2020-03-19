@@ -2,6 +2,9 @@
  * @fileoverview Functions for client-side usage analytics of SCP REST API
  */
 
+import {
+  getNumberOfTerms, getNumFacetsAndFilters
+} from '../components/search/StudySearchProvider'
 import { log } from './metrics-api'
 
 // See note in logSearch
@@ -36,31 +39,6 @@ export function mapFiltersForLogging(facetsOrFilters, isFacets=false) {
       filterNamesById[filter.id] = filter.name
     })
   }
-}
-
-/**
- * Count terms, i.e. space-delimited strings, and consider [""] to have 0 terms
- */
-export function getNumberOfTerms(terms) {
-  let numTerms = 0
-  const splitTerms = terms.split(' ')
-  if (splitTerms.length > 0 && splitTerms[0] !== '') {
-    numTerms = splitTerms.length
-  }
-  return numTerms
-}
-
-/**
- * Counts facets (e.g. species, disease) and filters (e.g. human, COVID-19)
- */
-export function getNumFacetsAndFilters(facets) {
-  const numFacets = Object.keys(facets).length
-  const numFilters =
-    Object.values(facets).reduce((prevNumFilters, filterArray) => {
-      return prevNumFilters + filterArray.length
-    }, 0)
-
-  return [numFacets, numFilters]
 }
 
 /**

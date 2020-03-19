@@ -5,13 +5,12 @@ import Modal from 'react-bootstrap/lib/Modal'
 import Tooltip from 'react-bootstrap/lib/Tooltip'
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger'
 
-import { useContextStudySearch } from './search/StudySearchProvider'
+import {
+  useContextStudySearch, hasSearchParams
+} from './search/StudySearchProvider'
 import { useContextUser } from './UserProvider'
 import { useContextDownload } from './search/DownloadProvider'
 import { fetchAuthCode } from 'lib/scp-api'
-import {
-  getNumFacetsAndFilters, getNumberOfTerms
-} from '../lib/scp-api-metrics'
 
 /**
  * Fetch auth code, build download command, return configuration object
@@ -190,13 +189,6 @@ function getLeadText(downloadSize) {
     To download ${prettyBytes} in ${fileTypes} files
     matching your search, copy this command and paste it into your terminal:
   `)
-}
-
-/** Determine if search has any parameters, i.e. terms or filters */
-function hasSearchParams(params) {
-  const numTerms = getNumberOfTerms(params.terms)
-  const [numFacets, numFilters] = getNumFacetsAndFilters(params.facets)
-  return (numTerms + numFacets + numFilters) > 0
 }
 
 /**
