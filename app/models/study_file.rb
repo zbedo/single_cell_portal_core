@@ -666,14 +666,19 @@ class StudyFile
     # put bundled files in a sub-directory named after the bundle parent's ID so relationship is maintained
     if self.is_bundled?
       bp = self.bundle_parent
-      "#{bp.output_directory_name}/#{bp.id}"
+      "#{bp.simplified_file_type}/#{bp.id}"
     else
-      case self.file_type
-      when /Expression/
-        'Expression'
-      else
-        self.file_type
-      end
+      self.simplified_file_type
+    end
+  end
+
+  # lump MM Coordinate Matrices & dense expression matrices together for convenience in bulk download
+  def simplified_file_type
+    case self.file_type
+    when /Matrix/
+      'Expression'
+    else
+      self.file_type
     end
   end
 

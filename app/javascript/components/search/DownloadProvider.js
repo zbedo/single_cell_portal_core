@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react'
-import { useContextStudySearch } from './StudySearchProvider'
+import { useContextStudySearch, hasSearchParams } from './StudySearchProvider'
 
 import { fetchDownloadSize } from './../../lib/scp-api'
 
@@ -38,7 +38,8 @@ export default function DownloadProvider(props) {
 
   if (
     !studyContext.isLoading && studyContext.isLoaded &&
-    !downloadState.isLoaded
+    !downloadState.isLoaded &&
+    hasSearchParams(studyContext.params)
   ) {
     updateDownloadSize(studyContext.results)
   }
