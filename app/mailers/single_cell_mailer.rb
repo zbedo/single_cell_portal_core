@@ -244,4 +244,29 @@ class SingleCellMailer < ApplicationMailer
       format.html
     end
   end
+
+  # collect usage statistics for the given day and email admins
+  def nightly_admin_report
+    @admins = User.where(admin: true).map(&:email)
+    @today = Date.today
+    @two_weeks_ago = @today - 2.weeks
+
+    # get user, submission, and study stats
+    @user_stats = SummaryStatsUtils.total_and_active_user_counts
+    @submissions = SummaryStatsUtils.analysis_submission_count
+    @studies_created = SummaryStatsUtils.study_creation_count
+
+    # get number of ingest runs for the day
+    @ingest_runs = SummaryStatsUtils.ingest_run_count
+
+    # disk usage
+    @disk_stats = SummaryStatsUtils.disk_usage
+
+    # storage sanity check
+    @missing_files = SummaryStatsUtils.storage_sanity_check
+
+    mail(to: @admins, subject: "[Single Cell Portal Admin Notification#{Rails.env != 'production' ? " (#{Rails.env})" : nil}]: Nightly Server Report for #{@today}") do |format|
+      format.html { render layout: 'nightly_admin_report' }
+    end
+  end
 end

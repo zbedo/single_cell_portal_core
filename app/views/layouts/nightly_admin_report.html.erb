@@ -1,0 +1,41 @@
+<html>
+  <head>
+    <meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
+    <style type="text/css">
+      div.stats {
+        float: left;
+        margin-right: 25px;
+      }
+
+      div.clear {
+        clear: both;
+        margin-bottom: 15px;
+      }
+
+      table {
+        border: 1px solid black;
+        min-width: 400px;
+        border-collapse: collapse
+      }
+
+
+      th {
+        text-align: left;
+        background-color: #c0c0c0;
+      }
+
+      th.first {
+        width: 75%;
+      }
+
+      table th, table td {
+        padding: 10px;
+      }
+
+    </style>
+
+  </head>
+  <body>
+    <%= yield %>
+  </body>
+</html>
