@@ -2,8 +2,6 @@ import React from 'react';
 import * as ReactAll from 'react';
 import { mount } from 'enzyme';
 
-const fetch = require('node-fetch');
-
 import Study from 'components/Study';
 
 const facetMatchedStudy = {
