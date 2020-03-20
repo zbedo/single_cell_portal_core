@@ -27,14 +27,18 @@ export default function SearchQueryDisplay({terms, facets}) {
   if (hasFacets) {
     let FacetContainer = (props) => <>{props.children}</>
     if (hasTerms) {
-      FacetContainer = (props) => <><span className="join-text"> AND </span>({props.children})</>
+      FacetContainer = props => (<>
+          <span className="join-text"> AND </span>({props.children})
+        </>)
     }
 
     const facetElements = facets.map((facet, index) => {
       return (<span key={index}>
         (
           <span className="facet-name">{facet.id}: </span>
-          { formattedJoinedList(facet.filters.map(filter => filter.name), 'filter-name', ' OR ')}
+          { formattedJoinedList(facet.filters.map(filter => filter.name),
+                                'filter-name',
+                                ' OR ')}
         )
         { (index != facets.length - 1) &&
           <span className="join-text"> AND </span>}
@@ -51,5 +55,9 @@ export default function SearchQueryDisplay({terms, facets}) {
       termsDisplay = <span>({termsDisplay})</span>
     }
   }
-  return <div className="search-query"> <FontAwesomeIcon icon={faSearch} />: {termsDisplay}{facetsDisplay}</div>
+  return (
+    <div className="search-query">
+      <FontAwesomeIcon icon={faSearch} />: {termsDisplay}{facetsDisplay}
+    </div>
+  )
 }

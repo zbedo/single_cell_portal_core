@@ -68,7 +68,15 @@
     word-wrap: break-word;
   }
   .cell-count {
-    background-color: green;
+    background-color: #74ae43;
+    font-weight: normal;
+  }
+  .facet-match {
+    background-color: #fff;
+    margin-left: 0.5em;
+    color: #74ae43;
+    border: 1px solid #74ae43;
+    font-weight: normal;
   }
   &.inferred-match {
     border-left: 4px dotted #bbb;
@@ -84,6 +92,7 @@
       color: #888;
     }
   }
+
 }
 .pagination{
   text-align: center;
