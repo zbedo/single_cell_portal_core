@@ -11,26 +11,20 @@ export function formatDescription(rawDescription, term) {
   return shortenDescription(textDescription, term)
 }
 
-function highlightText(text, termMatches) {
-  const matchedIndices = []
+export function highlightText(text, termMatches) {
+  let matchedIndices = []
   if (termMatches) {
+    matchedIndices=termMatches.map(term => text.indexOf(term))
+  }
+  if (matchedIndices.length>0) {
     termMatches.forEach((term, index) => {
-      let match
       const regex = RegExp(term, 'gi')
-      // Find indices where match occured
-      while ((match = regex.exec(text)) != null) {
-        matchedIndices.push(match.index)
-      }
+      text = text.replace(regex, `<span id='highlight'>${term}</span>`)
     })
-    if (matchedIndices.length>0) {
-      termMatches.forEach((term, index) => {
-        const regex = RegExp(term, 'gi')
-        text = text.replace(regex, `<span id='highlight'>${term}</span>`)
-      })
-    }
   }
   return { styledText: text, matchedIndices }
 }
+
 
 function shortenDescription(textDescription, term) {
   const { styledText, matchedIndices } = highlightText(textDescription, term)
