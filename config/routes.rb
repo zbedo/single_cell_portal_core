@@ -245,6 +245,11 @@ Rails.application.routes.draw do
     get 'privacy_policy', to: 'site#privacy_policy', as: :privacy_policy
     get 'terms_of_service', to: 'site#terms_of_service', as: :terms_of_service
     get '/', to: 'site#index', as: :site
+
+    # let react routing handle app and all subpaths under 'app'
+    get 'app', to: 'site#index'
+    get 'app/*path', to: 'site#index'
+
     root to: 'site#index'
   end
 end

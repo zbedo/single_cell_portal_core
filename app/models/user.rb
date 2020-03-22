@@ -97,7 +97,8 @@ class User
   field :feature_flags, default: {}
 
   DEFAULT_FEATURE_FLAGS = {
-    "faceted_search" => false
+    "faceted_search" => false,
+    "linkable_gene_search" => true  # feature flag for easy revert, NOT intended for per-user toggling
   }
 
   ###
@@ -283,6 +284,14 @@ class User
     else
       DEFAULT_FEATURE_FLAGS[flag_key]
     end
+  end
+
+  # returns feature_flags_with_defaults for the user, or the default flags if no user is given
+  def self.feature_flags_for_user(user)
+    if user.nil?
+      return DEFAULT_FEATURE_FLAGS
+    end
+    user.feature_flags_with_defaults
   end
 
   # helper method to migrate study ownership & shares from old email to new email
