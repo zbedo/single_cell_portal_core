@@ -16,8 +16,9 @@ function main {
     GIT_BRANCH="master"
     PASSENGER_APP_ENV="production"
     BOOT_COMMAND="bin/remote_deploy.sh"
+    SCP_REPO="https://github.com/broadinstitute/single_cell_portal_core.git"
 
-    while getopts "p:s:r:e:b:d:h:S:H" OPTION; do
+    while getopts "p:s:r:e:b:d:h:S:u:H" OPTION; do
         case $OPTION in
             p)
                 PORTAL_SECRETS_VAULT_PATH="$OPTARG"
@@ -42,6 +43,9 @@ function main {
                 ;;
             S)
                 SSH_KEYFILE="$OPTARG"
+                ;;
+            u)
+                SSH_USER="$OPTARG"
                 ;;
             H)
                 echo "$usage"
@@ -85,6 +89,9 @@ function main {
     echo "export SERVICE_ACCOUNT_KEY=/home/app/webapp/config/$SERVICE_ACCOUNT_FILENAME" >> $CONFIG_FILENAME
     echo "export READ_ONLY_SERVICE_ACCOUNT_KEY=/home/app/webapp/config/$READ_ONLY_SERVICE_ACCOUNT_FILENAME" >> $CONFIG_FILENAME
     echo "### COMPLETED ###"
+
+    # init repo if this is the first deploy on this host
+    run_remote_command "if [ ! -d .git ]; then rm -rf ./* && git clone $SCP_REPO .; fi"
 
     # move secrets to remote host
     echo "### migrating secrets to remote host ###"
@@ -136,6 +143,7 @@ function run_remote_command {
 function copy_file_to_remote {
     LOCAL_FILEPATH="$1"
     REMOTE_FILEPATH="$2"
+    $SSH_COMMAND "mkdir -p \$(dirname $REMOTE_FILEPATH)"
     cat $LOCAL_FILEPATH | $SSH_COMMAND "cat > $REMOTE_FILEPATH"
 }
 
