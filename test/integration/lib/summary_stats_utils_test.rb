@@ -22,7 +22,7 @@ class SummaryStatsUtilsTest < ActiveSupport::TestCase
     assert_equal expected_user_count, user_stats[:active]
 
     # exercise cutoff date
-    user_stats = SummaryStatsUtils.total_and_active_user_counts(cutoff_date: @one_week_ago)
+    user_stats = SummaryStatsUtils.total_and_active_user_counts(end_date: @one_week_ago)
     assert_equal 0, user_stats[:total]
     assert_equal 0, user_stats[:active]
 
@@ -40,7 +40,7 @@ class SummaryStatsUtilsTest < ActiveSupport::TestCase
     assert_equal 1, submission_count
 
     # exercise cutoff date
-    submission_count = SummaryStatsUtils.analysis_submission_count(start_date: @one_month_ago, cutoff_date: @one_week_ago)
+    submission_count = SummaryStatsUtils.analysis_submission_count(start_date: @one_month_ago, end_date: @one_week_ago)
     assert_equal 0, submission_count
 
     # clean up
@@ -57,7 +57,7 @@ class SummaryStatsUtilsTest < ActiveSupport::TestCase
     assert_equal expected_study_count, studies_created
 
     # exercise cutoff date
-    studies_created = SummaryStatsUtils.study_creation_count(cutoff_date: @one_week_ago)
+    studies_created = SummaryStatsUtils.study_creation_count(end_date: @one_week_ago)
     assert_equal 0, studies_created
 
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
@@ -104,7 +104,7 @@ class SummaryStatsUtilsTest < ActiveSupport::TestCase
     ingest_runs = SummaryStatsUtils.ingest_run_count
     assert ingest_runs > 0, "Should have found at least one ingest run for today, instead found: #{ingest_runs}"
     tomorrow = @today + 1.day
-    runs_tomorrow = SummaryStatsUtils.ingest_run_count(start_date: tomorrow, cutoff_date: tomorrow)
+    runs_tomorrow = SummaryStatsUtils.ingest_run_count(start_date: tomorrow, end_date: tomorrow)
     assert_equal 0, runs_tomorrow, "Should not have found any ingest runs for tomorrow: #{runs_tomorrow}"
 
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"

@@ -40,19 +40,19 @@
     <tbody>
     <tr>
       <td>Total Disk Size</td>
-      <td><%= @disk_stats[:total_space] %></td>
+      <td><%= number_to_human_size(@disk_stats[:total_space]) %></td>
     </tr>
     <tr>
       <td>Allocated</td>
-      <td><%= @disk_stats[:space_used] %></td>
+      <td><%= number_to_human_size(@disk_stats[:space_used]) %></td>
     </tr>
     <tr>
       <td>Free</td>
-      <td><%= @disk_stats[:space_free] %></td>
+      <td><%= number_to_human_size(@disk_stats[:space_free]) %></td>
     </tr>
     <tr>
       <td>Percent Used</td>
-      <td><%= @disk_stats[:percent_used] %></td>
+      <td><%= @disk_stats[:percent_used] %>%</td>
     </tr>
     </tbody>
   </table>
