@@ -252,9 +252,9 @@ class SingleCellMailer < ApplicationMailer
     @two_weeks_ago = @today - 2.weeks
 
     # get user, submission, and study stats
-    @user_stats = SummaryStatsUtils.total_and_active_user_counts
+    @user_stats = SummaryStatsUtils.daily_total_and_active_user_counts
     @submissions = SummaryStatsUtils.analysis_submission_count
-    @studies_created = SummaryStatsUtils.study_creation_count
+    @studies_created = SummaryStatsUtils.daily_study_creation_count
 
     # get number of ingest runs for the day
     @ingest_runs = SummaryStatsUtils.ingest_run_count

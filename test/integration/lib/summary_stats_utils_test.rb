@@ -16,13 +16,13 @@ class SummaryStatsUtilsTest < ActiveSupport::TestCase
     # manually update all user's current_sign_in_at to mimic sign_in
     User.update_all(current_sign_in_at: @now)
     expected_user_count = User.count
-    user_stats = SummaryStatsUtils.total_and_active_user_counts
+    user_stats = SummaryStatsUtils.daily_total_and_active_user_counts
     assert_equal [:total, :active], user_stats.keys
     assert_equal expected_user_count, user_stats[:total]
     assert_equal expected_user_count, user_stats[:active]
 
     # exercise cutoff date
-    user_stats = SummaryStatsUtils.total_and_active_user_counts(end_date: @one_week_ago)
+    user_stats = SummaryStatsUtils.daily_total_and_active_user_counts(end_date: @one_week_ago)
     assert_equal 0, user_stats[:total]
     assert_equal 0, user_stats[:active]
 
@@ -53,11 +53,11 @@ class SummaryStatsUtilsTest < ActiveSupport::TestCase
     puts "#{File.basename(__FILE__)}: #{self.method_name}"
 
     expected_study_count = Study.count
-    studies_created = SummaryStatsUtils.study_creation_count
+    studies_created = SummaryStatsUtils.daily_study_creation_count
     assert_equal expected_study_count, studies_created
 
     # exercise cutoff date
-    studies_created = SummaryStatsUtils.study_creation_count(end_date: @one_week_ago)
+    studies_created = SummaryStatsUtils.daily_study_creation_count(end_date: @one_week_ago)
     assert_equal 0, studies_created
 
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"

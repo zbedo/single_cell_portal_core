@@ -7,7 +7,7 @@ class SummaryStatsUtils
 
   # get a snapshot of user counts/activity up to a given date
   # will give count of users as of that date, and number of active users on that date
-  def self.total_and_active_user_counts(end_date: Time.zone.today)
+  def self.daily_total_and_active_user_counts(end_date: Time.zone.today)
     # make sure to make end_date one day forward to include any users that were created on cutoff date
     next_day = end_date + 1.day
     total_users = User.where(:created_at.lte => next_day).count
@@ -22,7 +22,7 @@ class SummaryStatsUtils
   end
 
   # get a count of all studies created on the requested day
-  def self.study_creation_count(end_date: Time.zone.today)
+  def self.daily_study_creation_count(end_date: Time.zone.today)
     Study.where(:created_at => (end_date..(end_date + 1.day))).count
   end
 
