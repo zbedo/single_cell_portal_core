@@ -66,6 +66,10 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   end
 
   # Returns a list of all pipelines run in this project
+  # Note: the 'filter' parameter is broken for this method and is not supported here
+  #
+  # * *params*
+  #   - +page_token+ (String) => Request next page of results using token
   #
   # * *return*
   #   - (Google::Apis::GenomicsV2alpha1::ListOperationsResponse)
@@ -74,8 +78,8 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   #   - (Google::Apis::ServerError) => An error occurred on the server and the request can be retried
   #   - (Google::Apis::ClientError) =>  The request is invalid and should not be retried without modification
   #   - (Google::Apis::AuthorizationError) => Authorization is required
-  def list_pipelines(filter: nil, page_token: nil)
-    self.service.list_project_operations("projects/#{COMPUTE_PROJECT}/operations", filter: filter, page_token: page_token)
+  def list_pipelines(page_token: nil)
+    self.service.list_project_operations("projects/#{COMPUTE_PROJECT}/operations", page_token: page_token)
   end
 
   # Runs a pipeline.  Will call sub-methods to instantiate required objects to pass to
