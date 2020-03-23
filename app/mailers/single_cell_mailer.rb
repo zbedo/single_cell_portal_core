@@ -54,7 +54,7 @@ class SingleCellMailer < ApplicationMailer
     @portal_row = portal_disk.split
     @table_header.slice!(-1)
     @data_disk_row = `df -h /home/app/webapp/data`.split("\n").last.split
-    mail(to: @users, subject: "Single Cell Portal Disk Usage for #{Date.today.to_s}") do |format|
+    mail(to: @users, subject: "Single Cell Portal Disk Usage for #{Time.zone.today.to_s}") do |format|
       format.html
     end
   end
@@ -248,7 +248,7 @@ class SingleCellMailer < ApplicationMailer
   # collect usage statistics for the given day and email admins
   def nightly_admin_report
     @admins = User.where(admin: true).map(&:email)
-    @today = Date.today
+    @today = Time.zone.today
     @two_weeks_ago = @today - 2.weeks
 
     # get user, submission, and study stats

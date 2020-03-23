@@ -4,7 +4,7 @@ class SummaryStatsUtilsTest < ActiveSupport::TestCase
 
   def setup
     @now = DateTime.now
-    @today = Date.today
+    @today = Time.zone.today
     @one_week_ago = @today - 1.week
     @one_month_ago = @today - 1.month
     @random_seed = File.open(Rails.root.join('.random_seed')).read.strip
