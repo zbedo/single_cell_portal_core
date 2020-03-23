@@ -1,8 +1,8 @@
 /* eslint-disable require-jsdoc */
 import React from 'react'
 
-const descriptionWordLimit = 750
-const summaryWordLimit = 150
+export const descriptionWordLimit = 750
+export const summaryWordLimit = 150
 const lengthOfHighlightTag = 21
 
 /* converts description into text snippet */
@@ -26,7 +26,7 @@ export function highlightText(text, termMatches) {
 }
 
 
-function shortenDescription(textDescription, term) {
+export function shortenDescription(textDescription, term) {
   const { styledText, matchedIndices } = highlightText(textDescription, term)
   const suffixTag = <span className="detail"> ...(continued)</span>
 
@@ -49,21 +49,21 @@ function shortenDescription(textDescription, term) {
       //  Need to recaluculate index positions because added html changes size of textDescription
       const beginningTextIndex= (amountOfMatchesInSummaryWordLimit *(lengthOfHighlightTag+term.length))
       const displayedBeginningText = { __html: styledText.slice(0, beginningTextIndex+summaryWordLimit) }
-      return <><span dangerouslySetInnerHTML={displayedBeginningText}></span> <span className="detail">... </span><span dangerouslySetInnerHTML={displayedStudyDescription}></span>{suffixTag}</>
+      return <><span id = 'openingText' dangerouslySetInnerHTML={displayedBeginningText}></span> <span className="detail">... </span><span id = 'studyDescription' dangerouslySetInnerHTML={displayedStudyDescription}></span>{suffixTag}</>
     }
     const displayedBeginningText = styledText.slice(0, summaryWordLimit)
-    return <><span>{displayedBeginningText} </span><span className="detail">... </span> <span dangerouslySetInnerHTML={displayedStudyDescription}></span>{suffixTag}</>
+    return <><span id = 'openingText'>{displayedBeginningText} </span><span className="detail">... </span> <span id = 'studyDescription' dangerouslySetInnerHTML={displayedStudyDescription}></span>{suffixTag}</>
   }
   const displayedStudyDescription = { __html: styledText.slice(0, descriptionWordLimit) }
   if (textDescription.length>descriptionWordLimit) {
-    return <><span dangerouslySetInnerHTML={displayedStudyDescription}></span>{suffixTag}</>
+    return <><span id = 'studyDescription' dangerouslySetInnerHTML={displayedStudyDescription}></span>{suffixTag}</>
   } else {
-    return <><span dangerouslySetInnerHTML={displayedStudyDescription}></span></>
+    return <><span id = 'studyDescription' dangerouslySetInnerHTML={displayedStudyDescription}></span></>
   }
 }
 
 /* removes html tags from a string */
-function stripTags(rawString) {
+export function stripTags(rawString) {
   const tempDiv = document.createElement('div')
   // Set the HTML content with the provided
   tempDiv.innerHTML = rawString
@@ -78,7 +78,7 @@ function facetMatchBadges(study) {
     return <></>
   }
   const matched_keys = Object.keys(matches)
-                       .filter(key => key != 'facet_search_weight')
+    .filter(key => key != 'facet_search_weight')
   return (<>
     { matched_keys.map((key, index) => {
       const helpText = `Metadata match for ${key}`
