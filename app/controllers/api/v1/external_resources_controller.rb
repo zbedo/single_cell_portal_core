@@ -64,7 +64,7 @@ module Api
           key :tags, [
               'ExternalResources'
           ]
-          key :summary, 'Find a ExternalResource'
+          key :summary, 'Find an ExternalResource'
           key :description, 'Finds a single Study'
           key :operationId, 'study_external_resource_path'
           parameter do
@@ -113,7 +113,7 @@ module Api
           key :tags, [
               'ExternalResources'
           ]
-          key :summary, 'Create a ExternalResource'
+          key :summary, 'Create an ExternalResource'
           key :description, 'Creates and returns a single ExternalResource'
           key :operationId, 'create_study_external_resource_path'
           parameter do
@@ -171,7 +171,7 @@ module Api
           key :tags, [
               'ExternalResources'
           ]
-          key :summary, 'Update a ExternalResource'
+          key :summary, 'Update an ExternalResource'
           key :description, 'Updates and returns a single ExternalResource.'
           key :operationId, 'update_study_external_resource_path'
           parameter do
@@ -235,7 +235,7 @@ module Api
           key :tags, [
               'ExternalResources'
           ]
-          key :summary, 'Delete a ExternalResource'
+          key :summary, 'Delete an ExternalResource'
           key :description, 'Deletes a single ExternalResource'
           key :operationId, 'delete_study_external_resource_path'
           parameter do
