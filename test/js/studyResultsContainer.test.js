@@ -22,6 +22,6 @@ describe('<StudyResults/> rendering>', () => {
   it('should render <StudyResults/> elements', () => {
     const wrapper = mount(<StudyResults changePage ={props.changePage} results={props.results}/>)
     expect(wrapper.find(PagingControl)).toHaveLength(2)
-    expect(wrapper.find(Study)).toHaveLength(1)
+    expect(wrapper.find(Study)).toHaveLength(props.results.studies.length)
   })
 })
