@@ -76,6 +76,14 @@ function logClickButton(target) {
 }
 
 /**
+ * Log front-end error (e.g. uncaught ReferenceError)
+ */
+export function logError(text) {
+  const props = { text: text }
+  log('error', props)
+}
+
+/**
  * Get label elements for an input element
  *
  * From https://stackoverflow.com/a/15061155

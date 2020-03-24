@@ -5,6 +5,7 @@ import { StudySearchContext } from 'components/search/StudySearchProvider'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTimesCircle } from '@fortawesome/free-solid-svg-icons'
 import { SearchSelectionContext } from './search/SearchSelectionProvider'
+import { withErrorBoundary } from 'lib/ErrorBoundary'
 
 /**
  * Converts string value to lowercase, hyphen-delimited version
@@ -17,7 +18,7 @@ function slug(value) {
 /**
  * Button for facets, and associated functions
  */
-export default function FacetControl(props) {
+function RawFacetControl(props) {
   const [showFilters, setShowFilters] = useState(false)
 
   const facetName = props.facet.name
@@ -121,3 +122,6 @@ export default function FacetControl(props) {
     </span>
   )
 }
+
+const FacetControl = withErrorBoundary(RawFacetControl)
+export default FacetControl
