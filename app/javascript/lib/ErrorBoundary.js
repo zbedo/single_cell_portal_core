@@ -32,6 +32,7 @@ export default class ErrorBoundary extends Component {
   render() {
     if (this.state.error) {
       // consider using node_env to decide whether or not to render the full trace
+      // See related ticket SCP-2237
       return (
         <div className="alert-danger text-center error-boundary">
           <span className="font-italic ">Something went wrong.</span><br/>
