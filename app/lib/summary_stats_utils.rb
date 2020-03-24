@@ -61,14 +61,18 @@ class SummaryStatsUtils
   # since the "filter" parameter for list_project_operations doesn't work, check dates manually.
   # defaults to current day
   def self.ingest_run_count(start_date: Time.zone.today, end_date: Time.zone.today + 1.day)
+    # make sure we only look at instances of runs for this schema (e.g. exclude test from staging/prod)
+    schema = Mongoid::Config.clients["default"]["database"]
     ingest_jobs = 0
     jobs = ApplicationController.papi_client.list_pipelines
     all_from_range = false
     until all_from_range
       jobs.operations.each do |job|
         submission_date = Date.parse(job.metadata['startTime'])
+        # use `dig` to avoid NoMethodError
+        database_name = job.metadata.dig('pipeline', 'environment', 'DATABASE_NAME')
         if submission_date >= start_date && submission_date <= end_date
-          ingest_jobs += 1
+          ingest_jobs += 1 if schema == database_name
         else
           all_from_range = true
           break
