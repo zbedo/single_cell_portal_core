@@ -1,7 +1,7 @@
 import React, { useContext, useState } from 'react'
 import _cloneDeep from 'lodash/cloneDeep'
 import _isEqual from 'lodash/isEqual'
-import { Router, navigate } from '@reach/router'
+import { navigate, useLocation } from '@reach/router'
 import * as queryString from 'query-string'
 
 import {
@@ -22,6 +22,11 @@ const emptySearch = {
   isError: false,
 
   updateSearch: () => {
+    throw new Error(
+      'You are trying to use this context outside of a Provider container'
+    )
+  },
+  performSearch: () => {
     throw new Error(
       'You are trying to use this context outside of a Provider container'
     )
@@ -73,14 +78,16 @@ export function useContextStudySearch() {
   * fires route navigate on changes to params
   */
 export function PropsStudySearchProvider(props) {
-  const defaultState = _cloneDeep(emptySearch)
-  defaultState.updateSearch = updateSearch
-  const [searchState, setSearchState] = useState(defaultState)
+  let startingState = _cloneDeep(emptySearch)
+  startingState.params = props.searchParams
+  // attach the perform and update methods to the context to avoid prop-drilling
+  startingState.performSearch = performSearch
+  startingState.updateSearch = updateSearch
+  const [searchState, setSearchState] = useState(startingState)
   const searchParams = props.searchParams
 
   /**
    * Update search parameters in URL
-   *
    * @param {Object} newParams Parameters to update
    */
   async function updateSearch(newParams) {
@@ -92,18 +99,18 @@ export function PropsStudySearchProvider(props) {
     navigate(`?${queryString}`)
   }
 
-  /** perform the actual API search */
-  async function performSearch(params) {
+  /** perform the actual API search based on current params */
+  async function performSearch() {
     // reset the scroll in case they scrolled down to read prior results
     window.scrollTo(0, 0)
 
     const results = await fetchSearch('study',
-      params.terms,
-      params.facets,
-      params.page)
+      searchParams.terms,
+      searchParams.facets,
+      searchParams.page)
 
     setSearchState({
-      params,
+      params: searchParams,
       isError: false,
       isLoading: false,
       isLoaded: true,
@@ -112,12 +119,8 @@ export function PropsStudySearchProvider(props) {
     })
   }
 
-  // Search done on initial page load
-  if (!_isEqual(searchParams, searchState.params) ||
-      !searchState.isLoading &&
-      !searchState.isLoaded) {
-    performSearch(searchParams)
-
+  if (!_isEqual(searchParams, searchState.params)) {
+    performSearch()
     setSearchState({
       params: searchParams,
       isError: false,
@@ -136,30 +139,23 @@ export function PropsStudySearchProvider(props) {
   )
 }
 
+
 /**
  * Self-contained component for providing a url-routable
  * StudySearchContext and rendering children.
  * The routing is all via query params
  */
 export default function StudySearchProvider(props) {
-  // create a wrapper component for the search display since <Router>
-  // assumes that all of its unwrapped children (even nested) be routes
-  const SearchRoute = routerProps => {
-    const queryParams = queryString.parse(routerProps.location.search)
-    const searchParams = {
-      page: queryParams.page ? queryParams.page : 1,
-      terms: queryParams.terms ? queryParams.terms : '',
-      facets: buildFacetsFromQueryString(queryParams.facets)
-    }
-    return (
-      <PropsStudySearchProvider searchParams={searchParams}>
-        {props.children}
-      </PropsStudySearchProvider>
-    )
+  const location = useLocation()
+  const queryParams = queryString.parse(location.search)
+  const searchParams = {
+    page: queryParams.page ? queryParams.page : 1,
+    terms: queryParams.terms ? queryParams.terms : '',
+    facets: buildFacetsFromQueryString(queryParams.facets)
   }
   return (
-    <Router>
-      <SearchRoute default/>
-    </Router>
+    <PropsStudySearchProvider searchParams={searchParams}>
+      {props.children}
+    </PropsStudySearchProvider>
   )
 }

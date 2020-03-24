@@ -25,7 +25,7 @@
   }
 }
 
-#search-panel {
+nav.search-links, #search-panel {
   a {
     cursor: pointer;
     text-decoration: none;
@@ -36,6 +36,25 @@
       background: lighten($action-color, 50%);
     }
   }
+}
+
+
+ nav.search-links {
+  a {
+    padding: 0.5em 1em 0.25em 1em;
+    font-size: larger;
+    display: inline-block;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    &.active {
+      background-color: #fff;
+      color: #333;
+      border-bottom: 2px solid #333;
+    }
+  }
+}
+
+#search-panel {
   .facet{
     display: inline-block;
     margin-right: 8px;
