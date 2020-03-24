@@ -3,12 +3,12 @@ import { mount } from 'enzyme'
 import { highlightText, shortenDescription, descriptionWordLimit, summaryWordLimit, stripTags } from '../../app/javascript/components/Study'
 
 
-const text = 'Study: Single nucleus RNA-seq of cell diversity in the adult mouse hippocampus (sNuc-Seq)'
-const highlightedText = 'Study: Single <span id=\'highlight\'>nucleus</span> RNA-seq of cell <span id=\'highlight\'>diversity</span> in the adult mouse hippocampus (sNuc-Seq)'
-const unMatchedTerms = ['tuberculosis', 'population']
-const matchedTerms = ['nucleus', 'and', 'diversity']
-
 describe('highlightText', () => {
+  const text = 'Study: Single nucleus RNA-seq of cell diversity in the adult mouse hippocampus (sNuc-Seq)'
+  const highlightedText = 'Study: Single <span id=\'highlight\'>nucleus</span> RNA-seq of cell <span id=\'highlight\'>diversity</span> in the adult mouse hippocampus (sNuc-Seq)'
+  const unMatchedTerms = ['tuberculosis', 'population']
+  const matchedTerms = ['nucleus', 'and', 'diversity']
+
   it('returns unaltered text when there are no matches', () => {
     const unHighlightedText = highlightText(text, unMatchedTerms).styledText
     expect(unHighlightedText).toEqual(text)
@@ -38,23 +38,35 @@ note that Release data is not corrected for batch-effects, but is stratified by 
   it('shortens description for study descriptions > 170 characters', () => {
     const expectedText = text.slice(0, descriptionWordLimit)
     const keywordTerms = []
-    const actualText = mount(shortenDescription(text, keywordTerms)).find('#studyDescription').text()
+    const actualText = mount(shortenDescription(text, keywordTerms)).find('.studyDescription').text()
     expect(expectedText).toEqual(actualText)
   })
 
 
   // Matches are within 750 character boundary
-  // it('shortens description for study descriptions > 170 characters', () => {
-  //   const expectedText = 'This study presents an example analysis of a decidua dataset from the Human Cell Atlas (HCA) \
-  //   Data Coordination Platform (DCP) Project entitled "Reconstructing the human first trimester fetal-maternal     \
-  //   interface using single cell transcriptomics". It is part of the HCA March 2020 Release (INSERT Link to the DCP page)     \
-  //   and showcases HCA single-cell data that were processed with standardized DCP pipelines, further analyzed by Cumulus (LINK)      \
-  //   , and annotated using published annotations. In this study, you can explore the biological and technical attributes of the analyzed HCA DCP data.      \
-  //   Additionally, you can view all HCA Release study pages and'
-  //   const actualText = mount(shortenDescription(text, ['study']))
-  //   console.log(actualText.find('span'))
-  //   expect(actualText.find('span')[0].text()).toEqual(expectedText)
-  // })
+  it('show matches when matches are within 750 character boundary', () => {
+    const expectedText = 'This study presents an example analysis of an eye (retina) dataset from the Human Cell Atlas (HCA) Data Coordination Platform (DCP) Project entitled "A single-cell transcriptome\
+ atlas of the adult human retina". It is part of the HCA March 2020 Release (INSERT Link to the DCP page)\
+ and showcases HCA single-cell data that wereprocessed with standardized DCP pipelines, further analyzed by\
+ Cumulus (LINK), and annotated using published annotations. In this study, you can explore the biological and\
+ technical attributes of the analyzed HCA DCP data. Additionally, you can view all HCA Release study pages and\
+ search genes across all projects by visiting the Single C'
+    const wrapper = mount(shortenDescription(text, ['study']))
+    // Find span tag with openingText
+    const openingTextSpan= wrapper.find('span').findWhere(n => n.hasClass('openingText'))
+    // Opening text should not exist
+    expect(openingTextSpan).toHaveLength(0)
+
+    // Find span with matched text
+    const matchedDescription= wrapper.find('span').findWhere(n => n.hasClass('studyDescription'))
+    expect(matchedDescription).toHaveLength(1)
+    const actualMatchedDescription = matchedDescription.text()
+    expect(actualMatchedDescription).toEqual(expectedText)
+  })
+
+  it('shows opening text and mataches outside of 750 charcter boundary', () => {
+
+  })
 
   // Matches are outside of 750 charcter boundary
 

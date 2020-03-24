@@ -49,16 +49,16 @@ export function shortenDescription(textDescription, term) {
       //  Need to recaluculate index positions because added html changes size of textDescription
       const beginningTextIndex= (amountOfMatchesInSummaryWordLimit *(lengthOfHighlightTag+term.length))
       const displayedBeginningText = { __html: styledText.slice(0, beginningTextIndex+summaryWordLimit) }
-      return <><span id = 'openingText' dangerouslySetInnerHTML={displayedBeginningText}></span> <span className="detail">... </span><span id = 'studyDescription' dangerouslySetInnerHTML={displayedStudyDescription}></span>{suffixTag}</>
+      return <><span className = 'openingText' dangerouslySetInnerHTML={displayedBeginningText}></span> <span className="detail">... </span><span id = 'studyDescription' dangerouslySetInnerHTML={displayedStudyDescription}></span>{suffixTag}</>
     }
     const displayedBeginningText = styledText.slice(0, summaryWordLimit)
-    return <><span id = 'openingText'>{displayedBeginningText} </span><span className="detail">... </span> <span id = 'studyDescription' dangerouslySetInnerHTML={displayedStudyDescription}></span>{suffixTag}</>
+    return <><span className = 'openingText'>{displayedBeginningText} </span><span className="detail">... </span> <span id = 'studyDescription' dangerouslySetInnerHTML={displayedStudyDescription}></span>{suffixTag}</>
   }
   const displayedStudyDescription = { __html: styledText.slice(0, descriptionWordLimit) }
   if (textDescription.length>descriptionWordLimit) {
-    return <><span id = 'studyDescription' dangerouslySetInnerHTML={displayedStudyDescription}></span>{suffixTag}</>
+    return <><span className = 'studyDescription' dangerouslySetInnerHTML={displayedStudyDescription}></span>{suffixTag}</>
   } else {
-    return <><span id = 'studyDescription' dangerouslySetInnerHTML={displayedStudyDescription}></span></>
+    return <><span className = 'studyDescription' dangerouslySetInnerHTML={displayedStudyDescription}></span></>
   }
 }
 
