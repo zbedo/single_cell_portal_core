@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef, useContext } from 'react'
 import FiltersBoxSearchable from './FiltersBoxSearchable'
 import { StudySearchContext } from 'components/search/StudySearchProvider'
+import { getDisplayNameForFacet } from 'components/search/SearchFacetProvider'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTimesCircle } from '@fortawesome/free-solid-svg-icons'
 import { SearchSelectionContext } from './search/SearchSelectionProvider'
@@ -88,7 +89,7 @@ function RawFacetControl(props) {
     }
   }, [])
 
-  let controlContent = facetName
+  let controlContent = getDisplayNameForFacet(props.facet.id)
   if (selectedFilterString) {
     controlContent =
       <>

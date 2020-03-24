@@ -1,6 +1,6 @@
 /* eslint-disable require-jsdoc */
 import React from 'react'
-
+import { getDisplayNameForFacet } from 'components/search/SearchFacetProvider'
 const descriptionWordLimit = 750
 const summaryWordLimit = 150
 const lengthOfHighlightTag = 21
@@ -96,7 +96,7 @@ function facetMatchBadges(study) {
           {
             matches[key].map(filter => {
               if (filter.min) { // numeric facet
-                return `${key} ${filter.min}-${filter.max} ${filter.unit}`
+                return `${getDisplayNameForFacet(key)} ${filter.min}-${filter.max} ${filter.unit}`
               } else {
                 return filter.name
               }

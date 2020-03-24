@@ -70,6 +70,6 @@ describe('Facet match badges', () => {
       <Study study={numericFacetMatchedStudy}/>
     ))
     expect(wrapper.find('.facet-match').length).toEqual(1)
-    expect(wrapper.find('.facet-match').first().text().trim()).toEqual('organism_age 30-50 years')
+    expect(wrapper.find('.facet-match').first().text().trim()).toEqual('organism age 30-50 years')
   })
 })
