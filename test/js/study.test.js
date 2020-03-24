@@ -1,11 +1,11 @@
 import React from 'react'
 import { mount } from 'enzyme'
-import { highlightText, shortenDescription, descriptionWordLimit } from '../../app/javascript/components/Study'
+import { highlightText, shortenDescription, descriptionCharacterLimit } from '../../app/javascript/components/Study'
 
 
 describe('highlightText', () => {
   const text = 'Study: Single nucleus RNA-seq of cell diversity in the adult mouse hippocampus (sNuc-Seq)'
-  const highlightedText = 'Study: Single <span id=\'highlight\'>nucleus</span> RNA-seq of cell <span id=\'highlight\'>diversity</span> in the adult mouse hippocampus (sNuc-Seq)'
+  const expectedHighlightedText = 'Study: Single <span id=\'highlight\'>nucleus</span> RNA-seq of cell <span id=\'highlight\'>diversity</span> in the adult mouse hippocampus (sNuc-Seq)'
   const unMatchedTerms = ['tuberculosis', 'population']
   const matchedTerms = ['nucleus', 'and', 'diversity']
 
@@ -14,13 +14,13 @@ describe('highlightText', () => {
     expect(unhighlightedText).toEqual(text)
   })
   it('returns highlighted text', () => {
-    const matchIndexes = matchedTerms.map(term => text.indexOf(term))
+    const expectedMatchIndices = matchedTerms.map(term => text.indexOf(term))
     const { styledText, matchedIndices } = highlightText(text, matchedTerms)
 
     // Check terms were matched in the correct place
-    expect(matchedIndices).toEqual(matchIndexes)
+    expect(matchedIndices).toEqual(expectedMatchIndices)
     // Check text highlighted properly
-    expect(styledText).toEqual(highlightedText)
+    expect(styledText).toEqual(expectedHighlightedText)
   })
 })
 
@@ -35,13 +35,12 @@ view all HCA Release study pages and search genes across all projects by visitin
 note that Release data is not corrected for batch-effects, but is stratified by organ and (in some cases) developmental stage as described below. '
 
   // For default state where there are no keyword search inquiries
-  it('shortens description for study descriptions > 170 characters', () => {
-    const expectedText = text.slice(0, descriptionWordLimit)
+  it('shortens description for study descriptions > descriptionCharacterLimit', () => {
+    const expectedText = text.slice(0, descriptionCharacterLimit)
     const keywordTerms = []
     const actualText = mount(shortenDescription(text, keywordTerms)).find('.studyDescription').text()
-    expect(expectedText).toEqual(actualText)
+    expect(actualText).toEqual(expectedText)
   })
-
 
   // Matches are within 750 character boundary
   it('show matches when matches are within 750 character boundary', () => {
@@ -54,12 +53,12 @@ note that Release data is not corrected for batch-effects, but is stratified by 
     const keywordTerms = ['study']
     const wrapper = mount(shortenDescription(text, keywordTerms))
     // Find span tag with openingText
-    const openingTextSpan= wrapper.find('span').findWhere(n => n.hasClass('openingText'))
+    const openingTextSpan= wrapper.find('span.openingText')
     // Span tag for opening text should not exist
     expect(openingTextSpan).toHaveLength(0)
 
     // Find span with matched text
-    const matchedDescription= wrapper.find('span').findWhere(n => n.hasClass('studyDescription'))
+    const matchedDescription= wrapper.find('span.studyDescription')
     expect(matchedDescription).toHaveLength(1)
     const actualMatchedDescription = matchedDescription.text()
     expect(actualMatchedDescription).toEqual(expectedText)
@@ -73,14 +72,14 @@ note that Release data is not corrected for batch-effects, but is stratified by 
     const wrapper = mount(shortenDescription(text, keywordTerms))
 
     // Find span tag with openingText
-    const openingTextSpan= wrapper.find('span').findWhere(n => n.hasClass('openingText'))
+    const openingTextSpan= wrapper.find('span.openingText')
     expect(openingTextSpan).toHaveLength(1)
     const actualopeningText = openingTextSpan.text()
     expect(actualopeningText).toEqual(expectedOpeningText)
 
 
     // Find span with matched text
-    const matchedDescription= wrapper.find('span').findWhere(n => n.hasClass('studyDescription'))
+    const matchedDescription= wrapper.find('span.studyDescription')
     expect(matchedDescription).toHaveLength(1)
     const actualMatchedDescription = matchedDescription.text()
     expect(actualMatchedDescription).toEqual(expectedMatchedDescription)
