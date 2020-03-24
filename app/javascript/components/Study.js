@@ -19,7 +19,7 @@ export function highlightText(text, termMatches) {
   if (matchedIndices.length>0) {
     termMatches.forEach((term, index) => {
       const regex = RegExp(term, 'gi')
-      text = text.replace(regex, `<span id='highlight'>${term}</span>`)
+      text = text.replace(regex, `<span class='highlight'>${term}</span>`)
     })
   }
   return { styledText: text, matchedIndices }
