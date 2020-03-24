@@ -50,6 +50,10 @@ module Api
           key :description, 'DirectoryListing operations'
         end
         tag do
+          key :name, 'ExternalResources'
+          key :description, 'Study publication/data link operations'
+        end
+        tag do
           key :name, 'Schemas'
           key :description, 'Descriptions of SCP model schemas'
         end
@@ -85,11 +89,13 @@ module Api
           StudyFileBundle,
           Taxon,
           AnalysisConfiguration,
+          ExternalResource,
           Api::V1::StudiesController,
           Api::V1::StudyFilesController,
           Api::V1::StudyFileBundlesController,
           Api::V1::StudySharesController,
           Api::V1::DirectoryListingsController,
+          Api::V1::ExternalResourcesController,
           Api::V1::SchemasController,
           Api::V1::TaxonsController,
           Api::V1::StatusController,
