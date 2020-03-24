@@ -4,7 +4,7 @@
 # note: all instances of :start_date and :end_date are inclusive
 ##
 class SummaryStatsUtils
-
+  include Sys
   # get a snapshot of user counts/activity up to a given date
   # will give count of users as of that date, and number of active users on that date
   def self.daily_total_and_active_user_counts(end_date: Time.zone.today)
