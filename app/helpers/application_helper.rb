@@ -353,7 +353,15 @@ module ApplicationHelper
     end
   end
 
-  # Return the user's access token for bulk download of faceted search results
+  # Return read-only service access, for logging events of unregistered users
+  # to Bard, and thus Mixpanel.
+  def get_bard_access_token
+    if Study.read_only_firecloud_client.present?
+      Study.read_only_firecloud_client.valid_access_token["access_token"]
+    end
+  end
+
+  # Return user access token for download of advanced search results
   def get_user_access_token(user)
     if user.present?
       user.valid_access_token[:access_token]

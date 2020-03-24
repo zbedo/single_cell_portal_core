@@ -4,6 +4,8 @@ import React, { useContext } from 'react'
 // so default such cases to a string "test"
 export const accessToken = ('SCP' in window) ? window.SCP.userAccessToken : 'test' // eslint-disable-line max-len
 
+export const bardToken = ('SCP' in window) ? window.SCP.bardToken : 'testBard' // eslint-disable-line max-len
+
 const user = {
   accessToken
 }

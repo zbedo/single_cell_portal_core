@@ -28,6 +28,9 @@
       }
 
       window.SCP.userAccessToken = '<%= get_user_access_token(current_user) %>';
+
+      window.SCP.bardToken = '<%= get_bard_access_token %>';
+
       window.SCP.environment = '<%= Rails.env %>';
 
       // Set the unique cookie for tracking user IDs in GA.  Also used in Mixpanel.

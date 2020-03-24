@@ -97,7 +97,7 @@ class User
   field :feature_flags, default: {}
 
   DEFAULT_FEATURE_FLAGS = {
-    "faceted_search" => false
+    "faceted_search" => true
   }
 
   ###

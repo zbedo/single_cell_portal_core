@@ -5,7 +5,10 @@
  * as well as generic a logging function that integrates with Bard / Mixpanel.
  */
 
-import { accessToken } from './../components/UserProvider'
+import { accessToken, bardToken } from './../components/UserProvider'
+
+console.log('bardToken')
+console.log(bardToken)
 
 const defaultInit = {
   method: 'POST',
