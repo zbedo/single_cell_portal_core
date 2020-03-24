@@ -101,7 +101,7 @@ fi
 echo "*** COMPLETED ***"
 
 echo "*** ADDING NIGHTLY ADMIN EMAIL ***"
-(crontab -u app -l ; echo "55 11 * * * . /home/app/.cron_env ; cd /home/app/webapp/; /home/app/webapp/bin/rails runner -e $PASSENGER_APP_ENV \"SingleCellMailer.nightly_admin_report.deliver_now\" >> /home/app/webapp/log/cron_out.log 2>&1") | crontab -u app -
+(crontab -u app -l ; echo "55 23 * * * . /home/app/.cron_env ; cd /home/app/webapp/; /home/app/webapp/bin/rails runner -e $PASSENGER_APP_ENV \"SingleCellMailer.nightly_admin_report.deliver_now\" >> /home/app/webapp/log/cron_out.log 2>&1") | crontab -u app -
 echo "*** COMPLETED ***"
 
 echo "*** ADDING DAILY RESET OF USER DOWNLOAD QUOTAS ***"
