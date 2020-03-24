@@ -93,7 +93,15 @@ function facetMatchBadges(study) {
           className="badge badge-secondary facet-match"
           data-toggle="tooltip"
           title={helpText}>
-          { matches[key].map(filter => filter.name).join(',') }
+          {
+            matches[key].map(filter => {
+              if (filter.min) { // numeric facet
+                return `${key} ${filter.min}-${filter.max} ${filter.unit}`
+              } else {
+                return filter.name
+              }
+            }).join(',')
+          }
         </span>)
     })}
   </>)
