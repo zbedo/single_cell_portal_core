@@ -10,7 +10,7 @@ describe('highlightText', () => {
   const matchedTerms = ['nucleus', 'and', 'diversity']
 
   it('returns unaltered text when there are no matches', () => {
-    const unHighlightedText = highlightText(text, unMatchedTerms).styledText
+    const unhighlightedText = highlightText(text, unmatchedTerms).styledText
     expect(unHighlightedText).toEqual(text)
   })
   it('returns highlighted text', () => {
