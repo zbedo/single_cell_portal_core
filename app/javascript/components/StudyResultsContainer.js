@@ -12,7 +12,7 @@ export default function StudyResultsContainer(props) {
     <Tab.Container id="result-tabs" defaultActiveKey="study">
       <Tabs defaultActiveKey='study' animation={false} >
         <Tab eventKey='study' title="Studies" >
-          <StudiesResults changePage ={props.changePage} results={props.results} />
+          <StudyResults changePage ={props.changePage} results={props.results} />
         </Tab>
       </Tabs>
     </Tab.Container>
