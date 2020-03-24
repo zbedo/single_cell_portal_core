@@ -10,8 +10,8 @@ describe('highlightText', () => {
   const matchedTerms = ['nucleus', 'and', 'diversity']
 
   it('returns unaltered text when there are no matches', () => {
-    const unhighlightedText = highlightText(text, unmatchedTerms).styledText
-    expect(unHighlightedText).toEqual(text)
+    const unhighlightedText = highlightText(text, unMatchedTerms).styledText
+    expect(unhighlightedText).toEqual(text)
   })
   it('returns highlighted text', () => {
     const matchIndexes = matchedTerms.map(term => text.indexOf(term))
@@ -51,10 +51,11 @@ note that Release data is not corrected for batch-effects, but is stratified by 
  Cumulus (LINK), and annotated using published annotations. In this study, you can explore the biological and\
  technical attributes of the analyzed HCA DCP data. Additionally, you can view all HCA Release study pages and\
  search genes across all projects by visiting the Single C'
-    const wrapper = mount(shortenDescription(text, ['study']))
+    const keywordTerms = ['study']
+    const wrapper = mount(shortenDescription(text, keywordTerms))
     // Find span tag with openingText
     const openingTextSpan= wrapper.find('span').findWhere(n => n.hasClass('openingText'))
-    // Opening text should not exist
+    // Span tag for opening text should not exist
     expect(openingTextSpan).toHaveLength(0)
 
     // Find span with matched text
@@ -64,11 +65,24 @@ note that Release data is not corrected for batch-effects, but is stratified by 
     expect(actualMatchedDescription).toEqual(expectedText)
   })
 
-  it('shows opening text and mataches outside of 750 charcter boundary', () => {
+  it('shows opening text and matches outside of 750 charcter boundary', () => {
+    const expectedOpeningText ='This study presents an example analysis of an eye (retina) dataset from the Human Cell Atlas (HCA) Data Coordination Platform (DCP) Project entitled \" '
+    const expectedMatchedDescription= 'hat Release data is not corrected for batch-effects, but is stratified by organ and (in some cases) developmental stage as described below. '
+    const keywordTerms = ['developmental']
 
+    const wrapper = mount(shortenDescription(text, keywordTerms))
+
+    // Find span tag with openingText
+    const openingTextSpan= wrapper.find('span').findWhere(n => n.hasClass('openingText'))
+    expect(openingTextSpan).toHaveLength(1)
+    const actualopeningText = openingTextSpan.text()
+    expect(actualopeningText).toEqual(expectedOpeningText)
+
+
+    // Find span with matched text
+    const matchedDescription= wrapper.find('span').findWhere(n => n.hasClass('studyDescription'))
+    expect(matchedDescription).toHaveLength(1)
+    const actualMatchedDescription = matchedDescription.text()
+    expect(actualMatchedDescription).toEqual(expectedMatchedDescription)
   })
-
-  // Matches are outside of 750 charcter boundary
-
-  // Matches are within 100 summary work boundary, and outside 750 charcter boundary
 })
