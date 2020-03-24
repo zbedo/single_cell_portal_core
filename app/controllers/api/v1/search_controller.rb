@@ -666,9 +666,12 @@ module Api
         facets.each do |facet|
           search_facet = SearchFacet.find(facet[:object_id])
           # only use non-numeric facets
-          if !search_facet.is_numeric?
-            terms_by_facet[search_facet.identifier] = facet[:filters].map {|filter| filter[:name]}
+          if search_facet.is_numeric?
+            # we can't do inferred matching on numerics, and because the facets are ANDed,
+            # the presence of any numeric facets disables inferred search
+            return {}
           end
+          terms_by_facet[search_facet.identifier] = facet[:filters].map {|filter| filter[:name]}
         end
         terms_by_facet
       end
