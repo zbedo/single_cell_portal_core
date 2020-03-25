@@ -30,6 +30,7 @@ import ClassicEditor from '@ckeditor/ckeditor5-build-classic'
 
 // Below import resolves to '/app/javascript/components/HomePageContent.js'
 import HomePageContent from 'components/HomePageContent'
+import Covid19PageContent from 'components/covid19/Covid19PageContent'
 import { logPageView, logClick } from 'lib/metrics-api'
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -49,6 +50,11 @@ document.addEventListener('DOMContentLoaded', () => {
     $(document).on('click', 'body', event => {
       logClick(event)
     })
+  }
+  if (document.getElementById('covid19-page-content')) {
+    ReactDOM.render(
+      <Covid19PageContent />, document.getElementById('covid19-page-content')
+    )
   }
 })
 

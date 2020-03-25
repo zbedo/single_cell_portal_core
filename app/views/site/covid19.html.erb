@@ -1,0 +1,30 @@
+<div class="mask" id="main-banner">
+  <style>
+    #main-banner {
+      background-image: url(<%=image_url "covid19-banner.png" %>) !important;
+      height: 184px;
+      background-position: left;
+    }
+  </style>
+  <div id="main-banner-logo">
+    <p id='main-banner-tag-line' class="scp-banner-position"></p>
+  </div>
+</div>
+<div class="container-fluid home-page-fix" id="wrap">
+  <div class="row section-pad" id="main-body">
+    <div class="col-md-12">
+      <h4> COVID-19 Studies</h4>
+      <div class="tab-content top-pad">
+        <div id="covid19-page-content"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<input type="hidden" id="feature-flags" value='<%= User.feature_flags_for_user(current_user).to_json %>'/>
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
+    $(document).ready(function() {
+        var main = $('.home-page-fix');
+        var height = main.actual('height');
+        main.css('min-height', height - 245);
+    });
+</script>

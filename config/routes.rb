@@ -246,6 +246,9 @@ Rails.application.routes.draw do
     get 'log_action', to: 'site#log_action', as: :log_action
     get 'privacy_policy', to: 'site#privacy_policy', as: :privacy_policy
     get 'terms_of_service', to: 'site#terms_of_service', as: :terms_of_service
+
+    get 'covid19', to: 'site#covid19'
+
     get '/', to: 'site#index', as: :site
     root to: 'site#index'
   end
