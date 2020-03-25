@@ -28,7 +28,8 @@ class PresetSearchesController < ApplicationController
   # POST /preset_searches
   # POST /preset_searches.json
   def create
-    @preset_search = PresetSearch.new(preset_search_params)
+    serialized_params = serialize_preset_search_params
+    @preset_search = PresetSearch.new(serialized_params)
 
     respond_to do |format|
       if @preset_search.save
@@ -44,8 +45,9 @@ class PresetSearchesController < ApplicationController
   # PATCH/PUT /preset_searches/1
   # PATCH/PUT /preset_searches/1.json
   def update
+    serialized_params = serialize_preset_search_params
     respond_to do |format|
-      if @preset_search.update(preset_search_params)
+      if @preset_search.update(serialized_params)
         format.html { redirect_to @preset_search, notice: 'Stored search was successfully updated.' }
         format.json { render :show, status: :ok, location: @preset_search }
       else
@@ -66,13 +68,37 @@ class PresetSearchesController < ApplicationController
   end
 
   private
-    # Use callbacks to share common setup or constraints between actions.
-    def set_preset_search
-      @preset_search = PresetSearch.find(params[:id])
-    end
+  # Use callbacks to share common setup or constraints between actions.
+  def set_preset_search
+    @preset_search = PresetSearch.find(params[:id])
+  end
 
-    # Never trust parameters from the scary internet, only allow the white list through.
-    def preset_search_params
-      params.require(:preset_search).permit(:name, :identifier, :accession_whitelist, :search_terms, :facet_filters, :public)
+  # Never trust parameters from the scary internet, only allow the white list through.
+  def preset_search_params
+    params.require(:preset_search).permit(:name, :public, :accession_whitelist, :search_terms, :facet_filters)
+  end
+
+  # convert text fields into arrays for saving
+  # TODO: figure out a way to leverage this natively using array serialization w/ forms because this is gross as hell
+  def serialize_preset_search_params
+    form_params = preset_search_params.to_unsafe_hash
+    accessions = form_params[:accession_whitelist].blank? ? [] : form_params[:accession_whitelist].split.map(&:strip)
+    facets = form_params[:facet_filters].blank? ? [] : form_params[:facet_filters].split('+').map(&:strip)
+    terms = []
+    if form_params[:search_terms].present? && form_params[:search_terms].include?("\"")
+      form_params[:search_terms].split("\"").each do |substring|
+        if substring.start_with?(' ') || substring.end_with?(' ')
+          terms += substring.strip.split
+        else
+          terms << substring
+        end
+      end
+    else
+      terms = form_params[:search_terms].split if form_params[:search_terms].present?
     end
+    form_params[:search_terms] = terms.map(&:strip).delete_if(&:blank?)
+    form_params[:accession_whitelist] = accessions
+    form_params[:facet_filters] = facets
+    form_params
+  end
 end

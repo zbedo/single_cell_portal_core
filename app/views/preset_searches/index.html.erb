@@ -35,9 +35,13 @@
               </td>
               <td><%= get_boolean_label(preset_search.public) %></td>
               <td class="actions">
-                <%= scp_link_to "<i class='fas fa-search'></i> Info".html_safe, preset_search_path(preset_search), class: "btn btn-xs btn-info #{preset_search.identifier}-show" %>
-                <%= scp_link_to "<i class='fas fa-edit'></i> Edit".html_safe, edit_preset_search_path(preset_search) , class: "btn btn-xs btn-primary #{preset_search.identifier}-edit" %>
-                <%= scp_link_to "<i class='fas fa-trash'></i> Destroy".html_safe, preset_search_path(preset_search), method: :delete, class: "btn btn-xs btn-danger delete-btn #{preset_search.identifier}-delete" %>
+                <%= scp_link_to "<i class='fas fa-search'></i> Info".html_safe, preset_search_path(preset_search),
+                                class: "btn btn-xs btn-info #{preset_search.identifier}-show" %>
+                <%= scp_link_to "<i class='fas fa-edit'></i> Edit".html_safe, edit_preset_search_path(preset_search),
+                                class: "btn btn-xs btn-primary #{preset_search.identifier}-edit" %>
+                <%= scp_link_to "<i class='fas fa-trash'></i> Destroy".html_safe, preset_search_path(preset_search),
+                                method: :delete, data: {confirm: "Are you sure you want to delete the search '#{preset_search.name}'?"},
+                                class: "btn btn-xs btn-danger delete-btn #{preset_search.identifier}-delete" %>
               </td>
             </tr>
           <% end %>

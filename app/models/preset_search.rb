@@ -26,6 +26,7 @@ class PresetSearch
   validates_presence_of :name
   validates_uniqueness_of :name
   before_validation :set_identifier, on: :create, if: proc {|attributes| attributes[:name].present?}
+  before_validation :sanitize_array_attributes
   validate :ensure_search_terms_are_unique, if: proc {|attributes| attributes[:search_terms].any?}
   validate :ensure_facet_filters_are_unique, if: proc {|attributes| attributes[:facet_filters].any?}
   validate :whitelisted_studies_exist
@@ -86,6 +87,12 @@ class PresetSearch
   # sets a url-safe version of name (for API requests)
   def set_identifier
     self.identifier = self.name.downcase.gsub(/[^a-zA-Z0-9]+/, '-').chomp('-')
+  end
+
+  def sanitize_array_attributes
+    self.accession_whitelist.reject!(&:blank?)
+    self.search_terms.reject!(&:blank?)
+    self.facet_filters.reject!(&:blank?)
   end
 
   # validate all terms are unique - only find duplicates if size mismatch is found on search_terms.uniq call
