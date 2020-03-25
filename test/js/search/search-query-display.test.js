@@ -42,7 +42,7 @@ describe('Search query display text', () => {
     const wrapper = mount((
       <SearchQueryDisplay facets={stringAndNumericFacets} terms={''}/>
     ))
-    expect(wrapper.text().trim()).toEqual(': Metadata contains (species: Homo sapiens OR Mus musculus) AND (organism_age: 14 - 180 years)')
+    expect(wrapper.text().trim()).toEqual(': Metadata contains (species: Homo sapiens OR Mus musculus) AND (organism age: 14 - 180 years)')
   })
 
   it('renders terms', async () => {
