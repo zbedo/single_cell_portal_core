@@ -36,7 +36,7 @@ SecureHeaders::Configuration.default do |config|
       default_src: %w('self'),
       block_all_mixed_content: true, # see http://www.w3.org/TR/mixed-content/
       frame_src: %w('self' https://us.input.tcell.insight.rapid7.com https://us.browser.tcell.insight.rapid7.com
-                     https://us.agent.tcell.insight.rapid7.com), # if child-src isn't supported, the value for frame-src will be set.
+                     https://us.agent.tcell.insight.rapid7.com https://www.google.com), # if child-src isn't supported, the value for frame-src will be set.
       font_src: %w('self' data:),
       form_action: %w('self' https://accounts.google.com),
       connect_src: allowed_connect_sources,
@@ -44,7 +44,7 @@ SecureHeaders::Configuration.default do |config|
       manifest_src: %w('self'),
       object_src: %w('none'),
       script_src: %w('self' blob: 'unsafe-eval' 'unsafe-inline' 'strict-dynamic' https://cdn.plot.ly https://cdn.datatables.net
-                     https://www.google-analytics.com https://cdnjs.cloudflare.com https://maxcdn.bootstrapcdn.com
+                     https://www.google-analytics.com https://www.google.com https://cdnjs.cloudflare.com https://maxcdn.bootstrapcdn.com
                      https://use.fontawesome.com https://api.tcell.io https://us.browser.tcell.insight.rapid7.com
                      https://us.jsagent.tcell.insight.rapid7.com https://us.agent.tcell.insight.rapid7.com https://js-agent.newrelic.com
                      https://bam.nr-data.net),
