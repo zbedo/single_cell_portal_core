@@ -55,6 +55,10 @@ function ApplyButton(props) {
 
 /**
  * Component for filter lists that have Apply and Clear
+ * We should revisit this structure if we ever have to add a
+ * type of control besides filter list and slider
+ * Currently, FiltersBox has to own a lot of logic about canApply and applyClick
+ * handling that is probably better encapsulated in the individual controls
  */
 export default function FiltersBox(props) {
   const searchContext = useContext(StudySearchContext)
