@@ -3,6 +3,8 @@ import React from 'react'
 
 export const descriptionCharacterLimit = 750
 export const summaryWordLimit = 150
+import { getDisplayNameForFacet } from 'components/search/SearchFacetProvider'
+
 const lengthOfHighlightTag = 21
 
 /* converts description into text snippet */
@@ -87,7 +89,15 @@ function facetMatchBadges(study) {
           className="badge badge-secondary facet-match"
           data-toggle="tooltip"
           title={helpText}>
-          { matches[key].map(filter => filter.name).join(',') }
+          {
+            matches[key].map(filter => {
+              if (filter.min) { // numeric facet
+                return `${getDisplayNameForFacet(key)} ${filter.min}-${filter.max} ${filter.unit}`
+              } else {
+                return filter.name
+              }
+            }).join(',')
+          }
         </span>)
     })}
   </>)
