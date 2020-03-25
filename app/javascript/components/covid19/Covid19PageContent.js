@@ -9,12 +9,12 @@ import ErrorBoundary from 'lib/ErrorBoundary'
 /**
  * Wrapper component for search and result panels
  */
-export default function HomePageContent() {
+export default function Covid19PageContent() {
   return (
     <ErrorBoundary>
       <UserProvider>
         <SearchFacetProvider>
-          <StudySearchProvider preset="covid19" >
+          <StudySearchProvider preset_search="covid19" >
             <ErrorBoundary>
               <SearchPanel/>
             </ErrorBoundary>

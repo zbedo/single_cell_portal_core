@@ -172,7 +172,7 @@ export async function fetchDownloadSize(accessions, fileTypes, mock=false) {
  *            {String}  terms: User-supplied query string
  *            {Object}  facets: User-supplied list facets and filters
  *            {Integer} page: User-supplied list facets and filters
- *            {String}  order: User-supplied query ordering field
+ *            {String}  order: User-supplied results ordering field
  *            {String}  preset_search: User-supplied query preset (e.g. 'covid19')
  * @param {Boolean} mock Whether to use mock data
  * @returns {Promise} Promise object containing camel-cased data from API
