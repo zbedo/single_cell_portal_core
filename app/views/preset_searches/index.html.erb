@@ -1,0 +1,65 @@
+<h1>Preset Searches</h1>
+
+<div class="row">
+  <div class="col-md-12">
+    <div class="table-responsive">
+      <div class="well">
+        <table class="table table-striped" id="searches">
+          <thead>
+          <tr>
+            <th>Name</th>
+            <th>Identifier</th>
+            <th>Whitelist</th>
+            <th>Search Terms</th>
+            <th>Facets</th>
+            <th>Public?</th>
+            <th>Actions</th>
+          </tr>
+          </thead>
+
+          <tbody>
+          <% @preset_searches.each do |preset_search| %>
+            <tr>
+              <td><%= preset_search.name %></td>
+              <td><%= preset_search.identifier %></td>
+              <td>
+                <% preset_search.accession_whitelist.each do |accession| %>
+                  <span class="btn btn-default"><%= scp_link_to accession, legacy_study_path(identifier: accession), target: :_blank %></span>
+                <% end %>
+              </td>
+              <td><%= preset_search.search_terms.join(', ') %></td>
+              <td>
+                <% preset_search.matching_facets_and_filters.each do |facet| %>
+                  <%= facet_query_label(facet).html_safe %><br />
+                <% end %>
+              </td>
+              <td><%= get_boolean_label(preset_search.public) %></td>
+              <td class="actions">
+                <%= scp_link_to "<i class='fas fa-search'></i> Info".html_safe, preset_search_path(preset_search), class: "btn btn-xs btn-info #{preset_search.identifier}-show" %>
+                <%= scp_link_to "<i class='fas fa-edit'></i> Edit".html_safe, edit_preset_search_path(preset_search) , class: "btn btn-xs btn-primary #{preset_search.identifier}-edit" %>
+                <%= scp_link_to "<i class='fas fa-trash'></i> Destroy".html_safe, preset_search_path(preset_search), method: :delete, class: "btn btn-xs btn-danger delete-btn #{preset_search.identifier}-delete" %>
+              </td>
+            </tr>
+          <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p><%= scp_link_to "<i class='fas fa-plus'></i> New Preset Search".html_safe, new_preset_search_path,
+                   class: 'btn btn-lg btn-success', id: 'new-preset-search' %></p>
+
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
+
+    $('#searches').dataTable({
+        pagingType: "full_numbers",
+        pageLength: 10,
+        order: [[0, 'asc']],
+        language: {
+            search: "Filter Results By: "
+        }
+    });
+
+</script>

@@ -1,0 +1,47 @@
+<%= form_with(model: preset_search, local: true) do |form| %>
+  <% if preset_search.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(preset_search.errors.count, "error") %> prohibited this preset_search from being saved:</h2>
+
+      <ul>
+      <% preset_search.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= form.label :name %>
+    <%= form.text_field :name %>
+  </div>
+
+  <div class="field">
+    <%= form.label :identifier %>
+    <%= form.text_field :identifier %>
+  </div>
+
+  <div class="field">
+    <%= form.label :accession_whitelist %>
+    <%= form.text_field :accession_whitelist %>
+  </div>
+
+  <div class="field">
+    <%= form.label :search_terms %>
+    <%= form.text_field :search_terms %>
+  </div>
+
+  <div class="field">
+    <%= form.label :facet_filters %>
+    <%= form.text_field :facet_filters %>
+  </div>
+
+  <div class="field">
+    <%= form.label :public %>
+    <%= form.check_box :public %>
+  </div>
+
+  <div class="actions">
+    <%= form.submit %>
+  </div>
+<% end %>
