@@ -1,12 +1,13 @@
-import React from 'react';
-import * as ReactAll from 'react';
-import { mount } from 'enzyme';
+import React from 'react'
+import * as ReactAll from 'react'
+import { mount } from 'enzyme'
 import * as Reach from '@reach/router'
 
-const fetch = require('node-fetch');
+const fetch = require('node-fetch')
 
-import FacetControl from 'components/FacetControl';
-import { PropsStudySearchProvider } from 'components/search/StudySearchProvider';
+import FacetControl from 'components/FacetControl'
+import { PropsStudySearchProvider } from 'components/search/StudySearchProvider'
+import { SearchSelectionContext } from 'components/search/SearchSelectionProvider'
 
 const testNoUnitFacet = {
   name: "bmi",
@@ -16,6 +17,18 @@ const testNoUnitFacet = {
   filters: [],
   unit: null,
   max: 50,
+  min: 1,
+  allUnits: null
+}
+
+const testUnitFacet = {
+  name: "age",
+  type: "number",
+  id: "age",
+  links: [],
+  filters: [],
+  unit: 'years',
+  max: 150,
   min: 1,
   allUnits: null
 }
@@ -46,3 +59,31 @@ describe('Filter slider works with facet with no units', () => {
     expect(routerNav).toHaveBeenLastCalledWith('?type=study&terms=&facets=bmi%3A30%2C50%2C&page=1')
   });
 });
+
+describe('Filter slider behavior', () => {
+  it('handles empty text boxes', async () => {
+    const routerNav = jest.spyOn(Reach, 'navigate')
+
+    let ageFacet = () => {
+      return wrapper.find('#facet-age').first()
+    }
+    const wrapper = mount((
+      <PropsStudySearchProvider searchParams={{terms: '', facets:{age:['', 150, 'years']}, page: 1}}>
+          <FacetControl facet={testUnitFacet}/>
+      </PropsStudySearchProvider>
+    ))
+    ageFacet().find('a').first().simulate('click')
+    expect(ageFacet().find('input[type="number"]').length).toEqual(2)
+    expect(ageFacet().find('input[type="number"]').first().props().value).toEqual('')
+    expect(ageFacet().find('input[type="number"]').last().props().value).toEqual(150)
+    expect(ageFacet().find('button.facet-apply-button').hasClass('active')).toEqual(false)
+
+    ageFacet().find('input[type="number"]').first().simulate('change', {
+      target: {value: 30}
+    })
+    expect(ageFacet().find('button.facet-apply-button').hasClass('active')).toEqual(true)
+    ageFacet().find('button.facet-apply-button').simulate('click')
+    expect(routerNav).toHaveBeenLastCalledWith('?type=study&terms=&facets=age%3A30%2C150%2Cyears&page=1')
+  });
+});
+

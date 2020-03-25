@@ -65,8 +65,12 @@ export default function FiltersBox(props) {
   const selection = props.selection
   const setSelection = props.setSelection
   const showClear = selection.length > 0
-  const canApply = !_isEqual(selection, appliedSelection) ||
-                   props.facet.type === 'number' && appliedSelection.length === 0
+  const isSelectionValid = props.facet.type != 'number' ||
+                             (!isNaN(parseInt(selection[0])) && !isNaN(parseInt(selection[1])))
+
+  const canApply = isSelectionValid &&
+                   (!_isEqual(selection, appliedSelection) ||
+                   props.facet.type === 'number' && appliedSelection.length === 0)
                    // allow application of number filters to default range
 
   const facetId = props.facet.id
