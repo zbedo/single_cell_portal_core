@@ -42,7 +42,7 @@ function RawFacetControl(props) {
       selectedFilterString = selectedFilters[0].name
     } else {
       // it's a numeric range filter
-      selectedFilterString = `${facetName}:
+      selectedFilterString = `${getDisplayNameForFacet(props.facet.id)}:
                               ${appliedSelection[0]}-${appliedSelection[1]}
                               ${appliedSelection[2]}`
     }
