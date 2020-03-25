@@ -261,14 +261,19 @@ module Api
 
         # if a preset search was requested, make sure :accession_whitelist studies are first
         if @preset_search.present? && @preset_search.accession_whitelist.any?
-          # remove from list first so we don't have duplicates
           whitelist = @preset_search.accession_whitelist
-          Rails.logger.info "Prepending #{whitelist.count} studies for preset search: #{@preset_search.name}: #{whitelist}"
-          @studies = @studies.delete_if {|study| whitelist.include?(study.accession)}
-          @studies = Study.where(:accession.in => whitelist).to_a + @studies
-          @matching_accessions = @studies.map(&:accession)
+          # if preset search is only a whitelist, replace search results completely
+          if @preset_search.whitelist_only?
+            Rails.logger.info "Clearing search results due to whitelist-only preset search: #{@preset_search.name}: #{whitelist}"
+            @studies = Study.where(:accession.in => whitelist).to_a
+          else
+            Rails.logger.info "Prepending #{whitelist.count} studies for preset search: #{@preset_search.name}: #{whitelist}"
+            # remove from list first so we don't have duplicates
+            @studies = @studies.delete_if {|study| whitelist.include?(study.accession)}
+            @studies = Study.where(:accession.in => whitelist).to_a + @studies
+          end
         end
-
+        @matching_accessions = @studies.map(&:accession)
         Rails.logger.info "Final list of matching studies: #{@matching_accessions}"
         @results = @studies.paginate(page: params[:page], per_page: Study.per_page)
       end

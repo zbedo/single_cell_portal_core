@@ -65,6 +65,11 @@ class PresetSearch
     Study.where(:accession.in => self.accession_whitelist)
   end
 
+  # helper for determining if this search does not contain keywords/facets
+  def whitelist_only?
+    self.facet_filters.empty? && self.search_terms.empty?
+  end
+
   # get an array of matching facets & filters based off of the facet_filters query string
   # this method mimics SearchController#set_search_facets_and_filters and is needed because
   # the above method runs as a :before_filter and cannot be overridden
