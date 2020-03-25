@@ -345,4 +345,22 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
 
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end
+
+  test 'should run preset search' do
+    puts "#{File.basename(__FILE__)}: #{self.method_name}"
+
+    @preset_search = PresetSearch.first
+    convention_study = Study.find_by(name: "Test Study #{@random_seed}")
+    whitelisted_study = Study.first
+    execute_http_request(:get, api_v1_search_path(type: 'study', preset_search: @preset_search.identifier))
+    assert_response :success
+    preset_accessions = [whitelisted_study.accession, convention_study.accession]
+    assert json['matching_accessions'] == preset_accessions,
+           "Did not return correct studies for preset search; expected #{preset_accessions} but found #{json['matching_accessions']}"
+    found_preset = json['studies'].first
+    assert whitelisted_study.accession == @preset_search.accession_whitelist.first
+    assert found_preset['preset_match'], "Did not correctly mark whitelisted study as preset match; #{found_preset['preset_match']}"
+
+    puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
+  end
 end

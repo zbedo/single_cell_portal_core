@@ -8,6 +8,7 @@ module Api
       before_action :authenticate_api_user!, only: [:create_auth_code, :bulk_download]
       before_action :set_search_facet, only: :facet_filters
       before_action :set_search_facets_and_filters, only: :index
+      before_action :set_preset_search, only: :index
       before_action :set_branding_group, only: :index
 
       swagger_path '/search' do
@@ -41,6 +42,13 @@ module Api
             key :type, :string
           end
           parameter do
+            key :name, :preset_search
+            key :in, :query
+            key :description, 'Identifier of preset/stored query'
+            key :required, false
+            key :type, :string
+          end
+          parameter do
             key :name, :page
             key :in, :query
             key :description, 'Page number for pagination control'
@@ -53,6 +61,14 @@ module Api
             key :description, 'Requested branding group (to filter results on)'
             key :reqired, false
             key :type, :string
+          end
+          parameter do
+            key :name, :order
+            key :in, :query
+            key :description, 'Requested order of results'
+            key :reqired, false
+            key :type, :string
+            key :enum, [:recent, :popular]
           end
           response 200 do
             key :description, 'Search parameters, Studies and StudyFiles'
@@ -146,6 +162,12 @@ module Api
         # variable for determining how we will sort search results for relevance
         sort_type = :none
 
+        # if a user is requested a preset search, override search parameters to load the requested query
+        if @preset_search.present?
+          params[:terms] = @preset_search.keyword_query_string
+
+        end
+
         # if search params are present, filter accordingly
         if params[:terms].present?
           sort_type = :keyword
@@ -192,6 +214,11 @@ module Api
           @studies = @studies.where(:accession.in => @convention_accessions)
         end
 
+        # reset order if user requested a custom ordering
+        if params[:order].present?
+          sort_type = params[:order].to_sym
+        end
+
         # determine sort order for pagination; minus sign (-) means a descending search
         @studies = @studies.to_a
         case sort_type
@@ -201,9 +228,13 @@ module Api
           @studies = @studies.sort_by {|study| possible_accessions.index(study.accession) }
         when :facet
           @studies = @studies.sort_by {|study| -@studies_by_facet[study.accession][:facet_search_weight]}
+        when :recent
+          @studies = @studies.sort_by(&:created_at).reverse
+        when :popular
+          @studies = @studies.sort_by(&:view_count).reverse
         else
           # we have sort_type of :none, so preserve original ordering of :view_order
-          @studies = @studies.sort_by(&:view_order)
+          @studies = @studies.sort_by(&:view_order).reverse
         end
 
         # save list of study accessions for bulk_download/bulk_download_size calls, in order of results
@@ -227,6 +258,15 @@ module Api
             @studies += inferred_studies.sort_by {|study| -study.search_weight(@inferred_terms)[:total] }
           end
         end
+
+        # if a preset search was requested, make sure :accession_whitelist studies are first
+        if @preset_search.present? && @preset_search.accession_whitelist.any?
+          # remove from list first so we don't have duplicates
+          @studies = @studies.delete_if {|study| @preset_search.accession_whitelist.include?(study.accession)}
+          @studies = Study.where(:accession.in => @preset_search.accession_whitelist).to_a + @studies
+          @matching_accessions = @studies.map(&:accession)
+        end
+
         @results = @studies.paginate(page: params[:page], per_page: Study.per_page)
       end
 
@@ -520,6 +560,10 @@ module Api
 
       def set_branding_group
         @selected_branding_group = BrandingGroup.find_by(name_as_id: params[:scpbr])
+      end
+
+      def set_preset_search
+        @preset_search = PresetSearch.find_by(identifier: params[:preset_search])
       end
 
       def set_search_facet

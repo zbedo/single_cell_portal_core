@@ -22,6 +22,9 @@ if @inferred_accessions.present? && @inferred_accessions.include?(study.accessio
   json.set! :term_matches, inferred_weight[:terms].keys
   json.set! :term_search_weight, inferred_weight[:total]
 end
+if @preset_search.present? && @preset_search.accession_whitelist.include?(study.accession)
+  json.set! :preset_match, true
+end
 if study.detached
   json.set! :study_files, 'Unavailable (cannot load study workspace or bucket)'
 else
