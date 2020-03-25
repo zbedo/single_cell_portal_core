@@ -5,7 +5,7 @@ import { highlightText, shortenDescription, descriptionCharacterLimit } from '..
 
 describe('highlightText', () => {
   const text = 'Study: Single nucleus RNA-seq of cell diversity in the adult mouse hippocampus (sNuc-Seq)'
-  const expectedHighlightedText = 'Study: Single <span id=\'highlight\'>nucleus</span> RNA-seq of cell <span id=\'highlight\'>diversity</span> in the adult mouse hippocampus (sNuc-Seq)'
+  const expectedHighlightedText = 'Study: Single <span class=\'highlight\'>nucleus</span> RNA-seq of cell <span class=\'highlight\'>diversity</span> in the adult mouse hippocampus (sNuc-Seq)'
   const unMatchedTerms = ['tuberculosis', 'population']
   const matchedTerms = ['nucleus', 'and', 'diversity']
 
@@ -49,7 +49,7 @@ note that Release data is not corrected for batch-effects, but is stratified by 
  and showcases HCA single-cell data that wereprocessed with standardized DCP pipelines, further analyzed by\
  Cumulus (LINK), and annotated using published annotations. In this study, you can explore the biological and\
  technical attributes of the analyzed HCA DCP data. Additionally, you can view all HCA Release study pages and\
- search genes across all projects by visiting the Single C'
+ search genes across all projects by visiting the'
     const keywordTerms = ['study']
     const wrapper = mount(shortenDescription(text, keywordTerms))
     // Find span tag with openingText
