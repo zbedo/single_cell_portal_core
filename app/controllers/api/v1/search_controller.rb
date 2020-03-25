@@ -165,7 +165,7 @@ module Api
         # if a user is requested a preset search, override search parameters to load the requested query
         if @preset_search.present?
           params[:terms] = @preset_search.keyword_query_string
-
+          @facets = @preset_search.matching_facets_and_filters
         end
 
         # if search params are present, filter accordingly
@@ -262,11 +262,14 @@ module Api
         # if a preset search was requested, make sure :accession_whitelist studies are first
         if @preset_search.present? && @preset_search.accession_whitelist.any?
           # remove from list first so we don't have duplicates
-          @studies = @studies.delete_if {|study| @preset_search.accession_whitelist.include?(study.accession)}
-          @studies = Study.where(:accession.in => @preset_search.accession_whitelist).to_a + @studies
+          whitelist = @preset_search.accession_whitelist
+          Rails.logger.info "Prepending #{whitelist.count} studies for preset search: #{@preset_search.name}: #{whitelist}"
+          @studies = @studies.delete_if {|study| whitelist.include?(study.accession)}
+          @studies = Study.where(:accession.in => whitelist).to_a + @studies
           @matching_accessions = @studies.map(&:accession)
         end
 
+        Rails.logger.info "Final list of matching studies: #{@matching_accessions}"
         @results = @studies.paginate(page: params[:page], per_page: Study.per_page)
       end
 
