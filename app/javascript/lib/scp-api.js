@@ -168,9 +168,12 @@ export async function fetchDownloadSize(accessions, fileTypes, mock=false) {
  * Docs: https:///singlecell.broadinstitute.org/single_cell/api/swagger_docs/v1#!/Search/search_facet_filters_path
  *
  * @param {String} type Type of query to perform (study- or cell-based)
- * @param {String} terms User-supplied query string
- * @param {Object} facets User-supplied list facets and filters
- * @param {Integer} page User-supplied list facets and filters
+ * @param {Object} searchParams  User-supplied search parameters including
+ *            {String}  terms: User-supplied query string
+ *            {Object}  facets: User-supplied list facets and filters
+ *            {Integer} page: User-supplied list facets and filters
+ *            {String}  order: User-supplied query ordering field
+ *            {String}  preset_search: User-supplied query preset (e.g. 'covid19')
  * @param {Boolean} mock Whether to use mock data
  * @returns {Promise} Promise object containing camel-cased data from API
  *
@@ -179,30 +182,34 @@ export async function fetchDownloadSize(accessions, fileTypes, mock=false) {
  * fetchSearch('study', 'tuberculosis');
  */
 export async function fetchSearch(
-  type, terms, facets, page, mock=false
+  type, searchParams, mock=false
 ) {
-  const path = `/search?${buildSearchQueryString(type, terms, facets, page)}`
+  const path = `/search?${buildSearchQueryString(type, searchParams)}`
 
   const searchResults = await scpApi(path, defaultInit, mock)
 
-  logSearch(type, terms, facets, page)
+  logSearch(type, searchParams.terms, searchParams.facets, searchParams.page)
 
   return searchResults
 }
 
-/** Constructs query string used for /search REST API endpoint
+/**
+  * Constructs query string used for /search REST API endpoint
   * auto-appends the branding group if one exists
   */
-export function buildSearchQueryString(type, terms, facets, page) {
-  const facetsParam = buildFacetQueryString(facets)
-  const pageParam = page ? page : 1
+export function buildSearchQueryString(type, searchParams) {
+  const facetsParam = buildFacetQueryString(searchParams.facets)
+  const otherParamString = ['page', 'order', 'terms', 'preset_search'].map(param => {
+    return searchParams[param] ? `&${param}=${searchParams[param]}` : ''
+  }).join('')
 
   let brandingGroupParam = ''
   const brandingGroup = getBrandingGroup()
   if (brandingGroup) {
     brandingGroupParam = `&scpbr=${brandingGroup}`
   }
-  return `type=${type}&terms=${terms}&facets=${facetsParam}&page=${pageParam}${brandingGroupParam}`
+
+  return `type=${type}${otherParamString}${facetsParam}${brandingGroupParam}`
 }
 
 /** Serializes "facets" URL parameter for /search API endpoint */
@@ -210,12 +217,13 @@ function buildFacetQueryString(facets) {
   if (!facets || !Object.keys(facets).length) {
     return ''
   }
-  const rawURL = _compact(Object.keys(facets).map(facetId => {
+  let rawURL = _compact(Object.keys(facets).map(facetId => {
     if (facets[facetId].length) {
       return `${facetId}:${facets[facetId].join(',')}`
     }
   })).join('+')
-  return encodeURIComponent(rawURL) // needed for the + , : characters
+  // encodeURIComponent needed for the + , : characters
+  return `&facets=${encodeURIComponent(rawURL)}`
 }
 
 /** Deserializes "facets" URL parameter into facets object */
