@@ -6,6 +6,7 @@ import { StudySearchContext } from 'components/search/StudySearchProvider'
 import { StudiesResults } from './StudyResultsContainer'
 import SearchQueryDisplay from './SearchQueryDisplay'
 
+
 /**
  * Component for Results displayed on the homepage
  */

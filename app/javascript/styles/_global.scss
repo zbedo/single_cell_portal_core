@@ -1,3 +1,4 @@
+@import './_colors.scss';
 
 /* SCP-specific styles */
 
@@ -630,10 +631,12 @@ h4, .h4, h5, .h5, h6, .h6 {
   display: inline-block;
 }
 .notification-banner{
-  color: white;
   height: 50px;
   padding: 5px;
-  background: #ff5252;
+  background: $warning-background-color;
+  .fa-exclamation-triangle {
+    color: $warning-icon-color;
+  }
 }
 #deployment-form-group{
   padding-bottom: 10px;

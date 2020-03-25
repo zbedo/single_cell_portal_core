@@ -1,6 +1,6 @@
 /* eslint-disable require-jsdoc */
 import React from 'react'
-
+import { getDisplayNameForFacet } from 'components/search/SearchFacetProvider'
 const descriptionWordLimit = 750
 const summaryWordLimit = 150
 const lengthOfHighlightTag = 21
@@ -77,18 +77,48 @@ function stripTags(rawString) {
   return tempDiv.textContent || ''
 }
 
+/* generate a badge for each matched facet, containing the filter names */
+function facetMatchBadges(study) {
+  const matches = study.facet_matches
+  if (!matches) {
+    return <></>
+  }
+  const matched_keys = Object.keys(matches)
+                       .filter(key => key != 'facet_search_weight')
+  return (<>
+    { matched_keys.map((key, index) => {
+      const helpText = `Metadata match for ${key}`
+      return (
+        <span key={index}
+          className="badge badge-secondary facet-match"
+          data-toggle="tooltip"
+          title={helpText}>
+          {
+            matches[key].map(filter => {
+              if (filter.min) { // numeric facet
+                return `${getDisplayNameForFacet(key)} ${filter.min}-${filter.max} ${filter.unit}`
+              } else {
+                return filter.name
+              }
+            }).join(',')
+          }
+        </span>)
+    })}
+  </>)
+}
+
 /* displays a brief summary of a study, with a link to the study page */
 export default function Study({ study }) {
   const { term_matches, facets } = study
   const studyTitle= highlightText(study.name, term_matches).styledText
   const studyDescription = formatDescription(study.description, term_matches)
   const displayStudyTitle = { __html: studyTitle }
+
   let inferredBadge = <></>
   if (study.inferred_match) {
     const helpText = `${study.term_matches.join(', ')} was not found in study metadata, only in study title or description`
     inferredBadge = <span className="badge soft-badge" data-toggle="tooltip" title={helpText}>text match only</span>
   }
-
 
   return (
     <>
@@ -100,6 +130,7 @@ export default function Study({ study }) {
           <span className='badge badge-secondary cell-count'>
             {study.cell_count} Cells
           </span>
+          { facetMatchBadges(study) }
         </div>
         {studyDescription}
       </div>

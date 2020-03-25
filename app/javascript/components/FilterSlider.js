@@ -99,7 +99,7 @@ export default function FilterSlider(props) {
         style={{ 'width': '60px', 'marginRight': '8px' }}
       />
       { unitControl }
-      <div style={{ height: 120, width: '100%' }}>
+      <div style={{ height: 60, width: '100%' }}>
         <Slider
           mode={1}
           step={1}

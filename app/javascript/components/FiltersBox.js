@@ -6,6 +6,21 @@ import { StudySearchContext } from 'components/search/StudySearchProvider'
 import { SearchSelectionContext } from './search/SearchSelectionProvider'
 import Filters from './Filters'
 
+
+// To consider: Get opinions, perhaps move to a UI code style guide.
+//
+// Systematic, predictable IDs help UX research and UI development.
+//
+// Form of IDs: <general name> <specific name(s)>
+// General name: All lowercase, specified in app code (e.g. 'apply-facet')
+// Specific name(s): Cased as specified in API (e.g. 'NCBITaxon_9606')
+//
+// UI code concatenates names in the ID.  Names in ID are hyphen-delimited.
+//
+// Examples:
+//   * apply-facet-species (for calls-to-action use ID: <action> <component>)
+//   * filter-species-NCBITaxon_9606
+
 /**
  * Component that can be clicked to unselect filters
  */
@@ -50,21 +65,10 @@ export default function FiltersBox(props) {
   const selection = props.selection
   const setSelection = props.setSelection
   const showClear = selection.length > 0
-  const canApply = !_isEqual(selection, appliedSelection)
+  const canApply = !_isEqual(selection, appliedSelection) ||
+                   props.facet.type === 'number' && appliedSelection.length === 0
+                   // allow application of number filters to default range
 
-  // TODO: Get opinions, perhaps move to a UI code style guide.
-  //
-  // Systematic, predictable IDs help UX research and UI development.
-  //
-  // Form of IDs: <general name> <specific name(s)>
-  // General name: All lowercase, specified in app code (e.g. 'apply-facet')
-  // Specific name(s): Cased as specified in API (e.g. 'NCBITaxon_9606')
-  //
-  // UI code concatenates names in the ID.  Names in ID are hyphen-delimited.
-  //
-  // Examples:
-  //   * apply-facet-species (for calls-to-action use ID: <action> <component>)
-  //   * filter-species-NCBITaxon_9606
   const facetId = props.facet.id
   const componentName = 'filters-box'
   const filtersBoxId = `${componentName}-${facetId}`
@@ -75,8 +79,19 @@ export default function FiltersBox(props) {
    */
   function handleApplyClick() {
     if (!canApply) return
-
-    selectionContext.performSearch()
+    if (props.facet.type === 'number' &&
+        appliedSelection.length === 0 &&
+        selection.length === 0) {
+      // case where a user clicks apply without changing the slider
+      let defaultSelection = [
+        props.facet.min,
+        props.facet.max,
+        props.facet.unit
+      ]
+      selectionContext.updateFacet(props.facet.id, defaultSelection, true)
+    } else {
+      selectionContext.performSearch()
+    }
     if (props.setShow) {
       props.setShow(false)
     }

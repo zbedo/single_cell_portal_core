@@ -1392,84 +1392,31 @@ class Study
     filepath
   end
 
-  # perform a sanity check to look for any missing files in remote storage
-  def self.storage_sanity_check
-    puts 'Performing global storage sanity check for all studies'
-    start_time = Time.zone.now
-    @missing_files = []
-    self.where(queued_for_deletion: false, detached: false).each do |study|
-      puts "Performing check for '#{study.name}'"
-      puts "Beginning with study_files"
-      # begin with study_files
-      files = study.study_files.where(queued_for_deletion: false, human_data: false, :parse_status.ne => 'parsing', status: 'uploaded')
-      study_remotes = []
-      # get all remotes at once, rather than individually to save time & memory
-      begin
-        remotes = Study.firecloud_client.execute_gcloud_method(:get_workspace_files, 0, study.bucket_id)
-        study_remotes += remotes
-        while remotes.next?
-          remotes = remotes.next
-          study_remotes += remotes
-        end
-        files.each do |file|
-          file_location = file.bucket_location
-          puts "Checking file: #{file_location}"
-          # if file has no generation tag, then we know the upload failed
-          if file.generation.blank?
-            puts "#{file_location} was never uploaded to #{study.bucket_id} (no generation tag)"
-            @missing_files << {filename: file_location, study: study.name, owner: study.user.email, reason: "File was never uploaded to #{study.bucket_id} (no generation tag)"}
-            # push the file to firecloud using UploadCleanupJob, which will retry on failure
-            Delayed::Job.enqueue(UploadCleanupJob.new(study, file, 0), run_at: Time.zone.now)
-          else
-            match = study_remotes.detect {|remote| remote.name == file_location}
-            if match.nil?
-              puts "#{file_location} not found in #{study.bucket_id}"
-              @missing_files << {filename: file_location, study: study.name, owner: study.user.email, reason: "File missing from bucket: #{study.bucket_id}"}
-            elsif match.generation.to_s != file.generation.to_s
-              puts "#{file_location} generation tag mismatch - local: #{file.generation}, remote: #{match.generation}"
-              @missing_files << {filename: file_location, study: study.name, owner: study.user.email, reason: "generation tag mismatch - local: #{file.generation}, remote: #{match.generation}"}
-            end
-          end
-        end
-        # next check directory_listings
-        directories = study.directory_listings.are_synced
-        directories.each do |directory|
-          puts "Checking directory: #{directory.name}"
-          directory.files.each do |file|
-            file_location = file['name']
-            puts "Checking directory file: #{file_location}"
-            match = study_remotes.detect {|remote| remote.name == file_location}
-            if match.nil?
-              puts "#{file_location} not found in #{study.bucket_id}"
-              @missing_files << {filename: file_location, study: study.name, owner: study.user.email, reason: "File missing from bucket: #{study.bucket_id}"}
-            elsif match.generation.to_s != file[:generation].to_s
-              puts "#{file_location} generation tag mismatch - local: #{file[:generation]}, remote: #{match.generation}"
-              @missing_files << {filename: file_location, study: study.name, owner: study.user.email, reason: "generation tag mismatch - local: #{file[:generation]}, remote: #{match.generation}"}
-            end
-          end
-        end
-      rescue => e
-        # check if the bucket or the workspace is missing and mark study accordingly
-        study.set_study_detached_state(e)
-        ErrorTracker.report_exception(e, nil, {})
-        puts "#{Time.zone.now}: error in retrieving remotes for #{study.name}: #{e.message}"
-        @missing_files << {filename: 'N/A', study: study.name, owner: study.user.email, reason: "Error retrieving remotes: #{e.message}"}
+  # check if all files for this study are still present in the bucket
+  # does not check generation tags for consistency - this is just a presence check
+  def verify_all_remotes
+    missing = []
+    files = self.study_files.where(queued_for_deletion: false, human_data: false, :parse_status.ne => 'parsing', status: 'uploaded')
+    directories = self.directory_listings.are_synced
+    all_locations = files.map(&:bucket_location)
+    all_locations += directories.map {|dir| dir.files.map {|file| file['name']}}.flatten
+    remotes = Study.firecloud_client.execute_gcloud_method(:get_workspace_files, 0, self.bucket_id)
+    if remotes.next?
+      remotes = [] # don't use bucket list of files, instead verify each file individually
+    end
+    all_locations.each do |file_location|
+      match = self.verify_remote_file(remotes: remotes, file_location: file_location)
+      if match.nil?
+        missing << {filename: file_location, study: self.name, owner: self.user.email, reason: "File missing from bucket: #{self.bucket_id}"}
       end
     end
-    end_time = Time.zone.now
-    seconds_diff = (start_time - end_time).to_i.abs
-    hours = seconds_diff / 3600
-    seconds_diff -= hours * 3600
-    minutes = seconds_diff / 60
-    seconds_diff -= minutes * 60
-    seconds = seconds_diff
-    puts "Sanity check complete! elapsed time: #{hours} hours, #{minutes} minutes, #{seconds} seconds"
-    puts "Missing files found: #{@missing_files.size}"
-    if @missing_files.any?
-      SingleCellMailer.sanity_check(@missing_files).deliver_now
-    else
-      SingleCellMailer.admin_notification('Sanity check results: All files accounted for', nil, '<p>No missing files found!</p>').deliver_now
-    end
+    missing
+  end
+
+  # quick check to see if a single file is still in the study's bucket
+  # can use cached list of bucket files, or check bucket directly
+  def verify_remote_file(remotes:, file_location:)
+    remotes.any? ? remotes.detect {|remote| remote.name == file_location} : Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, self.bucket_id, file_location)
   end
 
   ###

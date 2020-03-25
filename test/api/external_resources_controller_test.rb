@@ -1,6 +1,6 @@
 require 'api_test_helper'
 
-class StudySharesControllerTest < ActionDispatch::IntegrationTest
+class ExternalResourcesControllerTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
   include Requests::JsonHelpers
   include Requests::HttpHelpers
@@ -9,7 +9,7 @@ class StudySharesControllerTest < ActionDispatch::IntegrationTest
     @random_seed = File.open(Rails.root.join('.random_seed')).read.strip
     @user = User.first
     @study = Study.find_by(name: "API Test Study #{@random_seed}")
-    @study_share = @study.study_shares.first
+    @external_resource = @study.external_resources.first
     OmniAuth.config.mock_auth[:google_oauth2] = OmniAuth::AuthHash.new({
                                                                            :provider => 'google_oauth2',
                                                                            :uid => '123545',
@@ -20,18 +20,18 @@ class StudySharesControllerTest < ActionDispatch::IntegrationTest
 
   test 'should get index' do
     puts "#{File.basename(__FILE__)}: #{self.method_name}"
-    execute_http_request(:get, api_v1_study_study_shares_path(@study))
+    execute_http_request(:get, api_v1_study_external_resources_path(@study))
     assert_response :success
-    assert json.size >= 1, 'Did not find any study_shares'
+    assert json.size >= 1, 'Did not find any external_resources'
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end
 
-  test 'should get study share' do
+  test 'should get external resource' do
     puts "#{File.basename(__FILE__)}: #{self.method_name}"
-    execute_http_request(:get, api_v1_study_study_share_path(study_id: @study.id, id: @study_share.id))
+    execute_http_request(:get, api_v1_study_external_resource_path(study_id: @study.id, id: @external_resource.id))
     assert_response :success
     # check all attributes against database
-    @study_share.attributes.each do |attribute, value|
+    @external_resource.attributes.each do |attribute, value|
       if attribute =~ /_id/
         assert json[attribute] == JSON.parse(value.to_json), "Attribute mismatch: #{attribute} is incorrect, expected #{JSON.parse(value.to_json)} but found #{json[attribute.to_s]}"
       elsif attribute =~ /_at/
@@ -44,31 +44,34 @@ class StudySharesControllerTest < ActionDispatch::IntegrationTest
   end
 
   # create, update & delete tested together to use new object to avoid delete/update running before create
-  test 'should create then update then delete study share' do
+  test 'should create then update then delete external resource' do
     puts "#{File.basename(__FILE__)}: #{self.method_name}"
-    # create study share
-    study_share_attributes = {
-        study_share: {
-            email: 'some.person@gmail.com',
-            permission: 'Reviewer'
+    # create external_resource
+    external_resource_attributes = {
+        external_resource: {
+            url: 'https://www.something.com',
+            title: 'Something'
         }
     }
-    execute_http_request(:post, api_v1_study_study_shares_path(study_id: @study.id), study_share_attributes)
+    execute_http_request(:post, api_v1_study_external_resources_path(study_id: @study.id), external_resource_attributes)
     assert_response :success
-    assert json['email'] == study_share_attributes[:study_share][:email], "Did not set email correctly, expected #{study_share_attributes[:study_share][:email]} but found #{json['email']}"
-    # update study share
-    study_share_id = json['_id']['$oid']
+    assert json['title'] == external_resource_attributes[:external_resource][:title],
+           "Did not set title correctly, expected #{external_resource_attributes[:external_resource][:title]} but found #{json['title']}"
+    # update external_resource
+    external_resource_id = json['_id']['$oid']
+    description = 'This is the description'
     update_attributes = {
-        study_share: {
-            deliver_emails: false
+        external_resource: {
+            description: description
         }
     }
-    execute_http_request(:patch, api_v1_study_study_share_path(study_id: @study.id, id: study_share_id), update_attributes)
+    execute_http_request(:patch, api_v1_study_external_resource_path(study_id: @study.id, id: external_resource_id), update_attributes)
     assert_response :success
-    assert json['deliver_emails'] == update_attributes[:study_share][:deliver_emails], "Did not set deliver_emails correctly, expected #{update_attributes[:study_share][:deliver_emails]} but found #{json['deliver_emails']}"
-    # delete study share
-    execute_http_request(:delete, api_v1_study_study_share_path(study_id: @study.id, id: study_share_id))
-    assert_response 204, "Did not successfully delete study file, expected response of 204 but found #{@response.response_code}"
+    assert json['description'] == update_attributes[:external_resource][:description],
+           "Did not set description correctly, expected #{update_attributes[:external_resource][:description]} but found #{json['description']}"
+    # delete external_resource
+    execute_http_request(:delete, api_v1_study_external_resource_path(study_id: @study.id, id: external_resource_id))
+    assert_response 204, "Did not successfully delete external_resource, expected response of 204 but found #{@response.response_code}"
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end
 end

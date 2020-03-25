@@ -6,6 +6,15 @@ const moreFacetIds = [
   'sex', 'race', 'library_preparation_protocol', 'organism_age'
 ]
 
+/*
+ * this may evolve into something more sophisticated, or with actual
+ * message keys, but for now it just converts snake case to word case
+ * see https://broadworkbench.atlassian.net/browse/SCP-2108
+ */
+export function getDisplayNameForFacet(facetId) {
+  return facetId.replace(/_/gi, ' ')
+}
+
 export const SearchFacetContext = React.createContext({
   defaultFacets: [],
   moreFacets: [],
