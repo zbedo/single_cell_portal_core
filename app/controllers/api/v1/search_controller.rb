@@ -162,19 +162,16 @@ module Api
         # variable for determining how we will sort search results for relevance
         sort_type = :none
 
-        @studies = @viewable
-        # if a user is requested a preset search, merge the search parameters to load the requested query
+        # if a user is requested a preset search, override search parameters to load the requested query
         if @preset_search.present?
-          if @preset_search.keyword_query_string.present?
-            params[:terms] = @preset_search.keyword_query_string
-          end
-          # This probably needs to be a merge -- but we can cross that bridge when we come to it
-          @facets = @preset_search.matching_facets_and_filters
+          params[:terms] = "#{@preset_search.keyword_query_string} #{params[:terms]}".strip
+          @facets = @preset_search.matching_facets_and_filters if @preset_search.search_facets.any?
+          # if whitelist is provided, scope viewable to only those studies
           if @preset_search.accession_whitelist.any?
-            # remove from list first so we don't have duplicates
-            whitelist = @preset_search.accession_whitelist
-            Rails.logger.info "Including studies for preset search: #{@preset_search.name}: #{whitelist}"
-            @studies = Study.where(:accession.in => whitelist)
+            sort_type = :whitelist if params[:terms].blank?
+            @whitelist = @preset_search.accession_whitelist
+            Rails.logger.info "Scoping search results to whitelisted preset search: #{@preset_search.name}: #{@whitelist}"
+            @viewable = @viewable.where(:accession.in => @whitelist)
           end
         end
 
@@ -188,13 +185,13 @@ module Api
           if @search_terms.include?("\"")
             @term_list = self.class.extract_phrases_from_search(query_string: @search_terms)
             logger.info "Performing phrase-based search using #{@term_list}"
-            @studies = self.class.generate_mongo_query_by_context(terms: @term_list, base_studies: @studies,
+            @studies = self.class.generate_mongo_query_by_context(terms: @term_list, base_studies: @viewable,
                                                                   accessions: possible_accessions, query_context: :phrase)
             logger.info "Found #{@studies.count} studies in phrase search: #{@studies.pluck(:accession)}"
           else
             @term_list = @search_terms.split
             logger.info "Performing keyword-based search using #{@term_list}"
-            @studies = self.class.generate_mongo_query_by_context(terms: @search_terms, base_studies: @studies,
+            @studies = self.class.generate_mongo_query_by_context(terms: @search_terms, base_studies: @viewable,
                                                                   accessions: possible_accessions, query_context: :keyword)
             logger.info "Found #{@studies.count} studies in keyword search: #{@studies.pluck(:accession)}"
 
@@ -204,6 +201,8 @@ module Api
           if possible_accessions.size == @term_list.size
             sort_type = :accession
           end
+        else
+          @studies = @viewable
         end
 
         # only call BigQuery if list of possible studies is larger than 0 and we have matching facets to use
@@ -234,6 +233,8 @@ module Api
           @studies = @studies.sort_by {|study| -study.search_weight(@term_list)[:total] }
         when :accession
           @studies = @studies.sort_by {|study| possible_accessions.index(study.accession) }
+        when :whitelist
+          @studies = @studies.sort_by {|study| @whitelist.index(study.accession) }
         when :facet
           @studies = @studies.sort_by {|study| -@studies_by_facet[study.accession][:facet_search_weight]}
         when :recent
@@ -250,7 +251,8 @@ module Api
         logger.info "Total matching accessions from all non-inferred searches: #{@matching_accessions}"
 
         # if a user ran a faceted search, attempt to infer results by converting filter display values to keywords
-        if @facets.any?
+        # Do not run inferred search if we have a preset search with a whitelist
+        if @facets.any? && @whitelist.nil?
           # preserve existing search terms, if present
           facets_to_keywords = @term_list.present? ? {keywords: @term_list.dup} : {}
           facets_to_keywords.merge!(self.class.convert_filters_for_inferred_search(facets: @facets))
@@ -267,6 +269,7 @@ module Api
           end
         end
 
+        @matching_accessions = @studies.map(&:accession)
         Rails.logger.info "Final list of matching studies: #{@matching_accessions}"
         @results = @studies.paginate(page: params[:page], per_page: Study.per_page)
       end
