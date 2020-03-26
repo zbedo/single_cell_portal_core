@@ -124,7 +124,8 @@ class ClusterGroup
   # generate a formatted select box options array that corresponds to all this cluster_group's cell_annotations
   # can be scoped to cell_annotations of a specific type (group, numeric)
   def cell_annotation_select_option(annotation_type=nil, prepend_name=false)
-    annotations = annotation_type.nil? ? self.cell_annotations : self.cell_annotations.select {|annot| annot[:type] == annotation_type}
+    annot_opts = annotation_type.nil? ? self.cell_annotations : self.cell_annotations.select {|annot| annot[:type] == annotation_type}
+    annotations = annot_opts.keep_if {|annot| self.can_visualize_cell_annotation?(annot)}
     annotations.map {|annot| self.formatted_cell_annotation(annot, prepend_name)}
   end
 

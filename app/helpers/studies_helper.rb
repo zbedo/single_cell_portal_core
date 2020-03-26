@@ -45,7 +45,7 @@ module StudiesHelper
       # we need to check for NaN as minmax throws an ArgumentError
       begin
         values.minmax.join(', ')
-      rescue ArgumentError => e
+      rescue ArgumentError
         values.keep_if {|value| !value.to_f.nan?}.minmax.join(', ') + ' (excluding NaN)'
       end
     end
@@ -53,11 +53,17 @@ module StudiesHelper
 
   # helper for displaying sorted, unique values from a given group annotation
   # if there are too many values (> 100), then only a count is displayed
-  def get_sorted_group_values(values)
-    if CellMetadatum::GROUP_VIZ_THRESHOLD === values.size || values.size == 1
-      Naturally.sort(values).join(', ')
-    else
-      "List to long (#{values.size} values)"
+  # does not return anything for numeric annotations
+  def get_sorted_group_values(values:, annotation_type:)
+    if annotation_type.to_sym == :group
+      if CellMetadatum::GROUP_VIZ_THRESHOLD === values.size || values.size == 1
+        Naturally.sort(values).join(', ')
+      else
+        label = "<big><span class='label label-warning' data-toggle='tooltip' " + \
+        "title='Group-based annotations with over 100 groups are not visualized for performance reasons'>" + \
+        "<i class='fas fa-exclamation-triangle'></i> List too long, will not visualize</span></big>"
+        label.html_safe
+      end
     end
   end
 end

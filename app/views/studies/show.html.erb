@@ -143,22 +143,24 @@
         </thead>
         <tbody>
           <% @study.cell_metadata.each do |metadata| %>
+            <% values = metadata.annotation_type == 'group' ? metadata.values : metadata.cell_annotations.values %>
             <tr>
               <td>Cell Metadata</td>
               <td><%= metadata.name %></td>
               <td><%= metadata.annotation_type %></td>
-              <td><%= get_annotation_bounds(values: metadata.values, annotation_type: metadata.annotation_type) %></td>
-              <td><%= get_sorted_group_values(metadata.values) %></td>
+              <td><%= get_annotation_bounds(values: values, annotation_type: metadata.annotation_type) %></td>
+              <td><%= get_sorted_group_values(values: values, annotation_type: metadata.annotation_type) %></td>
             </tr>
           <% end %>
           <% @study.cluster_groups.keep_if {|c| c.cell_annotations.any?}.each do |cluster_group| %>
             <% cluster_group.cell_annotations.each do |annotation| %>
+              <% values = annotation[:type] == 'group' ? annotation[:values] : cluster_group.concatenate_data_arrays(annotation[:name], 'annotations') %>
               <tr>
                 <td class="actions">Cluster Annotation: <%= cluster_group.name %></td>
                 <td><%= annotation[:name] %></td>
                 <td><%= annotation[:type] %></td>
-                <td><%= get_annotation_bounds(values: annotation[:type] == 'group' ? annotation[:values] : cluster_group.concatenate_data_arrays(annotation[:name], 'annotations'), annotation_type: annotation[:type]) %></td>
-                <td><%= get_sorted_group_values(annotation[:values]) %></td>
+                <td><%= get_annotation_bounds(values: values, annotation_type: annotation[:type]) %></td>
+                <td><%= get_sorted_group_values(values: values, annotation_type: annotation[:type]) %></td>
               </tr>
             <% end %>
           <% end %>

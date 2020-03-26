@@ -1124,7 +1124,8 @@ class Study
   # dropdowns for selecting annotations.  can be scoped to one specific cluster, or return all with 'Cluster: ' prepended on the name
   def formatted_annotation_select(cluster: nil, annotation_type: nil)
     options = {}
-    metadata = annotation_type.nil? ? self.cell_metadata : self.cell_metadata.where(annotation_type: annotation_type)
+    meta_opts = annotation_type.nil? ? self.cell_metadata : self.cell_metadata.where(annotation_type: annotation_type)
+    metadata = meta_opts.keep_if(&:can_visualize?)
     options['Study Wide'] = metadata.map(&:annotation_select_option)
     if cluster.present?
       options['Cluster-Based'] = cluster.cell_annotation_select_option(annotation_type)

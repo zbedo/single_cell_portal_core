@@ -259,7 +259,7 @@ class IngestJob
     case self.study_file.file_type
     when 'Metadata'
       if self.study.default_options[:annotation].blank?
-        cell_metadatum = study.cell_metadata.first
+        cell_metadatum = study.cell_metadata.keep_if {|meta| meta.can_visualize?}.first
         self.study.default_options[:annotation] = cell_metadatum.annotation_select_value
         if cell_metadatum.annotation_type == 'numeric'
           self.study.default_options[:color_profile] = 'Reds'
@@ -270,7 +270,7 @@ class IngestJob
         cluster = study.cluster_groups.by_name(self.study_file.name)
         self.study.default_options[:cluster] = cluster.name
         if self.study.default_options[:annotation].blank? && cluster.cell_annotations.any?
-          annotation = cluster.cell_annotations.first
+          annotation = cluster.cell_annotations.select {|annot| cluster.can_visualize_cell_annotation?(annot)}.first
           self.study.default_options[:annotation] = cluster.annotation_select_value(annotation)
           if annotation[:type] == 'numeric'
             self.study.default_options[:color_profile] = 'Reds'
