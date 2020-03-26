@@ -70,7 +70,8 @@ export default function FiltersBox(props) {
   const setSelection = props.setSelection
   const showClear = selection.length > 0
   const isSelectionValid = props.facet.type != 'number' ||
-                             (!isNaN(parseInt(selection[0])) && !isNaN(parseInt(selection[1])))
+                             (selection.length === 0 ||
+                              !isNaN(parseInt(selection[0])) && !isNaN(parseInt(selection[1])))
 
   const canApply = isSelectionValid &&
                    (!_isEqual(selection, appliedSelection) ||

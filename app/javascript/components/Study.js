@@ -91,7 +91,7 @@ function facetMatchBadges(study) {
           title={helpText}>
           {
             matches[key].map(filter => {
-              if (filter.min) { // numeric facet
+              if ('min' in filter) { // numeric facet
                 return `${getDisplayNameForFacet(key)} ${filter.min}-${filter.max} ${filter.unit}`
               } else {
                 return filter.name

@@ -35,6 +35,16 @@ const numericFacetMatchedStudy = {
   }
 }
 
+const numericFacetMatchedRange0Study = {
+  name: 'Tuberculosis subtypes in human male blood',
+  description: 'stuff and things',
+  cell_count: 130,
+  facet_matches: {
+    facet_search_weight: 1,
+    organism_age: [{min: 0, max: 50, unit: 'years'}]
+  }
+}
+
 const facetUnmatchedStudy = {
   name: 'Tuberculosis subtypes in human male blood',
   description: 'stuff and things'
@@ -71,5 +81,10 @@ describe('Facet match badges', () => {
     ))
     expect(wrapper.find('.facet-match').length).toEqual(1)
     expect(wrapper.find('.facet-match').first().text().trim()).toEqual('organism age 30-50 years')
+    const wrapper2 = mount((
+      <Study study={numericFacetMatchedRange0Study}/>
+    ))
+    expect(wrapper2.find('.facet-match').length).toEqual(1)
+    expect(wrapper2.find('.facet-match').first().text().trim()).toEqual('organism age 0-50 years')
   })
 })

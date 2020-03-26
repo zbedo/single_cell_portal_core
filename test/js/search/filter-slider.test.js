@@ -46,6 +46,7 @@ describe('Filter slider works with facet with no units', () => {
       </PropsStudySearchProvider>
     ))
     bmiFacet().find('a').first().simulate('click')
+    expect(bmiFacet().find('button.facet-apply-button').hasClass('active')).toEqual(true)
     expect(bmiFacet().find('input[type="number"]').length).toEqual(2)
     expect(bmiFacet().find('input[type="number"]').first().props().value).toEqual(1)
     expect(bmiFacet().find('input[type="number"]').last().props().value).toEqual(50)
