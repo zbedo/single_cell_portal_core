@@ -586,6 +586,10 @@ class Study
       key :type, :boolean
       key :description, 'Indication if match is inferred (e.g. converting facet filter value to keyword search)'
     end
+    property :preset_match do
+      key :type, :boolean
+      key :description, 'Indication this study was whitelisted by a preset search'
+    end
     property :study_files do
       key :type, :object
       key :title, 'StudyFiles'

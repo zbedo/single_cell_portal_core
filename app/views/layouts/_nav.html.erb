@@ -31,6 +31,7 @@
             <% if current_user.admin? %>
               <li><%= link_to "<span class='fas fa-lock fa-fw'></span> Admin Config".html_safe, admin_configurations_path, class: 'check-upload', id: 'admin-nav' %></li>
               <li><%= link_to "<span class='fas fa-flask fa-fw'></span> Analyses".html_safe, analysis_configurations_path, class: 'check-upload', id: 'analysis-nav' %></li>
+              <li><%= link_to "<span class='fas fa-search fa-fw'></span> Preset Searches".html_safe, preset_searches_path, class: 'check-upload', id: 'preset-nav' %></li>
               <li><%= link_to "<span class='fas fa-dna fa-fw'></span> Species".html_safe, taxons_path, class: 'check-upload', id: 'species-nav' %></li>
               <li><%= scp_link_to "<span class='fas fa-copyright fa-fw'></span> Branding Groups".html_safe, branding_groups_path, class: 'check-upload', id: 'branding-groups-nav' %>
             <% end %>

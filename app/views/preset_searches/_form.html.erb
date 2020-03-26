@@ -1,0 +1,79 @@
+<%= form_with(model: preset_search, local: true, html: {class: 'form', id: 'preset-search-form'}) do |form| %>
+  <% if preset_search.errors.any? %>
+    <div class="bs-callout bs-callout-danger">
+      <h4><%= pluralize(preset_search.errors.count, "error") %> prohibited this preset search from being saved:</h4>
+      <ul>
+      <% preset_search.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+      </ul>
+    </div>
+  <% end %>
+  <div class="panel panel-info">
+    <div class="panel-heading">
+      <h4>
+        <a href="#preset-search-help" data-toggle="collapse">
+          Form Instructions <span class="fas fa-chevron-<%= @preset_search.new_record? ? 'down' : 'right' %> toggle-glyph"></span>
+        </a>
+      </h4>
+    </div>
+    <div id="preset-search-help" class="panel-collapse collapse <%= @preset_search.new_record? ? 'in' : nil %>">
+      <div class="panel-body">
+        <h5>Whitelist</h5>
+        <p>
+          Enter study accessions, space-delimited (no commas).  These studies will <strong>always</strong> be returned in results first.<br />
+          <span class="help-block">Example: <code>SCP1 SCP2 SCP3</code></span>
+        </p>
+        <h5>Search Terms</h5>
+        <p>
+          Enter individual terms or "quoted phrases", space-delimited (no commas).  This is used for keyword search.<br/>
+          <span class="help-block">Example: <code>cancer human "COVID-19" "synovial sarcoma"</code></span>
+        </p>
+        <h5>Facets</h5>
+        <p>
+          Enter facet identifers and filter IDs, plus-delimited (+) between facets, colons between identifiers and filters,
+          commas between filter values.
+          <%= link_to "List of Available Facets <i class='fas fa-external-link-alt'></i>".html_safe,
+                      api_swagger_ui_engine_path + '#/Search/search_facets_path',
+                      class: 'btn btn-default btn-xs', target: :_blank %><br />
+          <span class="help-block">Example: <code>disease:MONDO_0000001,MONDO_0018076+species:NCBITaxon_9606,NCBITaxon_10090</code></span>
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="form-group row">
+    <div class="col-sm-4">
+      <%= form.label :name %>
+      <%= form.text_field :name, class: 'form-control', autocomplete: 'no' %>
+    </div>
+    <div class="col-sm-2">
+      <%= form.label :public %>
+      <%= form.select :public, options_for_select([['Yes',1],['No',0]], @preset_search.public? ? 1 : 0), {}, class: 'form-control' %>
+    </div>
+    <div class="col-sm-6">
+      <%= form.label :accession_whitelist, 'Whitelist' %>
+      <%= form.text_field :accession_whitelist, class: 'form-control' %>
+    </div>
+  </div>
+
+  <div class="form-group row">
+    <div class="col-sm-6">
+      <%= form.label :search_terms, 'Search Terms' %>
+      <%= form.text_field :search_terms, value: @preset_search.keyword_query_string, class: 'form-control' %>
+    </div>
+
+    <div class="col-sm-6">
+      <%= form.label :facet_filters, 'Facets' %>
+      <%= form.text_field :facet_filters, value: @preset_search.facet_query_string,class: 'form-control' %>
+    </div>
+  </div>
+
+
+  <div class="form-group row">
+    <div class="col-sm-12">
+      <%= form.submit 'Save', class: 'btn btn-lg btn-success', id: 'save-preset-search' %>
+    </div>
+  </div>
+<% end %>

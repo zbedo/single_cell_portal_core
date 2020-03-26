@@ -76,6 +76,7 @@ else
                     test/integration/taxons_controller_test.rb
                     test/controllers/analysis_configurations_controller_test.rb
                     test/controllers/site_controller_test.rb
+                    test/controllers/preset_searches_controller_test.rb
                     test/api/site_controller_test.rb
                     test/api/studies_controller_test.rb
                     test/api/study_files_controller_test.rb
@@ -88,6 +89,7 @@ else
                     test/models/study_test.rb
                     test/models/analysis_configuration_test.rb
                     test/models/search_facet_test.rb
+                    test/models/preset_search_test.rb
                     test/integration/lib/search_facet_populator_test.rb
                     test/integration/lib/summary_stats_utils_test.rb
                     test/models/big_query_client_test.rb

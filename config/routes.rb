@@ -78,6 +78,7 @@ Rails.application.routes.draw do
     post 'admin/deployment', to: 'admin_configurations#create_deployment_notification', as: :create_deployment_notification
     delete 'admin/deployment', to: 'admin_configurations#delete_deployment_notification', as: :delete_deployment_notification
     resources :admin_configurations, path: 'admin'
+    resources :preset_searches
 
     resources :taxons, path: 'species'
     get 'species/:id/download_genome_annotation', to: 'taxons#download_genome_annotation', as: :download_genome_annotation
