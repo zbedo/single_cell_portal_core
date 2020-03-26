@@ -185,13 +185,13 @@ module Api
           if @search_terms.include?("\"")
             @term_list = self.class.extract_phrases_from_search(query_string: @search_terms)
             logger.info "Performing phrase-based search using #{@term_list}"
-            @studies = self.class.generate_mongo_query_by_context(terms: @term_list, base_studies: @viewable,
+            @studies = self.class.generate_mongo_query_by_context(terms: @term_list, base_studies: @studies,
                                                                   accessions: possible_accessions, query_context: :phrase)
             logger.info "Found #{@studies.count} studies in phrase search: #{@studies.pluck(:accession)}"
           else
             @term_list = @search_terms.split
             logger.info "Performing keyword-based search using #{@term_list}"
-            @studies = self.class.generate_mongo_query_by_context(terms: @search_terms, base_studies: @viewable,
+            @studies = self.class.generate_mongo_query_by_context(terms: @search_terms, base_studies: @studies,
                                                                   accessions: possible_accessions, query_context: :keyword)
             logger.info "Found #{@studies.count} studies in keyword search: #{@studies.pluck(:accession)}"
 
@@ -201,8 +201,6 @@ module Api
           if possible_accessions.size == @term_list.size
             sort_type = :accession
           end
-        else
-          @studies = @viewable
         end
 
         # only call BigQuery if list of possible studies is larger than 0 and we have matching facets to use
@@ -270,6 +268,7 @@ module Api
         end
 
         @matching_accessions = @studies.map(&:accession)
+
         Rails.logger.info "Final list of matching studies: #{@matching_accessions}"
         @results = @studies.paginate(page: params[:page], per_page: Study.per_page)
       end
