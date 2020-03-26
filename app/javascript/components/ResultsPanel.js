@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDna, faExclamationCircle } from '@fortawesome/free-solid-svg-icons'
 
 import { StudySearchContext } from 'components/search/StudySearchProvider'
-import { StudiesResults } from './StudyResultsContainer'
+import { StudyResults } from './StudyResultsContainer'
 import SearchQueryDisplay from './SearchQueryDisplay'
 
 
@@ -31,7 +31,7 @@ const ResultsPanel = props => {
     panelContent =
       <>
         <SearchQueryDisplay terms={results.termList} facets={results.facets}/>
-        <StudiesResults
+        <StudyResults
           results={results}
           changePage={pageNum => {searchContext.updateSearch({ page: pageNum })}}
         />

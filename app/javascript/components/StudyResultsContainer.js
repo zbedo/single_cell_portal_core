@@ -12,7 +12,7 @@ export default function StudyResultsContainer(props) {
     <Tab.Container id="result-tabs" defaultActiveKey="study">
       <Tabs defaultActiveKey='study' animation={false} >
         <Tab eventKey='study' title="Studies" >
-          <StudiesResults changePage ={props.changePage} results={props.results} />
+          <StudyResults changePage ={props.changePage} results={props.results} />
         </Tab>
       </Tabs>
     </Tab.Container>
@@ -23,7 +23,7 @@ export default function StudyResultsContainer(props) {
 /**
  * Component for the content of the 'Studies' tab
  */
-export function StudiesResults(props) {
+export function StudyResults(props) {
   const { results, changePage } = props
   const columns = React.useMemo(
     () => [{
@@ -75,7 +75,7 @@ export function StudiesResults(props) {
           />
         </div>
       </div>
-      <table {...getTableProps({className: 'result-table'})}>
+      <table {...getTableProps({ className: 'result-table' }) }>
         <tbody {...getTableBodyProps()}>
           {rows.map((row, i) => {
             prepareRow(row)

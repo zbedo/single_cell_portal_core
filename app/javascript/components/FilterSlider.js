@@ -38,17 +38,31 @@ export default function FilterSlider(props) {
 
 
   let propsSelection = _clone(props.selection)
+  // propsRange indicates the current numeric range for the slider
+  // it will always be numeric even if the text values are not (e.g. a text box is blank)
   let propsRange = []
   let propsUnit = ''
+  let minTextValue = propsSelection[0]
+  let maxTextValue = propsSelection[1]
 
   if (propsSelection && propsSelection.length === 3) {
     propsRange = propsSelection.slice(0, 2)
-    propsRange = propsRange.map(value => parseInt(value))
+    propsRange = propsRange.map((value, index) => {
+      const intVal = parseInt(value)
+      // convert blanks to min/max as appropriate so the slider can still render
+      if (isNaN(intVal) ) {
+        return domain[index]
+      }
+      return intVal
+    })
     propsUnit = propsSelection[2]
   } else {
     propsRange = domain.slice()
+    minTextValue = min
+    maxTextValue = max
     propsUnit = facet.unit
   }
+
 
   function handleUpdate(update) {
     if ('min' in update) {
@@ -85,7 +99,7 @@ export default function FilterSlider(props) {
         type="number"
         min={min}
         max={max}
-        value={propsRange[0]}
+        value={minTextValue}
         style={{ 'width': '60px' }}
       />
       <span style={{ 'margin': '0 4px 0 4px' }}>-</span>
@@ -95,7 +109,7 @@ export default function FilterSlider(props) {
         type='number'
         min={min}
         max={max}
-        value={propsRange[1]}
+        value={maxTextValue}
         style={{ 'width': '60px', 'marginRight': '8px' }}
       />
       { unitControl }

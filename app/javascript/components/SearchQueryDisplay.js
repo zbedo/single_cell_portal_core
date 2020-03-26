@@ -1,6 +1,7 @@
 import React from 'react'
 import { faSearch } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { getDisplayNameForFacet } from 'components/search/SearchFacetProvider'
 
 
 function formattedJoinedList(itemTexts, itemClass, joinText) {
@@ -28,7 +29,7 @@ function formatFacet(facet, index, numFacets) {
   }
   return (
     <span key={index}>
-      (<span className="facet-name">{facet.id}: </span>
+      (<span className="facet-name">{getDisplayNameForFacet(facet.id)}: </span>
       { facetContent })
       { (index != numFacets - 1) &&
         <span className="join-text"> AND </span>}
