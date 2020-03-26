@@ -13,6 +13,7 @@ import { accessToken } from './../components/UserProvider'
 import {
   logFilterSearch, logSearch, logDownloadAuthorization, mapFiltersForLogging
 } from './scp-api-metrics'
+import * as queryString from 'query-string'
 
 // If true, returns mock data for all API responses.  Only for dev.
 let globalMock = false
@@ -189,11 +190,19 @@ export async function fetchSearch(
   return searchResults
 }
 
-/** Constructs query string used for /search REST API endpoint */
+/** Constructs query string used for /search REST API endpoint
+  * auto-appends the branding group if one exists
+  */
 export function buildSearchQueryString(type, terms, facets, page) {
   const facetsParam = buildFacetQueryString(facets)
   const pageParam = page ? page : 1
-  return `type=${type}&terms=${terms}&facets=${facetsParam}&page=${pageParam}`
+
+  let brandingGroupParam = ''
+  const brandingGroup = getBrandingGroup()
+  if (brandingGroup) {
+    brandingGroupParam = `&scpbr=${brandingGroup}`
+  }
+  return `type=${type}&terms=${terms}&facets=${facetsParam}&page=${pageParam}${brandingGroupParam}`
 }
 
 /** Serializes "facets" URL parameter for /search API endpoint */
@@ -219,6 +228,12 @@ export function buildFacetsFromQueryString(facetsParamString) {
     })
   }
   return facets
+}
+
+/** returns the current branding group as specified by the url  */
+function getBrandingGroup(path) {
+  const queryParams = queryString.parse(window.location.search)
+  return queryParams.scpbr
 }
 
 /**
