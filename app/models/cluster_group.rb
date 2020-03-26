@@ -133,6 +133,16 @@ class ClusterGroup
     self.cell_annotations.select {|annotation| annotation['type'] == type}.map {|annotation| annotation['name']}
   end
 
+  # determine if this annotation is "useful" to visualize
+  def can_visualize_cell_annotation?(annotation)
+    annot = annotation.with_indifferent_access
+    if annot[:type] == 'group'
+      CellMetadatum::GROUP_VIZ_THRESHOLD === annot[:values].count
+    else
+      true
+    end
+  end
+
   # method used during parsing to generate representative sub-sampled data_arrays for rendering
   #
   # annotation_name: name of annotation to subsample off of

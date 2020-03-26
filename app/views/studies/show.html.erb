@@ -147,8 +147,8 @@
               <td>Cell Metadata</td>
               <td><%= metadata.name %></td>
               <td><%= metadata.annotation_type %></td>
-              <td><%= metadata.annotation_type == 'group' ? metadata.values.size : metadata.cell_annotations.values.minmax.join(', ') %></td>
-              <td><%= Naturally.sort(metadata.values).join(', ') %></td>
+              <td><%= get_annotation_bounds(values: metadata.values, annotation_type: metadata.annotation_type) %></td>
+              <td><%= get_sorted_group_values(metadata.values) %></td>
             </tr>
           <% end %>
           <% @study.cluster_groups.keep_if {|c| c.cell_annotations.any?}.each do |cluster_group| %>
@@ -157,8 +157,8 @@
                 <td class="actions">Cluster Annotation: <%= cluster_group.name %></td>
                 <td><%= annotation[:name] %></td>
                 <td><%= annotation[:type] %></td>
-                <td><%= annotation[:type] == 'group' ? annotation[:values].size : cluster_group.concatenate_data_arrays(annotation[:name], 'annotations').minmax.join(', ') %></td>
-                <td><%= Naturally.sort(annotation[:values]).join(', ') %></td>
+                <td><%= get_annotation_bounds(values: annotation[:type] == 'group' ? annotation[:values] : cluster_group.concatenate_data_arrays(annotation[:name], 'annotations'), annotation_type: annotation[:type]) %></td>
+                <td><%= get_sorted_group_values(annotation[:values]) %></td>
               </tr>
             <% end %>
           <% end %>
