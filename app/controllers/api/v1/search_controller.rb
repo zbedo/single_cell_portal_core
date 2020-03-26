@@ -162,7 +162,7 @@ module Api
         # variable for determining how we will sort search results for relevance
         sort_type = :none
 
-        # if a user is requested a preset search, override search parameters to load the requested query
+        # if a user requested a preset search, override search parameters to load the requested query
         if @preset_search.present?
           params[:terms] = "#{@preset_search.keyword_query_string} #{params[:terms]}".strip
           @facets = @preset_search.matching_facets_and_filters if @preset_search.search_facets.any?

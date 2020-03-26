@@ -28,9 +28,10 @@
 <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
    var baseUrl = "<%= site_url %>/study/";
    var resultsTarget = $('#preset-search-results')
+   var searchUrl = '<%= javascript_safe_url(api_v1_search_path(type: 'study', preset_search: @preset_search.identifier)) %>';
    $(document).ready(function() {
        $.ajax({
-           url: '<%= javascript_safe_url(api_v1_search_path(type: 'study', preset_search: @preset_search.identifier)) %>',
+           url: searchUrl,
            method: 'GET',
            dataType: 'json',
            headers: {'Authorization': 'Bearer ' + window.SCP.userAccessToken},
