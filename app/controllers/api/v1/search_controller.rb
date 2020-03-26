@@ -162,10 +162,20 @@ module Api
         # variable for determining how we will sort search results for relevance
         sort_type = :none
 
-        # if a user is requested a preset search, override search parameters to load the requested query
+        @studies = @viewable
+        # if a user is requested a preset search, merge the search parameters to load the requested query
         if @preset_search.present?
-          params[:terms] = @preset_search.keyword_query_string
+          if @preset_search.keyword_query_string.present?
+            params[:terms] = @preset_search.keyword_query_string
+          end
+          # This probably needs to be a merge -- but we can cross that bridge when we come to it
           @facets = @preset_search.matching_facets_and_filters
+          if @preset_search.accession_whitelist.any?
+            # remove from list first so we don't have duplicates
+            whitelist = @preset_search.accession_whitelist
+            Rails.logger.info "Including studies for preset search: #{@preset_search.name}: #{whitelist}"
+            @studies = Study.where(:accession.in => whitelist)
+          end
         end
 
         # if search params are present, filter accordingly
@@ -178,13 +188,13 @@ module Api
           if @search_terms.include?("\"")
             @term_list = self.class.extract_phrases_from_search(query_string: @search_terms)
             logger.info "Performing phrase-based search using #{@term_list}"
-            @studies = self.class.generate_mongo_query_by_context(terms: @term_list, base_studies: @viewable,
+            @studies = self.class.generate_mongo_query_by_context(terms: @term_list, base_studies: @studies,
                                                                   accessions: possible_accessions, query_context: :phrase)
             logger.info "Found #{@studies.count} studies in phrase search: #{@studies.pluck(:accession)}"
           else
             @term_list = @search_terms.split
             logger.info "Performing keyword-based search using #{@term_list}"
-            @studies = self.class.generate_mongo_query_by_context(terms: @search_terms, base_studies: @viewable,
+            @studies = self.class.generate_mongo_query_by_context(terms: @search_terms, base_studies: @studies,
                                                                   accessions: possible_accessions, query_context: :keyword)
             logger.info "Found #{@studies.count} studies in keyword search: #{@studies.pluck(:accession)}"
 
@@ -194,8 +204,6 @@ module Api
           if possible_accessions.size == @term_list.size
             sort_type = :accession
           end
-        else
-          @studies = @viewable
         end
 
         # only call BigQuery if list of possible studies is larger than 0 and we have matching facets to use
@@ -259,21 +267,6 @@ module Api
           end
         end
 
-        # if a preset search was requested, make sure :accession_whitelist studies are first
-        if @preset_search.present? && @preset_search.accession_whitelist.any?
-          whitelist = @preset_search.accession_whitelist
-          # if preset search is only a whitelist, replace search results completely
-          if @preset_search.whitelist_only?
-            Rails.logger.info "Clearing search results due to whitelist-only preset search: #{@preset_search.name}: #{whitelist}"
-            @studies = Study.where(:accession.in => whitelist).to_a
-          else
-            Rails.logger.info "Prepending #{whitelist.count} studies for preset search: #{@preset_search.name}: #{whitelist}"
-            # remove from list first so we don't have duplicates
-            @studies = @studies.delete_if {|study| whitelist.include?(study.accession)}
-            @studies = Study.where(:accession.in => whitelist).to_a + @studies
-          end
-        end
-        @matching_accessions = @studies.map(&:accession)
         Rails.logger.info "Final list of matching studies: #{@matching_accessions}"
         @results = @studies.paginate(page: params[:page], per_page: Study.per_page)
       end
