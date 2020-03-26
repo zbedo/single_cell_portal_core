@@ -98,11 +98,11 @@ class User
 
   DEFAULT_FEATURE_FLAGS = {
     # whether the home page uses React and the new search API
-    "advanced_search" => true,
+    "advanced_search" => false,
     # whether the facet search controls are shown
     "faceted_search" => false,
     # show covid-19 tab on homepage
-    "covid19_page" => true
+    "covid19_page" => false
   }
 
   ###

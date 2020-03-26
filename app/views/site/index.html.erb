@@ -10,7 +10,7 @@
           <a href="#search-genes" class="home-nav-tab" data-toggle="tab"><span class="fas fa-dna"></span> Search Genes</a>
         </li>
         <% if User.feature_flag_for_user(current_user, 'covid19_page') %>
-          <li role="presentation" class="home-nav">
+          <li role="presentation" class="home-nav" id="covid19-tab">
             <a href="/single_cell/covid19" class="home-nav-tab"><span class="fas fa-briefcase-medical"></span> COVID-19 Studies</a>
           </li>
         <% end %>

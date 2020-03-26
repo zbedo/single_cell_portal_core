@@ -199,9 +199,11 @@ export async function fetchSearch(
   */
 export function buildSearchQueryString(type, searchParams) {
   const facetsParam = buildFacetQueryString(searchParams.facets)
-  const otherParamString = ['page', 'order', 'terms', 'preset_search'].map(param => {
+
+  let otherParamString = ['page', 'order', 'terms', 'preset'].map(param => {
     return searchParams[param] ? `&${param}=${searchParams[param]}` : ''
   }).join('')
+  otherParamString = otherParamString.replace('preset=', 'preset_search=')
 
   let brandingGroupParam = ''
   const brandingGroup = getBrandingGroup()

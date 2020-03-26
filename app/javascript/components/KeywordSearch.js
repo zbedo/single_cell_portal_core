@@ -10,7 +10,8 @@ import { SearchSelectionContext } from './search/SearchSelectionProvider'
  * Component to search using a keyword value
  * optionally takes a 'keywordValue' prop with the initial value for the field
  */
-export default function KeywordSearch() {
+export default function KeywordSearch({keywordPrompt}) {
+  const placeholder = keywordPrompt ? keywordPrompt : "Enter keyword"
   const selectionContext = useContext(SearchSelectionContext)
   /**
    * Updates terms in search context upon submitting keyword search
@@ -33,10 +34,11 @@ export default function KeywordSearch() {
       <InputGroup>
         <input
           className="form-control"
+          size="30"
           type="text"
           value={selectionContext.terms}
           onChange={e => handleKeywordChange(e.target.value) }
-          placeholder="Enter keyword"
+          placeholder={placeholder}
           name="keywordText"/>
         <div className="input-group-append">
           <Button type='submit'>

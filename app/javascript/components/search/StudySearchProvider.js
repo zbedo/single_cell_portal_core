@@ -90,6 +90,7 @@ export function PropsStudySearchProvider(props) {
     search.facets = Object.assign({}, searchParams.facets, newParams.facets)
     // reset the page to 1 for new searches, unless otherwise specified
     search.page = newParams.page ? newParams.page : 1
+    search.preset = undefined // for now, exclude preset from the page URL--it's in the component props instead
     const queryString = buildSearchQueryString('study', search)
     navigate(`?${queryString}`)
   }
@@ -149,7 +150,7 @@ export default function StudySearchProvider(props) {
       page: queryParams.page ? queryParams.page : 1,
       terms: queryParams.terms ? queryParams.terms : '',
       facets: buildFacetsFromQueryString(queryParams.facets),
-      preset_search: props.preset_search ? props.preset_search : queryString.preset_search,
+      preset: props.preset ? props.preset : queryString.preset_search,
       order: queryParams.order
     }
     return (

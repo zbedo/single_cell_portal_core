@@ -27,18 +27,21 @@ function CommonSearchButtons() {
 /**
  * Component for SCP faceted search UI
  */
-export default function SearchPanel() {
+export default function SearchPanel({showCommonButtons, keywordPrompt}) {
   // Note: This might become  a Higher-Order Component (HOC).
   // This search component is currently specific to the "Studies" tab, but
   // could possibly also enable search for "Genes" and "Cells" tabs.
 
-  let searchButtons = <CommonSearchButtons/>
+  let searchButtons = <></>
+  if (showCommonButtons !== false) {
+    searchButtons = <CommonSearchButtons/>
+  }
   if (getFlagValue('faceted_search')) {
     searchButtons = <FacetsPanel/>
   }
   return (
     <div className='container-fluid' id='search-panel'>
-      <KeywordSearch/>
+      <KeywordSearch keywordPrompt={keywordPrompt}/>
       { searchButtons }
       <DownloadProvider>
         <DownloadButton />
