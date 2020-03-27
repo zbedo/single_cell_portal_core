@@ -1,6 +1,6 @@
 import React from 'react'
 
-import StudyResultsContainer, { StudyResults } from
+import { StudyResults } from
   '../../app/javascript/components/StudyResultsContainer'
 import { StudySearchContext } from
   '../../app/javascript/components/search/StudySearchProvider'
