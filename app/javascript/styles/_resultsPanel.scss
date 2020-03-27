@@ -3,12 +3,12 @@
 .results-panel {
   padding-top: 14px;
 
-  button{
+  button {
     color:$action-color;
     background-color: $default-background-color;
     border: none;
   }
-  button:hover{
+  button:hover {
     background-color: white;
   }
   .search-query {

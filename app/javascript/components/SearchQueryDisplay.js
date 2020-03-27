@@ -48,7 +48,6 @@ export const ClearAllButton = () => {
       terms: '',
       facets: {}
     }
-    selectionContext.performSearch()
     searchContext.updateSearch(defaultSearchParams)
     selectionContext.updateSelection(defaultSearchParams)
   }
@@ -61,7 +60,7 @@ export default function SearchQueryDisplay({ terms, facets }) {
   const hasTerms = terms && terms.length > 0
 
   if (!hasFacets && !hasTerms) {
-    return <><ClearAllButton/></>
+    return <></>
   }
 
   let facetsDisplay = <span></span>
