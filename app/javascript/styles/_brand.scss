@@ -140,13 +140,3 @@
     background-color: transparent;
   }
 }
-
-li#covid19-tab {
-  a {
-    border-radius: 5px;
-    border: 2px solid lighten($action-color, 10%);
-    background: lighten($action-color, 35%);
-    padding: 5px 10px;
-    margin-top: 2px;
-  }
-}

@@ -11,7 +11,16 @@
         </li>
         <% if User.feature_flag_for_user(current_user, 'covid19_page') %>
           <li role="presentation" class="home-nav" id="covid19-tab">
-            <a href="/single_cell/covid19" class="home-nav-tab"><span class="fas fa-briefcase-medical"></span> COVID-19 Studies</a>
+            <a href="/single_cell/covid19"
+               style="border-radius: 5px;
+                      font-size: normal;
+                      border: 2px solid #90a8cd;
+                      background: #d6dfed;
+                      padding: 5px 10px;
+                      margin-top: 2px;">
+              <%= image_tag 'microbe-icon', {style: "height: 22px; margin-top: -4px"} %>
+              COVID-19 Studies
+            </a>
           </li>
         <% end %>
       </ul>

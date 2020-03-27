@@ -2,12 +2,17 @@
   <style>
     #main-banner {
       background-image: url(<%=image_url "covid19-banner.png" %>) !important;
-      height: 184px;
-      background-position: left;
+      height: 230px;
+      background-position: right;
+      background-color: #1d1e20;
+    }
+    #main-banner-tag-line {
+      color: #eee;
     }
   </style>
   <div id="main-banner-logo">
-    <p id='main-banner-tag-line' class="scp-banner-position"></p>
+    <%= image_tag "SCP-logo.png", id: 'scp-logo' %><small id="beta-main" class="label label-danger">BETA</small>
+    <p id='main-banner-tag-line' class="scp-banner-position">Special section devoted to COVID-19 studies</p>
   </div>
 </div>
 <div class="container-fluid home-page-fix" id="wrap">
