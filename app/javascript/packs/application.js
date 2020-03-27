@@ -26,10 +26,11 @@ import morpheus from 'morpheus-app'
 import Ideogram from 'ideogram'
 // Per https://ckeditor.com/docs/ckeditor5/latest/builds/guides/integration/advanced-setup.html#scenario-1-integrating-existing-builds
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic'
-
+import { faVirus } from '@fortawesome/free-solid-svg-icons'
 
 // Below import resolves to '/app/javascript/components/HomePageContent.js'
 import HomePageContent from 'components/HomePageContent'
+import Covid19PageContent from 'components/covid19/Covid19PageContent'
 import { logPageView, logClick } from 'lib/metrics-api'
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -49,6 +50,11 @@ document.addEventListener('DOMContentLoaded', () => {
     $(document).on('click', 'body', event => {
       logClick(event)
     })
+  }
+  if (document.getElementById('covid19-page-content')) {
+    ReactDOM.render(
+      <Covid19PageContent />, document.getElementById('covid19-page-content')
+    )
   }
 })
 

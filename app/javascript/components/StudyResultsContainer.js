@@ -55,6 +55,15 @@ export function StudyResults(props) {
   },
   usePagination)
 
+  let pageControlDisplay = <></>
+  if (results.totalPages > 1) {
+    pageControlDisplay = <PagingControl currentPage={results.currentPage}
+                                        totalPages={results.totalPages}
+                                        changePage={changePage}
+                                        canPreviousPage={canPreviousPage}
+                                        canNextPage={canNextPage}/>
+  }
+
   function getRowProps(row) {
     const studyClass = row.values.study.inferred_match ? 'inferred-match result-row' : 'result-row'
     return { className: studyClass }
@@ -66,13 +75,7 @@ export function StudyResults(props) {
           <strong>{ results.totalStudies }</strong> total studies found
         </div>
         <div className="col-md-4">
-          <PagingControl
-            currentPage={results.currentPage}
-            totalPages={results.totalPages}
-            changePage={changePage}
-            canPreviousPage={canPreviousPage}
-            canNextPage={canNextPage}
-          />
+          { pageControlDisplay }
         </div>
       </div>
       <table {...getTableProps({ className: 'result-table' }) }>
@@ -93,13 +96,7 @@ export function StudyResults(props) {
           })}
         </tbody>
       </table>
-      <PagingControl
-        currentPage={results.currentPage}
-        totalPages={results.totalPages}
-        changePage={changePage}
-        canPreviousPage={canPreviousPage}
-        canNextPage={canNextPage}
-      />
+      { pageControlDisplay }
     </>
   )
 }

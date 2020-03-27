@@ -97,7 +97,12 @@ class User
   field :feature_flags, default: {}
 
   DEFAULT_FEATURE_FLAGS = {
-    "faceted_search" => false
+    # whether the home page uses React and the new search API
+    "advanced_search" => false,
+    # whether the facet search controls are shown
+    "faceted_search" => false,
+    # show covid-19 tab on homepage
+    "covid19_page" => false
   }
 
   ###
@@ -283,6 +288,14 @@ class User
     else
       DEFAULT_FEATURE_FLAGS[flag_key]
     end
+  end
+
+  # returns feature_flags_with_defaults for the user, or the default flags if no user is given
+  def self.feature_flags_for_user(user)
+    if user.nil?
+      return DEFAULT_FEATURE_FLAGS
+    end
+    user.feature_flags_with_defaults
   end
 
   # helper method to migrate study ownership & shares from old email to new email
