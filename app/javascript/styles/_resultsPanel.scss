@@ -1,6 +1,16 @@
+@import './_colors.scss';
+
 .results-panel {
   padding-top: 14px;
 
+  button {
+    color:$action-color;
+    background-color: $default-background-color;
+    border: none;
+  }
+  button:hover {
+    background-color: white;
+  }
   .search-query {
     margin-left: 1em;
     .filter-name, .search-term {
