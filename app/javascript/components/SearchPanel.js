@@ -40,7 +40,7 @@ export default function SearchPanel({showCommonButtons, keywordPrompt}) {
     searchButtons = <FacetsPanel/>
   }
   return (
-    <div className='container-fluid' id='search-panel'>
+    <div id='search-panel'>
       <KeywordSearch keywordPrompt={keywordPrompt}/>
       { searchButtons }
       <DownloadProvider>
