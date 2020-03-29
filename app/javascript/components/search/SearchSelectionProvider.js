@@ -23,8 +23,12 @@ export default function SearchSelectionProvider(props) {
   selection.performSearch = performSearch
 
   /** merges the update into the current selection */
-  function updateSelection(value) {
-    setSelection(Object.assign({}, selection, value))
+  function updateSelection(value, searchNow) {
+    const newSelection = Object.assign({}, selection, value)
+    if (searchNow) {
+      searchContext.updateSearch(newSelection)
+    }
+    setSelection(newSelection)
   }
 
   /** merges the facet update into the current selection */

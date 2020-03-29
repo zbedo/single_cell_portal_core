@@ -65,7 +65,7 @@ describe('Apply applies all changes made in the search panel', () => {
     speciesControl().find('input#speciesId5').simulate('change', {target: {checked: true}})
     speciesControl().find('button.facet-apply-button').simulate('click')
 
-    expect(routerNav).toHaveBeenLastCalledWith('?type=study&terms=test123&facets=species%3AspeciesId5&page=1')
+    expect(routerNav).toHaveBeenLastCalledWith('?type=study&page=1&terms=test123&facets=species%3AspeciesId5')
   })
 
   it('applies facet changes when keyword searching', async () => {
@@ -96,6 +96,6 @@ describe('Apply applies all changes made in the search panel', () => {
     keywordInput().simulate('change', {target: { value: 'test345'}});
     keywordInput().simulate('submit')
 
-    expect(routerNav).toHaveBeenLastCalledWith('?type=study&terms=test345&facets=species%3AspeciesId2%2Bdisease%3Adisease4&page=1')
+    expect(routerNav).toHaveBeenLastCalledWith('?type=study&page=1&terms=test345&facets=species%3AspeciesId2%2Bdisease%3Adisease4')
   })
 })
