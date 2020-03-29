@@ -345,4 +345,39 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
 
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end
+
+  test 'should run preset search' do
+    puts "#{File.basename(__FILE__)}: #{self.method_name}"
+
+    # run whitelist only search
+    @preset_search = PresetSearch.create!(name: 'Preset Search Test', accession_whitelist: %w(SCP1))
+    whitelisted_study = Study.first
+    execute_http_request(:get, api_v1_search_path(type: 'study', preset_search: @preset_search.identifier))
+    assert_response :success
+    whitelist_accessions = %w(SCP1)
+    assert json['matching_accessions'] == whitelist_accessions,
+           "Did not return correct studies for whitelisted preset search; expected #{whitelist_accessions} but found #{json['matching_accessions']}"
+    found_preset = json['studies'].first
+    assert found_preset['accession'] == whitelisted_study.accession
+    assert found_preset['preset_match'], "Did not correctly mark whitelisted study as preset match; #{found_preset['preset_match']}"
+
+    # update to use user-search terms as well, include all studies to widen search
+    all_accessions = Study.pluck(:accession)
+    @preset_search.update(accession_whitelist: all_accessions)
+    @preset_search.reload
+    search_terms = "\"API Test Study\""
+    execute_http_request(:get, api_v1_search_path(type: 'study', preset_search: @preset_search.identifier, terms: search_terms))
+    assert_response :success
+    api_test_study = Study.find_by(name: /API Test Study/)
+    assert_equal 1, json['studies'].count, "Found wrong number of studies; should be 1 but found #{json['studies'].count}"
+    expected_results = [api_test_study.accession]
+    assert_equal expected_results, json['matching_accessions'],
+                 "Found wrong study with keywords & preset search; expected #{expected_results} but found #{json['matching_accessions']}"
+    found_study = json['studies'].first
+    assert found_study['preset_match']
+    assert_equal ['API Test Study'], found_study['term_matches'], "Did not correctly match on #{search_terms}: #{found_study['term_matches']}"
+    @preset_search.destroy # clean up
+
+    puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
+  end
 end

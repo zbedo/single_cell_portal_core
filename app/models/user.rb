@@ -97,8 +97,14 @@ class User
   field :feature_flags, default: {}
 
   DEFAULT_FEATURE_FLAGS = {
+    # feature flag for easy revert, NOT intended for per-user toggling since links are shareable
+    "linkable_gene_search" => true,
+    # whether the home page uses React and the new search API
+    "advanced_search" => false,
+    # whether the facet search controls are shown
     "faceted_search" => false,
-    "linkable_gene_search" => true  # feature flag for easy revert, NOT intended for per-user toggling
+    # show covid-19 tab on homepage
+    "covid19_page" => false
   }
 
   ###

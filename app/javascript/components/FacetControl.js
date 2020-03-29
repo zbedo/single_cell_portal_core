@@ -2,9 +2,11 @@
 import React, { useState, useEffect, useRef, useContext } from 'react'
 import FiltersBoxSearchable from './FiltersBoxSearchable'
 import { StudySearchContext } from 'components/search/StudySearchProvider'
+import { getDisplayNameForFacet } from 'components/search/SearchFacetProvider'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTimesCircle } from '@fortawesome/free-solid-svg-icons'
 import { SearchSelectionContext } from './search/SearchSelectionProvider'
+import { withErrorBoundary } from 'lib/ErrorBoundary'
 
 /**
  * Converts string value to lowercase, hyphen-delimited version
@@ -17,7 +19,7 @@ function slug(value) {
 /**
  * Button for facets, and associated functions
  */
-export default function FacetControl(props) {
+function RawFacetControl(props) {
   const [showFilters, setShowFilters] = useState(false)
 
   const facetName = props.facet.name
@@ -40,7 +42,7 @@ export default function FacetControl(props) {
       selectedFilterString = selectedFilters[0].name
     } else {
       // it's a numeric range filter
-      selectedFilterString = `${facetName}:
+      selectedFilterString = `${getDisplayNameForFacet(props.facet.id)}:
                               ${appliedSelection[0]}-${appliedSelection[1]}
                               ${appliedSelection[2]}`
     }
@@ -87,7 +89,7 @@ export default function FacetControl(props) {
     }
   }, [])
 
-  let controlContent = facetName
+  let controlContent = getDisplayNameForFacet(props.facet.id)
   if (selectedFilterString) {
     controlContent =
       <>
@@ -121,3 +123,6 @@ export default function FacetControl(props) {
     </span>
   )
 }
+
+const FacetControl = withErrorBoundary(RawFacetControl)
+export default FacetControl

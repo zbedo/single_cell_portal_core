@@ -8,6 +8,8 @@ import ResultsPanel from './ResultsPanel'
 import StudySearchProvider, { StudySearchContext } from 'components/search/StudySearchProvider'
 import SearchFacetProvider from 'components/search/SearchFacetProvider'
 import UserProvider from 'components/UserProvider'
+import ErrorBoundary from 'lib/ErrorBoundary'
+import { getFlagValue } from 'lib/feature-flags'
 
 const StudySearchView = function() {
   const studySearchState = useContext(StudySearchContext)
@@ -52,19 +54,19 @@ const LinkableSearchTabs = function(props) {
  */
 function RawHomePageContent() {
   return (
-    <UserProvider>
-      <SearchFacetProvider>
-        <StudySearchProvider>
-          <GeneSearchProvider>
-            {
-              window.SCP.featureFlags.linkable_gene_search
-                ? <LinkableSearchTabs/>
-                : <StudySearchView/>
-            }
-          </GeneSearchProvider>
-        </StudySearchProvider>
-      </SearchFacetProvider>
-    </UserProvider>
+    <ErrorBoundary>
+      <UserProvider>
+        <SearchFacetProvider>
+          <StudySearchProvider>
+            <GeneSearchProvider>
+               { getFlagValue('linkable_gene_search')
+                  ? <LinkableSearchTabs/>
+                  : <StudySearchView/> }
+            </GeneSearchProvider>
+          </StudySearchProvider>
+        </SearchFacetProvider>
+      </UserProvider>
+    </ErrorBoundary>
   )
 }
 

@@ -9,11 +9,13 @@ import {
 } from 'lib/scp-api'
 import SearchSelectionProvider from 'components/search/SearchSelectionProvider'
 
-const emptySearch = {
+export const emptySearch = {
   params: {
     terms: '',
     facets: {},
-    page: 1
+    page: 1,
+    preset_search: undefined,
+    order: undefined
   },
 
   results: [],
@@ -91,23 +93,21 @@ export function PropsStudySearchProvider(props) {
    * @param {Object} newParams Parameters to update
    */
   async function updateSearch(newParams) {
-    const facets = Object.assign({}, searchParams.facets, newParams.facets)
-    const terms = ('terms' in newParams) ? newParams.terms : searchParams.terms
+    let search = Object.assign({}, searchParams, newParams)
+    search.facets = Object.assign({}, searchParams.facets, newParams.facets)
     // reset the page to 1 for new searches, unless otherwise specified
-    const page = newParams.page ? newParams.page : 1
-    const queryString = buildSearchQueryString('study', terms, facets, page)
+    search.page = newParams.page ? newParams.page : 1
+    search.preset = undefined // for now, exclude preset from the page URL--it's in the component props instead
+    const queryString = buildSearchQueryString('study', search)
     navigate(`?${queryString}`)
   }
 
   /** perform the actual API search based on current params */
-  async function performSearch() {
+  async function performSearch(params) {
     // reset the scroll in case they scrolled down to read prior results
     window.scrollTo(0, 0)
 
-    const results = await fetchSearch('study',
-      searchParams.terms,
-      searchParams.facets,
-      searchParams.page)
+    const results = await fetchSearch('study', params)
 
     setSearchState({
       params: searchParams,
@@ -151,8 +151,11 @@ export default function StudySearchProvider(props) {
   const searchParams = {
     page: queryParams.page ? queryParams.page : 1,
     terms: queryParams.terms ? queryParams.terms : '',
-    facets: buildFacetsFromQueryString(queryParams.facets)
+    facets: buildFacetsFromQueryString(queryParams.facets),
+    preset: props.preset ? props.preset : queryString.preset_search,
+    order: queryParams.order
   }
+
   return (
     <PropsStudySearchProvider searchParams={searchParams}>
       {props.children}

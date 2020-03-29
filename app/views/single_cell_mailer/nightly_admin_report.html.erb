@@ -1,0 +1,85 @@
+<h1>Nightly Server Report for <%= @today %></h1>
+<div class="stats">
+  <h3>Portal Stats</h3>
+  <table>
+    <thead>
+    <th class="first">Measurement</th>
+    <th>Count</th>
+    </thead>
+    <tbody>
+    <tr>
+      <td>Total Users</td>
+      <td><%= @user_stats[:total] %></td>
+    </tr>
+    <tr>
+      <td>Returning Users</td>
+      <td><%= @user_stats[:active] %></td>
+    </tr>
+    <tr>
+      <td>Studies Created</td>
+      <td><%= @studies_created %></td>
+    </tr>
+    <tr>
+      <td>Terra Workflows run since <%= @two_weeks_ago %></td>
+      <td><%= @submissions %></td>
+    </tr>
+    <tr>
+      <td>Ingest Pipeline Runs</td>
+      <td><%= @ingest_runs %></td>
+    </tr>
+    </tbody>
+  </table>
+</div>
+<div class="stats">
+  <h3>Disk Usage</h3>
+  <table>
+    <thead>
+    <th class="first">Measurement</th>
+    <th>Count</th>
+    </thead>
+    <tbody>
+    <tr>
+      <td>Total Disk Size</td>
+      <td><%= number_to_human_size(@disk_stats[:total_space]) %></td>
+    </tr>
+    <tr>
+      <td>Allocated</td>
+      <td><%= number_to_human_size(@disk_stats[:space_used]) %></td>
+    </tr>
+    <tr>
+      <td>Free</td>
+      <td><%= number_to_human_size(@disk_stats[:space_free]) %></td>
+    </tr>
+    <tr>
+      <td>Percent Used</td>
+      <td><%= @disk_stats[:percent_used] %>%</td>
+    </tr>
+    </tbody>
+  </table>
+</div>
+<div class="clear"></div>
+<h3>Storage Integrity</h3>
+<% if @missing_files.any? %>
+  <table>
+    <thead>
+      <tr>
+        <th>Study</th>
+        <th>Owner</th>
+        <th>Filename</th>
+        <th>Issue</th>
+      </tr>
+    </thead>
+    <tbody>
+    <% @missing_files.each do |missing_file| %>
+      <tr>
+        <td><%= truncate(missing_file[:study], length: 30) %></td>
+        <td><%= missing_file[:owner] %></td>
+        <td><%= missing_file[:filename] %></td>
+        <td><%= missing_file[:reason] %></td>
+      </tr>
+    <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <p>All files accounted for!</p>
+<% end %>

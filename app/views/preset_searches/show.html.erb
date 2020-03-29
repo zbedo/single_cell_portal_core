@@ -1,0 +1,50 @@
+<h1><%= @preset_search.name %></h1>
+
+<dl class="dl-horizontal" id="preset-search-attributes">
+  <dt>Identifier</dt>
+  <dd><%= @preset_search.identifier %></dd>
+  <dt>Whitelist</dt>
+  <dd><%= @preset_search.accession_whitelist.join(', ') %></dd>
+  <dt>Search Terms</dt>
+  <dd><%= @preset_search.search_terms.join(', ') %></dd>
+  <dt>Facets</dt>
+  <dd>
+    <% @preset_search.matching_facets_and_filters.each do |facet| %>
+      <%= facet_query_label(facet).html_safe %>&nbsp;
+    <% end %>
+  </dd>
+  <dt>Public?</dt>
+  <dd><%= get_boolean_label(@preset_search.public) %></dd>
+  <dt>Query Results</dt>
+  <dd id="preset-search-results"><i class="fas fa-spinner fa-spin"></i></dd>
+</dl>
+
+<p>
+  <%= scp_link_to "<span class='fas fa-edit'></span> Edit".html_safe, edit_preset_search_path(@preset_search), class: 'btn btn-info' %>
+  <%= scp_link_to "<span class='fas fa-chevron-left'></span> Back".html_safe, preset_searches_path, class: 'btn btn-warning' %>
+</p>
+
+
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
+   var baseUrl = "<%= site_url %>/study/";
+   var resultsTarget = $('#preset-search-results')
+   var searchUrl = '<%= javascript_safe_url(api_v1_search_path(type: 'study', preset_search: @preset_search.identifier)) %>';
+   $(document).ready(function() {
+       $.ajax({
+           url: searchUrl,
+           method: 'GET',
+           dataType: 'json',
+           headers: {'Authorization': 'Bearer ' + window.SCP.userAccessToken},
+           success: function(data) {
+               var accessions = data.matching_accessions;
+               resultsTarget.empty();
+               $.each(accessions, function(index, accession) {
+                   var studyUrl = baseUrl + accession;
+                   var studyBtn = "<span class='btn btn-default'><a href='" + studyUrl + "' target='_blank'>" + accession + "</a></span>";
+                   resultsTarget.append(studyBtn + "&nbsp;")
+               })
+           }
+       })
+   });
+
+</script>

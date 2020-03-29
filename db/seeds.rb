@@ -106,6 +106,9 @@ DirectoryListing.create!(name: 'csvs', file_type: 'csv', files: [{name: 'foo.csv
 StudyFileBundle.create!(bundle_type: 'BAM', original_file_list: [{'name' => 'sample_1.bam', 'file_type' => 'BAM'},
                                                                  {'name' => 'sample_1.bam.bai', 'file_type' => 'BAM Index'}],
                         study_id: api_study.id)
+resource = api_study.external_resources.build(url: 'https://singlecell.broadinstitute.org', title: 'SCP',
+                                              description: 'Link to Single Cell Portal')
+resource.save!
 api_user = User.create!(email:'testing.user.2@gmail.com', password:'someotherpassword',
              api_access_token: {access_token: 'test-api-token-2', expires_in: 3600, expires_at: Time.zone.now + 1.hour})
 
@@ -133,3 +136,7 @@ SearchFacet.create(name: 'Organism Age', identifier: 'organism_age', big_query_i
                    unit: 'years')
 
 BrandingGroup.create(name: 'Test Brand', user_id: api_user.id, font_family: 'Helvetica Neue, sans-serif', background_color: '#FFFFFF')
+
+# Preset search seeds
+PresetSearch.create!(name: 'Test Search', search_terms: ["Test Study"],
+                     facet_filters: ['species:NCBITaxon_9606', 'disease:MONDO_0000001'], accession_whitelist: %w(SCP1))

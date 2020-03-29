@@ -95,7 +95,7 @@
   </div>
   <%= render '/layouts/notices' %>
 </div>
-<% if controller_name == 'site' && action_name == 'index' %>
+<% if controller_name == 'site' && ['index', 'covid19'].include?(action_name) %>
   <%= yield %>
 <% else %>
   <div class="container-fluid" id="wrap">

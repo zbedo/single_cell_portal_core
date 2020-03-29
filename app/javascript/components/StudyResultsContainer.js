@@ -12,7 +12,7 @@ export default function StudyResultsContainer(props) {
     <Tab.Container id="result-tabs" defaultActiveKey="study">
       <Tabs defaultActiveKey='study' animation={false} >
         <Tab eventKey='study' title="Studies" >
-          <StudiesResults changePage ={props.changePage} results={props.results} />
+          <StudyResults changePage ={props.changePage} results={props.results} />
         </Tab>
       </Tabs>
     </Tab.Container>
@@ -23,7 +23,7 @@ export default function StudyResultsContainer(props) {
 /**
  * Component for the content of the 'Studies' tab
  */
-export function StudiesResults(props) {
+export function StudyResults(props) {
   const { results, changePage } = props
   const columns = React.useMemo(
     () => [{
@@ -55,6 +55,15 @@ export function StudiesResults(props) {
   },
   usePagination)
 
+  let pageControlDisplay = <></>
+  if (results.totalPages > 1) {
+    pageControlDisplay = <PagingControl currentPage={results.currentPage}
+                                        totalPages={results.totalPages}
+                                        changePage={changePage}
+                                        canPreviousPage={canPreviousPage}
+                                        canNextPage={canNextPage}/>
+  }
+
   function getRowProps(row) {
     const studyClass = row.values.study.inferred_match ? 'inferred-match result-row' : 'result-row'
     return { className: studyClass }
@@ -66,16 +75,10 @@ export function StudiesResults(props) {
           <strong>{ results.totalStudies }</strong> total studies found
         </div>
         <div className="col-md-4">
-          <PagingControl
-            currentPage={results.currentPage}
-            totalPages={results.totalPages}
-            changePage={changePage}
-            canPreviousPage={canPreviousPage}
-            canNextPage={canNextPage}
-          />
+          { pageControlDisplay }
         </div>
       </div>
-      <table {...getTableProps({className: 'result-table'})}>
+      <table {...getTableProps({ className: 'result-table' }) }>
         <tbody {...getTableBodyProps()}>
           {rows.map((row, i) => {
             prepareRow(row)
@@ -93,13 +96,7 @@ export function StudiesResults(props) {
           })}
         </tbody>
       </table>
-      <PagingControl
-        currentPage={results.currentPage}
-        totalPages={results.totalPages}
-        changePage={changePage}
-        canPreviousPage={canPreviousPage}
-        canNextPage={canNextPage}
-      />
+      { pageControlDisplay }
     </>
   )
 }

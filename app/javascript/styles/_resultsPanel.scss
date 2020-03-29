@@ -1,6 +1,16 @@
+@import './_colors.scss';
+
 .results-panel {
   padding-top: 14px;
 
+  button {
+    color:$action-color;
+    background-color: $default-background-color;
+    border: none;
+  }
+  button:hover {
+    background-color: white;
+  }
   .search-query {
     margin-left: 1em;
     .filter-name, .search-term {
@@ -11,16 +21,14 @@
     }
   }
 }
-
-.results-panel > div > ul {
-  background-color: #dce3e9;
-}
-#highlight {
+.highlight {
   color:green;
   background: rgba($color: #74AE43, $alpha: .2);
 }
+.results-panel > div > ul {
+  background-color: #dce3e9;
+}
 .results-header {
-  height: 50px;
   .results-totals {
     height: 100%;
     padding-top: 15px;

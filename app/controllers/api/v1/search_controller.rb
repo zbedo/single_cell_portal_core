@@ -8,6 +8,7 @@ module Api
       before_action :authenticate_api_user!, only: [:create_auth_code, :bulk_download]
       before_action :set_search_facet, only: :facet_filters
       before_action :set_search_facets_and_filters, only: :index
+      before_action :set_preset_search, only: :index
       before_action :set_branding_group, only: :index
 
       swagger_path '/search' do
@@ -41,6 +42,13 @@ module Api
             key :type, :string
           end
           parameter do
+            key :name, :preset_search
+            key :in, :query
+            key :description, 'Identifier of preset/stored query'
+            key :required, false
+            key :type, :string
+          end
+          parameter do
             key :name, :page
             key :in, :query
             key :description, 'Page number for pagination control'
@@ -53,6 +61,14 @@ module Api
             key :description, 'Requested branding group (to filter results on)'
             key :reqired, false
             key :type, :string
+          end
+          parameter do
+            key :name, :order
+            key :in, :query
+            key :description, 'Requested order of results'
+            key :reqired, false
+            key :type, :string
+            key :enum, [:recent, :popular]
           end
           response 200 do
             key :description, 'Search parameters, Studies and StudyFiles'
@@ -146,6 +162,19 @@ module Api
         # variable for determining how we will sort search results for relevance
         sort_type = :none
 
+        # if a user requested a preset search, override search parameters to load the requested query
+        if @preset_search.present?
+          params[:terms] = "#{@preset_search.keyword_query_string} #{params[:terms]}".strip
+          @facets = @preset_search.matching_facets_and_filters if @preset_search.search_facets.any?
+          # if whitelist is provided, scope viewable to only those studies
+          if @preset_search.accession_whitelist.any?
+            sort_type = :whitelist if params[:terms].blank?
+            @whitelist = @preset_search.accession_whitelist
+            Rails.logger.info "Scoping search results to whitelisted preset search: #{@preset_search.name}: #{@whitelist}"
+            @viewable = @viewable.where(:accession.in => @whitelist)
+          end
+        end
+
         # if search params are present, filter accordingly
         if params[:terms].present?
           sort_type = :keyword
@@ -192,6 +221,11 @@ module Api
           @studies = @studies.where(:accession.in => @convention_accessions)
         end
 
+        # reset order if user requested a custom ordering
+        if params[:order].present?
+          sort_type = params[:order].to_sym
+        end
+
         # determine sort order for pagination; minus sign (-) means a descending search
         @studies = @studies.to_a
         case sort_type
@@ -199,11 +233,17 @@ module Api
           @studies = @studies.sort_by {|study| -study.search_weight(@term_list)[:total] }
         when :accession
           @studies = @studies.sort_by {|study| possible_accessions.index(study.accession) }
+        when :whitelist
+          @studies = @studies.sort_by {|study| @whitelist.index(study.accession) }
         when :facet
           @studies = @studies.sort_by {|study| -@studies_by_facet[study.accession][:facet_search_weight]}
+        when :recent
+          @studies = @studies.sort_by(&:created_at).reverse
+        when :popular
+          @studies = @studies.sort_by(&:view_count).reverse
         else
           # we have sort_type of :none, so preserve original ordering of :view_order
-          @studies = @studies.sort_by(&:view_order)
+          @studies = @studies.sort_by(&:view_order).reverse
         end
 
         # save list of study accessions for bulk_download/bulk_download_size calls, in order of results
@@ -211,7 +251,8 @@ module Api
         logger.info "Total matching accessions from all non-inferred searches: #{@matching_accessions}"
 
         # if a user ran a faceted search, attempt to infer results by converting filter display values to keywords
-        if @facets.any?
+        # Do not run inferred search if we have a preset search with a whitelist
+        if @facets.any? && @whitelist.nil?
           # preserve existing search terms, if present
           facets_to_keywords = @term_list.present? ? {keywords: @term_list.dup} : {}
           facets_to_keywords.merge!(self.class.convert_filters_for_inferred_search(facets: @facets))
@@ -227,6 +268,9 @@ module Api
             @studies += inferred_studies.sort_by {|study| -study.search_weight(@inferred_terms)[:total] }
           end
         end
+
+        @matching_accessions = @studies.map(&:accession)
+        Rails.logger.info "Final list of matching studies: #{@matching_accessions}"
         @results = @studies.paginate(page: params[:page], per_page: Study.per_page)
       end
 
@@ -522,6 +566,10 @@ module Api
         @selected_branding_group = BrandingGroup.find_by(name_as_id: params[:scpbr])
       end
 
+      def set_preset_search
+        @preset_search = PresetSearch.find_by(identifier: params[:preset_search])
+      end
+
       def set_search_facet
         @search_facet = SearchFacet.find_by(identifier: params[:facet])
       end
@@ -666,9 +714,12 @@ module Api
         facets.each do |facet|
           search_facet = SearchFacet.find(facet[:object_id])
           # only use non-numeric facets
-          if !search_facet.is_numeric?
-            terms_by_facet[search_facet.identifier] = facet[:filters].map {|filter| filter[:name]}
+          if search_facet.is_numeric?
+            # we can't do inferred matching on numerics, and because the facets are ANDed,
+            # the presence of any numeric facets disables inferred search
+            return {}
           end
+          terms_by_facet[search_facet.identifier] = facet[:filters].map {|filter| filter[:name]}
         end
         terms_by_facet
       end

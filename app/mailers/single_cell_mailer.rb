@@ -54,7 +54,7 @@ class SingleCellMailer < ApplicationMailer
     @portal_row = portal_disk.split
     @table_header.slice!(-1)
     @data_disk_row = `df -h /home/app/webapp/data`.split("\n").last.split
-    mail(to: @users, subject: "Single Cell Portal Disk Usage for #{Date.today.to_s}") do |format|
+    mail(to: @users, subject: "Single Cell Portal Disk Usage for #{Time.zone.today.to_s}") do |format|
       format.html
     end
   end
@@ -242,6 +242,31 @@ class SingleCellMailer < ApplicationMailer
 
     mail(to: @admins, subject: "[Single Cell Portal Admin Notification #{Rails.env != 'production' ? " (#{Rails.env})" : nil}]: Sanity check results: #{@missing_files.size} files missing") do |format|
       format.html
+    end
+  end
+
+  # collect usage statistics for the given day and email admins
+  def nightly_admin_report
+    @admins = User.where(admin: true).map(&:email)
+    @today = Time.zone.today
+    @two_weeks_ago = @today - 2.weeks
+
+    # get user, submission, and study stats
+    @user_stats = SummaryStatsUtils.daily_total_and_active_user_counts
+    @submissions = SummaryStatsUtils.analysis_submission_count
+    @studies_created = SummaryStatsUtils.daily_study_creation_count
+
+    # get number of ingest runs for the day
+    @ingest_runs = SummaryStatsUtils.ingest_run_count
+
+    # disk usage
+    @disk_stats = SummaryStatsUtils.disk_usage
+
+    # storage sanity check
+    @missing_files = SummaryStatsUtils.storage_sanity_check
+
+    mail(to: @admins, subject: "[Single Cell Portal Admin Notification#{Rails.env != 'production' ? " (#{Rails.env})" : nil}]: Nightly Server Report for #{@today}") do |format|
+      format.html { render layout: 'nightly_admin_report' }
     end
   end
 end
