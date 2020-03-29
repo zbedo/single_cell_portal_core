@@ -62,7 +62,7 @@ describe('Facet control handles selections appropriately', () => {
 
     // apply sends a routing request to the right url
     speciesControl().find('button.facet-apply-button').simulate('click')
-    expect(routerNav).toHaveBeenLastCalledWith('?type=study&terms=&facets=species%3AspeciesId3%2CspeciesId6&page=1')
+    expect(routerNav).toHaveBeenLastCalledWith('?type=study&page=1&facets=species%3AspeciesId3%2CspeciesId6')
   })
 })
 
@@ -120,6 +120,6 @@ describe('Facet control handles facets with many filters', () => {
     expect(speciesControl().find('button.facet-apply-button').hasClass('active')).toEqual(true)
 
     speciesControl().find('button.facet-apply-button').simulate('click')
-    expect(routerNav).toHaveBeenLastCalledWith('?type=study&terms=&facets=species%3AspeciesId2&page=1')
+    expect(routerNav).toHaveBeenLastCalledWith('?type=study&page=1&facets=species%3AspeciesId2')
   })
 })

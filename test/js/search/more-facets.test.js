@@ -63,7 +63,7 @@ describe('Basic "More Facets" capability for faceted search', () => {
     expect(wrapper.find('#facet-sex button.facet-apply-button').hasClass('active')).toEqual(true)
 
     wrapper.find('#facet-sex button.facet-apply-button').simulate('click')
-    expect(routerNav).toHaveBeenLastCalledWith('?type=study&terms=&facets=sex%3Afemale&page=1')
+    expect(routerNav).toHaveBeenLastCalledWith('?type=study&page=1&facets=sex%3Afemale')
   });
 });
 
@@ -93,7 +93,7 @@ describe('Filter slider works within more facets', () => {
     })
     expect(ageFacet().find('button.facet-apply-button').hasClass('active')).toEqual(true)
     ageFacet().find('button.facet-apply-button').simulate('click')
-    expect(routerNav).toHaveBeenLastCalledWith('?type=study&terms=&facets=organism_age%3A50%2C180%2Cyears&page=1')
+    expect(routerNav).toHaveBeenLastCalledWith('?type=study&page=1&facets=organism_age%3A50%2C180%2Cyears')
   });
 });
 
