@@ -13,7 +13,6 @@ import { accessToken } from './../components/UserProvider'
 import {
   logFilterSearch, logSearch, logDownloadAuthorization, mapFiltersForLogging
 } from './scp-api-metrics'
-import * as queryString from 'query-string'
 
 // If true, returns mock data for all API responses.  Only for dev.
 let globalMock = false
@@ -172,8 +171,8 @@ export async function fetchDownloadSize(accessions, fileTypes, mock=false) {
  *            {String}  terms: User-supplied query string
  *            {Object}  facets: User-supplied list facets and filters
  *            {Integer} page: User-supplied list facets and filters
- *            {String}  order: User-supplied results ordering field
- *            {String}  preset_search: User-supplied query preset (e.g. 'covid19')
+ *            {String}  order: User-supplied query ordering field
+ *            {String}  preset: User-supplied query preset (e.g. 'covid19')
  * @param {Boolean} mock Whether to use mock data
  * @returns {Promise} Promise object containing camel-cased data from API
  *
@@ -188,30 +187,19 @@ export async function fetchSearch(
 
   const searchResults = await scpApi(path, defaultInit, mock)
 
-  logSearch(type, searchParams.terms, searchParams.facets, searchParams.page)
+  logSearch(type, searchParams)
 
   return searchResults
 }
 
-/**
-  * Constructs query string used for /search REST API endpoint
-  * auto-appends the branding group if one exists
-  */
+/** Constructs query string used for /search REST API endpoint */
 export function buildSearchQueryString(type, searchParams) {
   const facetsParam = buildFacetQueryString(searchParams.facets)
-
-  let otherParamString = ['page', 'order', 'terms', 'preset'].map(param => {
+  const otherParamString = ['page', 'order', 'terms', 'preset'].map(param => {
     return searchParams[param] ? `&${param}=${searchParams[param]}` : ''
   }).join('')
-  otherParamString = otherParamString.replace('preset=', 'preset_search=')
 
-  let brandingGroupParam = ''
-  const brandingGroup = getBrandingGroup()
-  if (brandingGroup) {
-    brandingGroupParam = `&scpbr=${brandingGroup}`
-  }
-
-  return `type=${type}${otherParamString}${facetsParam}${brandingGroupParam}`
+  return `type=${type}${otherParamString}${facetsParam}`
 }
 
 /** Serializes "facets" URL parameter for /search API endpoint */
@@ -219,7 +207,7 @@ function buildFacetQueryString(facets) {
   if (!facets || !Object.keys(facets).length) {
     return ''
   }
-  let rawURL = _compact(Object.keys(facets).map(facetId => {
+  const rawURL = _compact(Object.keys(facets).map(facetId => {
     if (facets[facetId].length) {
       return `${facetId}:${facets[facetId].join(',')}`
     }
@@ -238,12 +226,6 @@ export function buildFacetsFromQueryString(facetsParamString) {
     })
   }
   return facets
-}
-
-/** returns the current branding group as specified by the url  */
-function getBrandingGroup(path) {
-  const queryParams = queryString.parse(window.location.search)
-  return queryParams.scpbr
 }
 
 /**

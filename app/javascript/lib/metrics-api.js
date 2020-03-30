@@ -35,21 +35,21 @@ if ('SCP' in window) {
 /**
  * Log page view, i.e. page load
  */
-export function logPageView() {
+export function logPageView(props={}) {
   log('page:view')
 }
 
 /** Log click on page.  Delegates to more element-specific loggers. */
-export function logClick(event) {
+export function logClick(event, props={}) {
   const target = event.target
   const tag = target.localName.toLowerCase() // local tag name
 
   if (tag === 'a') {
-    logClickLink(target)
+    logClickLink(target, props)
   } else if (tag === 'button') {
-    logClickButton(target)
+    logClickButton(target, props)
   } else if (tag === 'input') {
-    logClickInput(target)
+    logClickInput(target, props)
   } else {
     // Perhaps uncomment when Mixpanel quota increases
     // logClickOther(target)
@@ -59,28 +59,20 @@ export function logClick(event) {
 /**
  * Log click on link, i.e. anchor (<a ...) tag
  */
-function logClickLink(target) {
-  const props = { text: target.text }
+function logClickLink(target, props) {
+  props = Object.assign(props, { text: target.text })
   log('click:link', props)
 }
 
 /**
  * Log click on button, e.g. for pagination, "Apply", etc.
  */
-function logClickButton(target) {
-  const props = { text: target.text }
+function logClickButton(target, props) {
+  props = Object.assign(props, { text: target.text })
   log('click:button', props)
 
   // Google Analytics fallback: remove once Bard and Mixpanel are ready for SCP
   ga('send', 'event', 'click', 'button') // eslint-disable-line no-undef
-}
-
-/**
- * Log front-end error (e.g. uncaught ReferenceError)
- */
-export function logError(text) {
-  const props = { text: text }
-  log('error', props)
 }
 
 /**
@@ -112,13 +104,13 @@ function getLabelsForInputElement(element) {
 /**
  * Log click on input by type, e.g. text, number, checkbox
  */
-function logClickInput(target) {
+function logClickInput(target, props) {
   const domLabels = getLabelsForInputElement(target)
 
   // User-facing label
   const label = domLabels.length > 0 ? domLabels[0].innerText : ''
 
-  const props = { label }
+  props = Object.assign(props, { label })
   const element = `input-${target.type}`
   log(`click:${element}`, props)
 
@@ -129,12 +121,20 @@ function logClickInput(target) {
 /**
  * Log clicks on elements that are not otherwise classified
  */
-function logClickOther(target) { // eslint-disable-line no-unused-vars
-  const props = { text: target.text }
+function logClickOther(target, props) { // eslint-disable-line no-unused-vars
+  props = Object.assign(props, { text: target.text })
   log('click:other', props)
 
   // Google Analytics fallback: remove once Bard and Mixpanel are ready for SCP
   ga('send', 'event', 'click', 'other') // eslint-disable-line no-undef
+}
+
+/**
+ * Log front-end error (e.g. uncaught ReferenceError)
+ */
+export function logError(text) {
+  const props = { text }
+  log('error', props)
 }
 
 /**
@@ -170,7 +170,10 @@ export function log(name, props={}) {
   const init = Object.assign(defaultInit, body)
 
   // Remove once Bard and Mixpanel are ready for SCP
-  if ('SCP' in window && window.SCP.environment !== 'production') {
+  if (
+    'SCP' in window && window.SCP.environment !== 'production' &&
+    accessToken === '' // Remove once Bard supports unregistered users
+  ) {
     fetch(`${bardDomain}/api/event`, init)
   }
 }

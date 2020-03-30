@@ -37,6 +37,11 @@
       }
       window.SCP.userId = Cookies.get('user_id');
 
+      // set userId in Google Analytics
+      // Where else is `userId` used?  Consider removing this raw global.
+      var userId = window.SCP.userId;
+      ga('set', 'userId', window.SCP.userId);
+
   </script>
 
   <script type="text/javascript"  nonce="<%= content_security_policy_script_nonce %>">
@@ -172,11 +177,6 @@
   <% end %>
 </div>
 <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
-
-    // set userId in Google Analytics
-    // Where else is `userId` used?  Consider removing this raw global.
-    var userId = window.SCP.userId;
-    ga('set', 'userId', window.SCP.userId);
 
     // variable used mostly for testing
     PAGE_RENDERED = true;
