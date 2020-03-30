@@ -7,7 +7,7 @@ class ResetDefaultAnnotations < Mongoid::Migration
         if annotation_type == 'group' # numeric annotations are fine, so skip
           case annotation_scope
           when 'study'
-            annotation = study.cell_metadatum.by_name_and_type(annotation_name, annotation_type)
+            annotation = study.cell_metadata.by_name_and_type(annotation_name, annotation_type)
             can_visualize = annotation.can_visualize?
           when 'cluster'
             cluster = study.default_cluster
