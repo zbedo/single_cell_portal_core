@@ -8,6 +8,7 @@
 
 import camelcaseKeys from 'camelcase-keys'
 import _compact from 'lodash/compact'
+import * as queryString from 'query-string'
 
 import { accessToken } from './../components/UserProvider'
 import {
@@ -171,8 +172,8 @@ export async function fetchDownloadSize(accessions, fileTypes, mock=false) {
  *            {String}  terms: User-supplied query string
  *            {Object}  facets: User-supplied list facets and filters
  *            {Integer} page: User-supplied list facets and filters
- *            {String}  order: User-supplied query ordering field
- *            {String}  preset: User-supplied query preset (e.g. 'covid19')
+ *            {String}  order: User-supplied results ordering field
+ *            {String}  preset_search: User-supplied query preset (e.g. 'covid19')
  * @param {Boolean} mock Whether to use mock data
  * @returns {Promise} Promise object containing camel-cased data from API
  *
@@ -192,14 +193,25 @@ export async function fetchSearch(
   return searchResults
 }
 
-/** Constructs query string used for /search REST API endpoint */
+/**
+  * Constructs query string used for /search REST API endpoint
+  * auto-appends the branding group if one exists
+  */
 export function buildSearchQueryString(type, searchParams) {
   const facetsParam = buildFacetQueryString(searchParams.facets)
-  const otherParamString = ['page', 'order', 'terms', 'preset'].map(param => {
+
+  let otherParamString = ['page', 'order', 'terms', 'preset'].map(param => {
     return searchParams[param] ? `&${param}=${searchParams[param]}` : ''
   }).join('')
+  otherParamString = otherParamString.replace('preset=', 'preset_search=')
 
-  return `type=${type}${otherParamString}${facetsParam}`
+  let brandingGroupParam = ''
+  const brandingGroup = getBrandingGroup()
+  if (brandingGroup) {
+    brandingGroupParam = `&scpbr=${brandingGroup}`
+  }
+
+  return `type=${type}${otherParamString}${facetsParam}${brandingGroupParam}`
 }
 
 /** Serializes "facets" URL parameter for /search API endpoint */
@@ -226,6 +238,12 @@ export function buildFacetsFromQueryString(facetsParamString) {
     })
   }
   return facets
+}
+
+/** returns the current branding group as specified by the url  */
+function getBrandingGroup(path) {
+  const queryParams = queryString.parse(window.location.search)
+  return queryParams.scpbr
 }
 
 /**
