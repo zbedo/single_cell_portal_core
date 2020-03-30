@@ -151,7 +151,7 @@ staging:
 pentest:
   clients:
     default:
-      database: single_cell_portal_staging
+      database: single_cell_portal_pentest
       hosts:
         - <%= ENV['MONGO_LOCALHOST'] %>:27017
       options:
