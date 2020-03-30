@@ -7,7 +7,7 @@ echo "*** COMPLETED ***"
 echo "*** ROLLING OVER LOGS ***"
 ruby /home/app/webapp/bin/cycle_logs.rb
 echo "*** COMPLETED ***"
-if [[ $PASSENGER_APP_ENV = "production" ]] || [[ $PASSENGER_APP_ENV = "staging" ]]
+if [[ $PASSENGER_APP_ENV = "production" ]] || [[ $PASSENGER_APP_ENV = "staging" ]] || [[ $PASSENGER_APP_ENV = "pentest" ]]
 then
     echo "*** PRECOMPILING ASSETS ***"
     sudo -E -u app -H bundle exec rake NODE_ENV=production RAILS_ENV=$PASSENGER_APP_ENV SECRET_KEY_BASE=$SECRET_KEY_BASE yarn:install
