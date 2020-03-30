@@ -2,9 +2,9 @@
   <style>
     #main-banner {
       background-image: url(<%=image_url "covid19-banner.png" %>) !important;
-      height: 230px;
       background-position: right;
       background-color: #1d1e20;
+      background-size: cover;
     }
     #main-banner-tag-line {
       color: #eee;
@@ -16,7 +16,7 @@
   </div>
 </div>
 <div class="container-fluid home-page-fix" id="wrap">
-  <div class="row section-pad" id="main-body">
+  <div class="row" id="main-body" style="margin-top:1.6em">
     <div class="col-md-12">
       <h3>
         <a href="/single_cell"
@@ -29,11 +29,10 @@
           <span class="fas fa-angle-left"></span>
         </a>
         COVID-19 Studies
-        <span class="fas fa-question-circle action"
-              style="color:#aaa;"
-              title="These are studies that have been identified as having specific relevance to COVID-19. If you would like to include a study in this section, please contact us" data-toggle="tooltip"></span>
+
 
       </h3>
+      <span>These are studies that have been identified as having specific relevance to COVID-19. If you would like to include a study in this section, please contact us</span>
       <div class="tab-content top-pad">
         <div id="covid19-page-content"></div>
       </div>
