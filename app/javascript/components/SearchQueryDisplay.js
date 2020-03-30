@@ -1,18 +1,21 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import { faSearch } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { getDisplayNameForFacet } from 'components/search/SearchFacetProvider'
+import { SearchSelectionContext } from './search/SearchSelectionProvider'
+import { StudySearchContext } from 'components/search/StudySearchProvider'
+import Button from 'react-bootstrap/lib/Button'
 
 
 function formattedJoinedList(itemTexts, itemClass, joinText) {
   return itemTexts.map((text, index) => {
-      return (
-        <span key={index}>
-          <span className={itemClass}>{text}</span>
-          { (index != itemTexts.length - 1) &&
+    return (
+      <span key={index}>
+        <span className={itemClass}>{text}</span>
+        { (index != itemTexts.length - 1) &&
             <span className="join-text">{joinText}</span>}
-        </span>
-      )
+      </span>
+    )
   })
 }
 
@@ -20,8 +23,8 @@ function formatFacet(facet, index, numFacets) {
   let facetContent
   if (Array.isArray(facet.filters)) {
     facetContent = formattedJoinedList(facet.filters.map(filter => filter.name),
-                                       'filter-name',
-                                       ' OR ')
+      'filter-name',
+      ' OR ')
   } else { // it's a numeric facet
     facetContent = (<span className="filter-name">
       {facet.filters.min} - {facet.filters.max} {facet.filters.unit ? facet.filters.unit : '' }
@@ -37,7 +40,27 @@ function formatFacet(facet, index, numFacets) {
   )
 }
 
-export default function SearchQueryDisplay({terms, facets}) {
+export const ClearAllButton = () => {
+  const selectionContext = useContext(SearchSelectionContext)
+  const searchContext = useContext(StudySearchContext)
+  const clearSearch = () => {
+    const emptyFilters = {}
+    Object.keys(selectionContext.facets
+    ).forEach(facet => {
+      emptyFilters[facet] = []
+    })
+    const emptySearchParams = {
+      terms: '',
+      facets: emptyFilters
+    }
+    searchContext.updateSearch(emptySearchParams)
+    selectionContext.updateSelection(emptySearchParams)
+  }
+  return (
+    <Button onClick = {clearSearch}>Clear All</Button>)
+}
+
+export default function SearchQueryDisplay({ terms, facets }) {
   const hasFacets = facets.length > 0
   const hasTerms = terms && terms.length > 0
   if (!hasFacets && !hasTerms) {
@@ -48,7 +71,7 @@ export default function SearchQueryDisplay({terms, facets}) {
   let termsDisplay = <span></span>
 
   if (hasFacets) {
-    let FacetContainer = (props) => <>{props.children}</>
+    let FacetContainer = props => <>{props.children}</>
     if (hasTerms) {
       FacetContainer = props => (<>
         <span className="join-text"> AND </span>({props.children})
@@ -68,7 +91,7 @@ export default function SearchQueryDisplay({terms, facets}) {
   }
   return (
     <div className="search-query">
-      <FontAwesomeIcon icon={faSearch} />: {termsDisplay}{facetsDisplay}
+      <FontAwesomeIcon icon={faSearch} />: {termsDisplay}{facetsDisplay} <ClearAllButton/>
     </div>
   )
 }

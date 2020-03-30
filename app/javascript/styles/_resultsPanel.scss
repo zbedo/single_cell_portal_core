@@ -1,6 +1,14 @@
 .results-panel {
   padding-top: 14px;
 
+  button {
+    color:$action-color;
+    background-color: #EEF2F5;
+    border: none;
+  }
+  button:hover {
+    background-color: white;
+  }
   .search-query {
     margin-left: 1em;
     .filter-name, .search-term {
