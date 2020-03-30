@@ -35,6 +35,10 @@
 
       window.SCP.hasLoggedPageView = false;
 
+      <% if controller_name == 'site' && action_name == 'covid19' %>
+      window.SCP.featuredSpace = 'covid19'
+      <% end %>
+
       // Set the unique cookie for tracking user IDs in GA.  Also used in Mixpanel.
       // This is not personally identifiable, lasts for 1 year or until cleared.
       if ( typeof Cookies.get('user_id') === 'undefined' ) {

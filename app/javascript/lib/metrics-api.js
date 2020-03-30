@@ -35,21 +35,21 @@ if ('SCP' in window) {
 /**
  * Log page view, i.e. page load
  */
-export function logPageView(props={}) {
-  log('page:view', props)
+export function logPageView() {
+  log('page:view')
 }
 
 /** Log click on page.  Delegates to more element-specific loggers. */
-export function logClick(event, props={}) {
+export function logClick(event) {
   const target = event.target
   const tag = target.localName.toLowerCase() // local tag name
 
   if (tag === 'a') {
-    logClickLink(target, props)
+    logClickLink(target)
   } else if (tag === 'button') {
-    logClickButton(target, props)
+    logClickButton(target)
   } else if (tag === 'input') {
-    logClickInput(target, props)
+    logClickInput(target)
   } else {
     // Perhaps uncomment when Mixpanel quota increases
     // logClickOther(target)
@@ -59,16 +59,16 @@ export function logClick(event, props={}) {
 /**
  * Log click on link, i.e. anchor (<a ...) tag
  */
-function logClickLink(target, props) {
-  props = Object.assign(props, { text: target.text })
+function logClickLink(target) {
+  const props = { text: target.text }
   log('click:link', props)
 }
 
 /**
  * Log click on button, e.g. for pagination, "Apply", etc.
  */
-function logClickButton(target, props) {
-  props = Object.assign(props, { text: target.text })
+function logClickButton(target) {
+  const props = { text: target.text }
   log('click:button', props)
 
   // Google Analytics fallback: remove once Bard and Mixpanel are ready for SCP
@@ -104,13 +104,13 @@ function getLabelsForInputElement(element) {
 /**
  * Log click on input by type, e.g. text, number, checkbox
  */
-function logClickInput(target, props) {
+function logClickInput(target) {
   const domLabels = getLabelsForInputElement(target)
 
   // User-facing label
   const label = domLabels.length > 0 ? domLabels[0].innerText : ''
 
-  props = Object.assign(props, { label })
+  const props = { label }
   const element = `input-${target.type}`
   log(`click:${element}`, props)
 
@@ -121,8 +121,8 @@ function logClickInput(target, props) {
 /**
  * Log clicks on elements that are not otherwise classified
  */
-function logClickOther(target, props) { // eslint-disable-line no-unused-vars
-  props = Object.assign(props, { text: target.text })
+function logClickOther(target) { // eslint-disable-line no-unused-vars
+  const props = { text: target.text }
   log('click:other', props)
 
   // Google Analytics fallback: remove once Bard and Mixpanel are ready for SCP
@@ -160,6 +160,11 @@ export function log(name, props={}) {
     distinct_id: userId, // Needed for Mixpanel "Distinct ID" (Bard papercut)
     env
   })
+
+  if ('SCP' in window && 'featuredSpace' in window.SCP) {
+    // For e.g. COVID-19 featured space
+    props['featureSpace'] = window.SCP.featuredSpace
+  }
 
   const body = {
     body: JSON.stringify({
