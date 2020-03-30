@@ -78,6 +78,7 @@ Rails.application.routes.draw do
     post 'admin/deployment', to: 'admin_configurations#create_deployment_notification', as: :create_deployment_notification
     delete 'admin/deployment', to: 'admin_configurations#delete_deployment_notification', as: :delete_deployment_notification
     resources :admin_configurations, path: 'admin'
+    resources :preset_searches
 
     resources :taxons, path: 'species'
     get 'species/:id/download_genome_annotation', to: 'taxons#download_genome_annotation', as: :download_genome_annotation
@@ -245,6 +246,9 @@ Rails.application.routes.draw do
     get 'log_action', to: 'site#log_action', as: :log_action
     get 'privacy_policy', to: 'site#privacy_policy', as: :privacy_policy
     get 'terms_of_service', to: 'site#terms_of_service', as: :terms_of_service
+
+    get 'covid19', to: 'site#covid19'
+
     get '/', to: 'site#index', as: :site
     root to: 'site#index'
   end

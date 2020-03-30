@@ -9,17 +9,32 @@
         <li role="presentation" class="home-nav" id="search-genes-nav">
           <a href="#search-genes" class="home-nav-tab" data-toggle="tab"><span class="fas fa-dna"></span> Search Genes</a>
         </li>
+        <% if User.feature_flag_for_user(current_user, 'covid19_page') %>
+          <li role="presentation" class="home-nav" id="covid19-tab">
+            <a href="/single_cell/covid19"
+               style="border-radius: 5px;
+                      font-size: normal;
+                      border: 2px solid #90a8cd;
+                      background: #d6dfed;
+                      padding: 5px 10px;
+                      margin-top: 2px;">
+              <%= image_tag 'microbe-icon.png', {style: "height: 22px; margin-top: -4px"} %>
+              COVID-19 Studies
+            </a>
+          </li>
+        <% end %>
       </ul>
       <div class="tab-content top-pad">
         <div class="tab-pane active in" id="search-studies" role="tabpanel">
-          <!--
+          <%#
             This is where React integrates into Rails.
 
             Ensure any updates to this ID are reflected in the ReactDOM.render call
             in app/javascript/packs/application.js
-          -->
-          <% if User.feature_flag_for_user(current_user, "faceted_search") %>
-            <div id="home-page-content"></div>
+          #%>
+          <% if User.feature_flag_for_user(current_user, "advanced_search") %>
+            <div id="home-page-content">
+            </div>
           <% else %>
             <%= render partial: '/site/search/search_studies' %>
           <% end %>
@@ -31,6 +46,8 @@
     </div>
   </div>
 </div>
+<%# render feature flags to html so they can be found by react components #%>
+<input type="hidden" id="feature-flags" value='<%= User.feature_flags_for_user(current_user).to_json %>'/>
 
 <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
     $(window).scroll(bindScroll);

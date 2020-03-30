@@ -15,7 +15,7 @@ class SiteController < ApplicationController
   respond_to :html, :js, :json
 
   before_action :set_study, except: [:index, :search, :legacy_study, :get_viewable_studies, :search_all_genes, :privacy_policy, :terms_of_service,
-                                     :view_workflow_wdl, :create_totat, :log_action, :get_taxon, :get_taxon_assemblies]
+                                     :view_workflow_wdl, :create_totat, :log_action, :get_taxon, :get_taxon_assemblies, :covid19]
   before_action :set_cluster_group, only: [:study, :render_cluster, :render_gene_expression_plots, :render_global_gene_expression_plots,
                                            :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression,
                                            :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap, :expression_query,
@@ -30,7 +30,7 @@ class SiteController < ApplicationController
   before_action :check_view_permissions, except: [:index, :legacy_study, :get_viewable_studies, :search_all_genes, :render_global_gene_expression_plots, :privacy_policy,
                                                   :terms_of_service, :search, :precomputed_results, :expression_query, :annotation_query, :view_workflow_wdl,
                                                   :log_action, :get_workspace_samples, :update_workspace_samples, :create_totat,
-                                                  :get_workflow_options, :get_taxon, :get_taxon_assemblies]
+                                                  :get_workflow_options, :get_taxon, :get_taxon_assemblies, :covid19]
   before_action :check_compute_permissions, only: [:get_fastq_files, :get_workspace_samples, :update_workspace_samples,
                                                    :delete_workspace_samples, :get_workspace_submissions, :create_workspace_submission,
                                                    :get_submission_workflow, :abort_submission_workflow, :get_submission_errors,
@@ -91,6 +91,10 @@ class SiteController < ApplicationController
     else
       @studies = @viewable.paginate(page: params[:page], per_page: Study.per_page)
     end
+  end
+
+  def covid
+    # nothing for now
   end
 
   # search for matching studies
@@ -2255,7 +2259,7 @@ class SiteController < ApplicationController
           'Did you delete the file in the bucket and not sync it in Single Cell Portal?'
       ]
     end
-    
+
     curl_config = curl_config.join("\n")
     file_size = (is_study_file ? file.upload_file_size : file[:size])
 

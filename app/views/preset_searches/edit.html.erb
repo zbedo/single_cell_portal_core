@@ -1,0 +1,8 @@
+<h1>Editing "<%= @preset_search.name %>"</h1>
+
+<%= render 'form', preset_search: @preset_search %>
+
+<p>
+  <%= scp_link_to "<i class='fas fa-search'></i> Info".html_safe, preset_search_path(@preset_search), class: 'btn btn-info' %>
+  <%= scp_link_to "<span class='fas fa-chevron-left'></span> Back".html_safe, preset_searches_path, class: 'btn btn-warning' %>
+</p>

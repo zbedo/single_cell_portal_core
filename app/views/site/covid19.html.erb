@@ -1,0 +1,50 @@
+<div class="mask" id="main-banner">
+  <style>
+    #main-banner {
+      background-image: url(<%=image_url "covid19-banner.png" %>) !important;
+      height: 230px;
+      background-position: right;
+      background-color: #1d1e20;
+    }
+    #main-banner-tag-line {
+      color: #eee;
+    }
+  </style>
+  <div id="main-banner-logo">
+    <%= image_tag "SCP-logo.png", id: 'scp-logo' %><small id="beta-main" class="label label-danger">BETA</small>
+    <p id='main-banner-tag-line' class="scp-banner-position">Special section devoted to COVID-19 studies</p>
+  </div>
+</div>
+<div class="container-fluid home-page-fix" id="wrap">
+  <div class="row section-pad" id="main-body">
+    <div class="col-md-12">
+      <h3>
+        <a href="/single_cell"
+           style="padding: 0 0.2em 0 0.4em;
+                  border-radius: 0.5em;
+                  color: #fff;
+                  background: #4d72aa;
+                  margin-right: 0.5em;
+                  text-align: center;">
+          <span class="fas fa-angle-left"></span>
+        </a>
+        COVID-19 Studies
+        <span class="fas fa-question-circle action"
+              style="color:#aaa;"
+              title="These are studies that have been identified as having specific relevance to COVID-19. If you would like to include a study in this section, please contact us" data-toggle="tooltip"></span>
+
+      </h3>
+      <div class="tab-content top-pad">
+        <div id="covid19-page-content"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<input type="hidden" id="feature-flags" value='<%= User.feature_flags_for_user(current_user).to_json %>'/>
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
+    $(document).ready(function() {
+        var main = $('.home-page-fix');
+        var height = main.actual('height');
+        main.css('min-height', height - 245);
+    });
+</script>
