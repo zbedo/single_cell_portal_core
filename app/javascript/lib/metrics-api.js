@@ -36,7 +36,7 @@ if ('SCP' in window) {
  * Log page view, i.e. page load
  */
 export function logPageView(props={}) {
-  log('page:view')
+  log('page:view', props)
 }
 
 /** Log click on page.  Delegates to more element-specific loggers. */
@@ -172,7 +172,7 @@ export function log(name, props={}) {
   // Remove once Bard and Mixpanel are ready for SCP
   if (
     'SCP' in window && window.SCP.environment !== 'production' &&
-    accessToken === '' // Remove once Bard supports unregistered users
+    accessToken !== '' // Remove once Bard supports unregistered users
   ) {
     fetch(`${bardDomain}/api/event`, init)
   }
