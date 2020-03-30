@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
     })
   }
   if (document.getElementById('covid19-page-content')) {
-    logPageView({ preset: 'covid19' })
+    logPageView({ featuredSpace: 'covid19' })
 
     ReactDOM.render(
       <Covid19PageContent />, document.getElementById('covid19-page-content')
@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Only logs clicks for home page with faceted search UI
     $(document).on('click', 'body', event => {
-      logClick(event, { preset: 'covid19' })
+      logClick(event, { featuredSpace: 'covid19' })
     })
   }
 })
