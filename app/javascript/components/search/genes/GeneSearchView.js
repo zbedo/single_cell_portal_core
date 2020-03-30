@@ -3,6 +3,7 @@ import _clone from 'lodash/clone'
 
 import { GeneSearchContext } from 'components/search/genes/GeneSearchProvider'
 import { StudySearchContext } from 'components/search/StudySearchProvider'
+import SearchPanel from 'components/SearchPanel'
 import SearchQueryDisplay from 'components/SearchQueryDisplay'
 
 export default function GeneSearchView() {
@@ -14,16 +15,17 @@ export default function GeneSearchView() {
     searchContext.updateSearch({genes: genes}, studySearchState)
   }
 
-  let studyFilterText = <div>Searching all studies</div>
+  let studyFilterText = <div></div>
   if (studySearchState.results.totalStudies) {
     studyFilterText = <div>
-      <SearchQueryDisplay terms={studySearchState.results.terms} facets={studySearchState.results.facets}/>
+      <SearchQueryDisplay terms={studySearchState.results.termList} facets={studySearchState.results.facets}/>
       <div>({studySearchState.results.totalStudies} studies)</div>
     </div>
   }
 
   return (
     <div>
+      <SearchPanel/>
       { studyFilterText }
       <div className="row">
         <div className="col-md-6 col-sm-12 col-xs-12">
@@ -40,11 +42,9 @@ export default function GeneSearchView() {
             </div>
           </form>
         </div>
-        <div className="col-md-6 col-sm-12 col-xs-12">
-          <p className="lead">Results: <label id="gene-search-results-count" className="label label-default">0</label>
-            across <label id="gene-search-studies-count" className="label label-default">0</label> studies
-          </p>
-        </div>
+      </div>
+      <div className="row">
+
       </div>
       <div className="row">
         <div className="col-md-12">
