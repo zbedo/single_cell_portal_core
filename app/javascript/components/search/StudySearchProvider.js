@@ -9,7 +9,7 @@ import {
 } from 'lib/scp-api'
 import SearchSelectionProvider from 'components/search/SearchSelectionProvider'
 
-export const emptySearch = {
+const emptySearch = {
   params: {
     terms: '',
     facets: {},

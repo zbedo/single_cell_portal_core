@@ -2,9 +2,10 @@ import React, { useContext } from 'react'
 import Button from 'react-bootstrap/lib/Button'
 import InputGroup from 'react-bootstrap/lib/InputGroup'
 import Form from 'react-bootstrap/lib/Form'
-import { faSearch } from '@fortawesome/free-solid-svg-icons'
+import { faSearch, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { SearchSelectionContext } from './search/SearchSelectionProvider'
+import { StudySearchContext } from './search/StudySearchProvider'
 
 /**
  * Component to search using a keyword value
@@ -13,12 +14,21 @@ import { SearchSelectionContext } from './search/SearchSelectionProvider'
 export default function KeywordSearch({keywordPrompt}) {
   const placeholder = keywordPrompt ? keywordPrompt : "Enter keyword"
   const selectionContext = useContext(SearchSelectionContext)
+  const searchContext = useContext(StudySearchContext)
+  // show clear button after a search has been done,
+  //  as long as the text hasn't been updated
+  const showClear = searchContext.params.terms === selectionContext.terms
+                    && selectionContext.terms != ''
   /**
    * Updates terms in search context upon submitting keyword search
    */
   function handleSubmit(event) {
     event.preventDefault()
-    selectionContext.performSearch()
+    if (showClear) {
+      selectionContext.updateSelection({terms: ''}, true)
+    } else {
+      selectionContext.performSearch()
+    }
   }
 
   function handleKeywordChange(newValue) {
@@ -42,7 +52,7 @@ export default function KeywordSearch({keywordPrompt}) {
           name="keywordText"/>
         <div className="input-group-append">
           <Button type='submit'>
-            <FontAwesomeIcon icon={faSearch} />
+            <FontAwesomeIcon icon={ showClear ? faTimes : faSearch } />
           </Button>
         </div>
       </InputGroup>
