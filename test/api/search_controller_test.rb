@@ -236,6 +236,9 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     result_count = json['studies'].size
     assert_equal 1, result_count, "Did not find correct number of studies, expected 1 but found #{result_count}"
+    found_study = json['studies'].first
+    assert found_study['study_url'].include?("scpbr=#{branding_group.name_as_id}"),
+           "Did not append branding group identifier to end of study URL: #{found_study['study_url']}"
 
     # remove study from group and search again - should get 0 results
     study.update(branding_group_id: nil)

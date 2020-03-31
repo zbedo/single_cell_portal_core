@@ -5,7 +5,7 @@ json.set! :public, study.public
 json.set! :detached, study.detached
 json.set! :cell_count, study.cell_count
 json.set! :gene_count, study.gene_count
-json.set! :study_url, view_study_path(accession: study.accession, study_name: study.url_safe_name)
+json.set! :study_url, scp_url_for(view_study_path(accession: study.accession, study_name: study.url_safe_name), params[:scpbr])
 if @studies_by_facet.present?
   # faceted search was run, so append filter matches
   json.set! :facet_matches, @studies_by_facet[study.accession]
