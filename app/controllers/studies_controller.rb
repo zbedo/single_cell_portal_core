@@ -292,6 +292,8 @@ class StudiesController < ApplicationController
         workflow = Study.firecloud_client.get_workspace_submission_workflow(@study.firecloud_project, @study.firecloud_workspace,
                                                                             params[:submission_id], workflow['workflowId'])
         workflow['outputs'].each do |output_name, outputs|
+          # try to copy each 'output' to the special output path if the object is a file
+          # if the output is not a file, then we exit silently rather than throwing an error
           if outputs.is_a?(Array)
             outputs.each do |output_file|
               file_location = output_file.gsub(/gs\:\/\/#{@study.bucket_id}\//, '')
@@ -299,11 +301,6 @@ class StudiesController < ApplicationController
               remote_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, @study.bucket_id, file_location)
               if remote_file.present?
                 process_workflow_output(output_name, output_file, remote_file, workflow, params[:submission_id], configuration)
-              else
-                alert_content = "We were unable to sync the outputs from submission #{params[:submission_id]}; one or more of
-                             the declared output files have been deleted.  Please check the output directory before continuing."
-                redirect_to merge_default_redirect_params(request.referrer, scpbr: params[:scpbr]),
-                            alert: alert_content and return
               end
             end
           else
@@ -312,11 +309,6 @@ class StudiesController < ApplicationController
             remote_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, @study.bucket_id, file_location)
             if remote_file.present?
               process_workflow_output(output_name, outputs, remote_file, workflow, params[:submission_id], configuration)
-            else
-              alert_content = "We were unable to sync the outputs from submission #{params[:submission_id]}; one or more of
-                             the declared output files have been deleted.  Please check the output directory before continuing."
-              redirect_to merge_default_redirect_params(request.referrer, scpbr: params[:scpbr]),
-                          alert: alert_content and return
             end
           end
         end
@@ -329,7 +321,7 @@ class StudiesController < ApplicationController
               study_id: @study.id,
               version: '4.6.1'
           }
-          AnalysisMetadatum.create!(metadata_attr)
+          AnalysisMetadatum.create(metadata_attr)
         end
       end
       @available_files = @unsynced_files.map {|f| {name: f.name, generation: f.generation, size: f.upload_file_size}}

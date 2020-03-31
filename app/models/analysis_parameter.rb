@@ -13,7 +13,7 @@ class AnalysisParameter
   field :call_name, type: String # name of WDL task this input
   field :parameter_type, type: String # type of the parameter (from primitive/compound types)
   field :parameter_name, type: String # name of the parameter from the WDL
-  field :parameter_value, type: String # value of the parameter (optional)
+  field :parameter_value, type: String, default: '' # value of the parameter (optional)
   field :description, type: String # help text for input (optional, user-supplied)
   field :optional, type: Boolean, default: false # parameter optional?
   field :associated_model, type: String # SCP model this parameter is associated with, if any (e.g. StudyFile, etc)
@@ -40,8 +40,7 @@ class AnalysisParameter
   validates_inclusion_of :data_type, in: DATA_TYPES
   validate :validate_parameter_type
   validate :validate_parameter_value_by_type, unless: proc {|attributes| attributes.parameter_value.blank?}
-  validates :output_file_type, inclusion: {in: StudyFile::STUDY_FILE_TYPES},
-            presence: true, on: :update, if: proc {|attributes| attributes.data_type == 'outputs'}
+  validate :validate_output_file_type, on: :update, if: proc {|attributes| attributes.data_type == 'outputs'}
   validates_uniqueness_of :is_reference_bundle, scope: :analysis_configuration_id, if: proc {|attributes| attributes.is_reference_bundle}
 
   # get the call & parameter name together for use in Methods Repository configuration objects
@@ -61,6 +60,11 @@ class AnalysisParameter
     else
       false
     end
+  end
+
+  # check if this is an output file parameter
+  def is_output_file?
+    self.data_type == 'outputs' && self.parameter_type.match(/File/).present?
   end
 
   # type of input parameter for array-based inputs
@@ -222,6 +226,14 @@ class AnalysisParameter
     end
     if has_validation_error
       errors.add(:parameter_value, "is not a valid #{self.parameter_type} value: #{self.parameter_value}.")
+    end
+  end
+
+  def validate_output_file_type
+    if self.is_output_file?
+      unless StudyFile::STUDY_FILE_TYPES.include?(self.output_file_type)
+        errors.add(:output_file_type, "'#{self.output_file_type}' is not a valid file type: #{StudyFile::STUDY_FILE_TYPES.join(', ')}")
+      end
     end
   end
 end
