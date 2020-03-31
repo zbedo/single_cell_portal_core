@@ -83,9 +83,7 @@ describe('Clearing search query', () => {
       <FacetControl facet={speciesFacet}/>
     </PropsStudySearchProvider>
     const wrapper = mount(component)
-    // wrapper.find('.badge').text()
     wrapper.find('#facet-species > a').simulate('click')
-    console.log(wrapper.debug())
     wrapper.find(ClearAllButton).simulate('click')
     expect(wrapper.find('input[name="keywordText"]').first().props().value).toEqual('')
     // Check if badge for filter doesn't exist
