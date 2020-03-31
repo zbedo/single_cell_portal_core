@@ -2,7 +2,8 @@ class ResetDefaultAnnotations < Mongoid::Migration
   def self.up
     Study.all.each do |study|
       if study.default_annotation.present?
-        annotation_name, annotation_type, annotation_scope = study.default_annotation.split('--')
+        current_annotation = study.default_annotation
+        annotation_name, annotation_type, annotation_scope = current_annotation.split('--')
         can_visualize = true
         if annotation_type == 'group' # numeric annotations are fine, so skip
           case annotation_scope
@@ -20,6 +21,7 @@ class ResetDefaultAnnotations < Mongoid::Migration
             study.cell_metadata.each do |metadata|
               if metadata.can_visualize?
                 study.default_options[:annotation] = metadata.annotation_select_value
+                study.default_options[:old_annotation] = current_annotation # only for reversibility
                 study.save
                 break
               end
@@ -31,6 +33,12 @@ class ResetDefaultAnnotations < Mongoid::Migration
   end
 
   def self.down
-    # we don't want to do anything as we'd be reintroducing issues/errors in visualization
+    Study.all.each do |study|
+      old_default_annotation = study.default_options[:old_annotation]
+      if old_default_annotation.present?
+        study.default_options[:annotation] = old_default_annotation
+        study.save
+      end
+    end
   end
 end
