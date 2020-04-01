@@ -86,7 +86,7 @@ export function PropsStudySearchProvider(props) {
    * @param {Object} newParams Parameters to update
    */
   async function updateSearch(newParams) {
-    let search = Object.assign({}, searchParams, newParams)
+    const search = Object.assign({}, searchParams, newParams)
     search.facets = Object.assign({}, searchParams.facets, newParams.facets)
     // reset the page to 1 for new searches, unless otherwise specified
     search.page = newParams.page ? newParams.page : 1
@@ -100,11 +100,12 @@ export function PropsStudySearchProvider(props) {
     // reset the scroll in case they scrolled down to read prior results
     window.scrollTo(0, 0)
 
-    const results = await fetchSearch('study', params)
+    const results = await fetchSearch('study', 'boo boo')
+    console.log(results)
 
     setSearchState({
       params,
-      isError: false,
+      isError: results.message.ok,
       isLoading: false,
       isLoaded: true,
       results,

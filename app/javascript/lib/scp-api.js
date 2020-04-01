@@ -260,10 +260,25 @@ export default async function scpApi(path, init, mock=false) {
   let fullPath = basePath + path
   if (mock) fullPath += '.json' // e.g. /mock_data/search/auth_code.json
 
+  function handleErrors(response) {
+    if (!response.ok) {
+      return Promise.reject({
+        type: 'NetworkError',
+        status: response.status,
+        message: response
+      })
+    }
+    return response
+  }
   const response = await fetch(fullPath, init)
-  const json = await response.json()
+    .then(handleErrors)
+    .catch(error => error)
 
-  // Converts API's snake_case to JS-preferrable camelCase,
-  // for easy destructuring assignment.
-  return camelcaseKeys(json)
+  if (response.message.ok) {
+    const json = await response.json().catch(console.error)
+    // Converts API's snake_case to JS-preferrable camelCase,
+    // for easy destructuring assignment.
+    return camelcaseKeys(json)
+  }
+  return response
 }

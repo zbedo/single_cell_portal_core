@@ -12,6 +12,7 @@ import SearchQueryDisplay from './SearchQueryDisplay'
  */
 const ResultsPanel = props => {
   const searchContext = useContext(StudySearchContext)
+  console.log(searchContext.isError)
   const results = searchContext.results
   let panelContent
   if (searchContext.isError) {
