@@ -163,7 +163,7 @@ export function log(name, props={}) {
 
   if ('SCP' in window && 'featuredSpace' in window.SCP) {
     // For e.g. COVID-19 featured space
-    props['featureSpace'] = window.SCP.featuredSpace
+    props['featuredSpace'] = window.SCP.featuredSpace
   }
 
   const body = {
