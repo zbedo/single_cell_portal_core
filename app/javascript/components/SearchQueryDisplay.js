@@ -91,7 +91,7 @@ export default function SearchQueryDisplay({ terms, facets }) {
   }
   return (
     <div className="search-query">
-      <FontAwesomeIcon icon={faSearch} />: {termsDisplay}{facetsDisplay} <ClearAllButton/>
+      <FontAwesomeIcon icon={faSearch} />: <span className="query-text">{termsDisplay}{facetsDisplay}</span> <ClearAllButton/>
     </div>
   )
 }
