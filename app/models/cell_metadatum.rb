@@ -16,6 +16,12 @@ class CellMetadatum
   BIGQUERY_DATASET = "cell_metadata#{Rails.env != 'production' ? "_#{Rails.env}" : nil}"
   BIGQUERY_TABLE = 'alexandria_convention'
 
+  # range to determine whether a group annotation is "useful" to visualize
+  # an annotation must have 2-100 different groups.  only 1 label is not informative,
+  # and over 100 is difficult to comprehend and slows down rendering once the group count
+  # gets over a few hundred (both server- and client-side).
+  GROUP_VIZ_THRESHOLD = (2..100)
+
   belongs_to :study
   belongs_to :study_file
   has_many :data_arrays, as: :linear_data
@@ -63,7 +69,13 @@ class CellMetadatum
     [self.name, self.annotation_select_value]
   end
 
-
+  def can_visualize?
+    if self.annotation_type == 'group'
+      GROUP_VIZ_THRESHOLD === self.values.count
+    else
+      true
+    end
+  end
 
   ##
   #
