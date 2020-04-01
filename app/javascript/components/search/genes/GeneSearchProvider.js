@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useContext } from 'react'
 import _cloneDeep from 'lodash/cloneDeep'
 import _isEqual from 'lodash/isEqual'
 import { navigate, useLocation } from '@reach/router'
@@ -36,6 +36,7 @@ export function PropsGeneSearchProvider(props) {
   defaultState.updateSearch = updateSearch
   const [searchState, setSearchState] = useState(defaultState)
   const searchParams = props.searchParams
+  const studySearchState = useContext(StudySearchContext)
 
   /**
    * Update search parameters in URL
@@ -48,23 +49,22 @@ export function PropsGeneSearchProvider(props) {
     const genePage = newParams.genePage ? newParams.genePage : 1
     const facets = studySearchState.params.facets
     const terms = studySearchState.params.terms
-    let studyAccessions = []
-    if (studySearchState.isLoaded) {
-      studyAccessions = studySearchState.results.matchingAccessions
-    }
 
-    const queryString = buildGeneSearchQueryString(genes, studyAccessions, terms, facets, genePage)
+    const queryString = buildGeneSearchQueryString(genes, undefined, terms, facets, genePage)
     navigate(`?${queryString}`)
   }
 
   /** perform the actual API search */
-  async function performSearch(params) {
+  async function performSearch(params, studySearchState) {
     // reset the scroll in case they scrolled down to read prior results
     window.scrollTo(0, 0)
-
+    let studyAccessions = undefined
+    if (studySearchState.isLoaded) {
+      studyAccessions = studySearchState.results.matchingAccessions
+    }
     const results = await fetchGeneSearch(
       params.genes,
-      params.studyAccessions,
+      studyAccessions,
       params.terms,
       params.facets,
       params.genePage)
@@ -84,7 +84,7 @@ export function PropsGeneSearchProvider(props) {
       (!_isEqual(searchParams, searchState.params) ||
       !searchState.isLoading &&
       !searchState.isLoaded)) {
-    performSearch(searchParams)
+    performSearch(searchParams, studySearchState)
 
     setSearchState({
       params: searchParams,
@@ -114,9 +114,9 @@ export default function GeneSearchProvider(props) {
   const location = useLocation()
   const queryParams = queryString.parse(location.search)
   const searchParams = {
-    genePage: queryParams.genePage ? queryParams.genePage : 1,
+    genePage: queryParams.genePage ? parseInt(queryParams.genePage) : 1,
     genes: queryParams.genes ? queryParams.genes : '',
-    page: queryParams.page ? queryParams.page : 1,
+    page: queryParams.page ? parseInt(queryParams.page) : 1,
     terms: queryParams.terms ? queryParams.terms : '',
     facets: buildFacetsFromQueryString(queryParams.facets)
   }

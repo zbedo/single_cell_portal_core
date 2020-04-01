@@ -260,7 +260,7 @@ export function buildGeneSearchQueryString(genes, studyAccessions, studyKeywords
   if (studyAccessions && studyAccessions.length) {
     studyAccessionParam = '&studyAccessions=' + studyAccessions.join(',')
   }
-  return encodeURIComponent(`genes=${genes}${studyAccessionParam}&genePage=${pageParam}&terms=${studyKeywords}&facets=${facetsParam}`)
+  return `genes=${encodeURIComponent(genes)}${studyAccessionParam}&genePage=${pageParam}&terms=${studyKeywords}&facets=${facetsParam}`
 }
 
 /** returns the current branding group as specified by the url  */

@@ -149,7 +149,7 @@ export default function StudySearchProvider(props) {
   const location = useLocation()
   const queryParams = queryString.parse(location.search)
   const searchParams = {
-    page: queryParams.page ? queryParams.page : 1,
+    page: queryParams.page ? parseInt(queryParams.page) : 1,
     terms: queryParams.terms ? queryParams.terms : '',
     facets: buildFacetsFromQueryString(queryParams.facets),
     preset: props.preset ? props.preset : queryString.preset_search,
