@@ -92,14 +92,12 @@ export default function FiltersBox(props) {
         appliedSelection.length === 0 &&
         selection.length === 0) {
       // case where a user clicks apply without changing the slider
-      let defaultSelection = [
+      const defaultSelection = [
         props.facet.min,
         props.facet.max,
         props.facet.unit
       ]
       selectionContext.updateFacet(props.facet.id, defaultSelection, true)
-    } else {
-      selectionContext.performSearch()
     }
     if (props.setShow) {
       props.setShow(false)
