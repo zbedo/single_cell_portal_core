@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react'
+import React, { useContext, useState, useEffect } from 'react'
 import { StudySearchContext } from 'components/search/StudySearchProvider'
 import _clone from 'lodash/clone'
 
@@ -6,8 +6,7 @@ import _clone from 'lodash/clone'
 export const SearchSelectionContext = React.createContext({
   terms: '',
   facets: {},
-  updateSelection: undefined,
-  performSearch: undefined
+  updateSelection: undefined
 })
 
 /** Renders its children within a SearchSelectionContext provider */
@@ -20,7 +19,6 @@ export default function SearchSelectionProvider(props) {
       { terms: '', facets: {} })
   selection.updateSelection = updateSelection
   selection.updateFacet = updateFacet
-  selection.performSearch = performSearch
 
   /** merges the update into the current selection */
   function updateSelection(value, searchNow) {
@@ -30,6 +28,9 @@ export default function SearchSelectionProvider(props) {
     }
     setSelection(newSelection)
   }
+  useEffect(() => {
+    searchContext.updateSearch(selection)
+  }, [selection])
 
   /** merges the facet update into the current selection */
   function updateFacet(facetId, value, searchNow) {
@@ -38,16 +39,10 @@ export default function SearchSelectionProvider(props) {
     const facetObj = Object.assign({}, selection.facets, updatedFacet)
     const newSelection = Object.assign({}, selection)
     newSelection.facets = facetObj
-    if (searchNow) {
-      searchContext.updateSearch(newSelection)
-    }
+
     setSelection(newSelection)
   }
 
-  /** execute the search on the server */
-  function performSearch() {
-    searchContext.updateSearch(selection)
-  }
 
   return (
     <SearchSelectionContext.Provider value={selection}>
