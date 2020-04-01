@@ -33,35 +33,35 @@ describe('Search query display text', () => {
     const wrapper = mount((
       <SearchQueryDisplay facets={oneStringFacet} terms={''}/>
     ))
-    expect(wrapper.text().trim()).toEqual(': Metadata contains (species: Homo sapiens) Clear All')
+    expect(wrapper.find('.query-text').text().trim()).toEqual('Metadata contains (species: Homo sapiens)')
   })
 
   it('renders multiple facets', async () => {
     const wrapper = mount((
       <SearchQueryDisplay facets={twoStringFacets} terms={''}/>
     ))
-    expect(wrapper.text().trim()).toEqual(': Metadata contains (disease: disease1) AND (species: Homo sapiens) Clear All')
+    expect(wrapper.find('.query-text').text().trim()).toEqual('Metadata contains (disease: disease1) AND (species: Homo sapiens)')
   })
 
   it('renders string and numeric facets', async () => {
     const wrapper = mount((
       <SearchQueryDisplay facets={stringAndNumericFacets} terms={''}/>
     ))
-    expect(wrapper.text().trim()).toEqual(': Metadata contains (species: Homo sapiens OR Mus musculus) AND (organism age: 14 - 180 years) Clear All')
+    expect(wrapper.find('.query-text').text().trim()).toEqual('Metadata contains (species: Homo sapiens OR Mus musculus) AND (organism age: 14 - 180 years)')
   })
 
   it('renders terms', async () => {
     const wrapper = mount((
       <SearchQueryDisplay facets={[]} terms={['foo']}/>
     ))
-    expect(wrapper.text().trim()).toEqual(': Text contains (foo) Clear All')
+    expect(wrapper.find('.query-text').text().trim()).toEqual('Text contains (foo)')
   })
 
   it('renders terms and a single facet', async () => {
     const wrapper = mount((
       <SearchQueryDisplay facets={oneStringFacet} terms={['foo', 'bar']}/>
     ))
-    expect(wrapper.text().trim()).toEqual(': (Text contains (foo OR bar)) AND (Metadata contains (species: Homo sapiens)) Clear All')
+    expect(wrapper.find('.query-text').text().trim()).toEqual('(Text contains (foo OR bar)) AND (Metadata contains (species: Homo sapiens))')
   })
 })
 
@@ -83,7 +83,10 @@ describe('Clearing search query', () => {
       <FacetControl facet={speciesFacet}/>
     </PropsStudySearchProvider>
     const wrapper = mount(component)
+    expect(wrapper.find('input[name="keywordText"]').first().props().value).toEqual('foo')
     wrapper.find('#facet-species > a').simulate('click')
+    // Filer is checked
+    expect(wrapper.find('input[name="NCBITaxon_9606"]').props().checked).toEqual(true)
     wrapper.find(ClearAllButton).simulate('click')
     expect(wrapper.find('input[name="keywordText"]').first().props().value).toEqual('')
     // Check if badge for filter doesn't exist
