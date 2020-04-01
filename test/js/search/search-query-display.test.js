@@ -85,7 +85,7 @@ describe('Clearing search query', () => {
     const wrapper = mount(component)
     expect(wrapper.find('input[name="keywordText"]').first().props().value).toEqual('foo')
     wrapper.find('#facet-species > a').simulate('click')
-    // Filer is checked
+    // Filter is checked
     expect(wrapper.find('input[name="NCBITaxon_9606"]').props().checked).toEqual(true)
     wrapper.find(ClearAllButton).simulate('click')
     expect(wrapper.find('input[name="keywordText"]').first().props().value).toEqual('')
