@@ -5,7 +5,7 @@ import FacetsPanel from './FacetsPanel'
 import DownloadButton from './DownloadButton'
 import DownloadProvider from 'components/search/DownloadProvider'
 import { StudySearchContext } from 'components/search/StudySearchProvider'
-import { getFlagValue } from 'lib/feature-flags'
+import { FeatureFlagContext } from 'providers/FeatureFlagProvider'
 
 function CommonSearchButtons() {
   const searchState = useContext(StudySearchContext)
@@ -32,12 +32,12 @@ export default function SearchPanel({showCommonButtons, keywordPrompt, showDownl
   // Note: This might become  a Higher-Order Component (HOC).
   // This search component is currently specific to the "Studies" tab, but
   // could possibly also enable search for "Genes" and "Cells" tabs.
-
+  const featureFlagState = useContext(FeatureFlagContext)
   let searchButtons = <></>
   if (showCommonButtons !== false) {
     searchButtons = <CommonSearchButtons/>
   }
-  if (getFlagValue('faceted_search')) {
+  if (featureFlagState.faceted_search) {
     searchButtons = <FacetsPanel/>
   }
   let downloadButtons = <></>
