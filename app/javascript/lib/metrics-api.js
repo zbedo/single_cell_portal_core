@@ -76,14 +76,6 @@ function logClickButton(target) {
 }
 
 /**
- * Log front-end error (e.g. uncaught ReferenceError)
- */
-export function logError(text) {
-  const props = { text: text }
-  log('error', props)
-}
-
-/**
  * Get label elements for an input element
  *
  * From https://stackoverflow.com/a/15061155
@@ -138,6 +130,14 @@ function logClickOther(target) { // eslint-disable-line no-unused-vars
 }
 
 /**
+ * Log front-end error (e.g. uncaught ReferenceError)
+ */
+export function logError(text) {
+  const props = { text }
+  log('error', props)
+}
+
+/**
  * Log metrics to Mixpanel via Bard web service
  *
  * Bard docs:
@@ -161,6 +161,11 @@ export function log(name, props={}) {
     env
   })
 
+  if ('SCP' in window && 'featuredSpace' in window.SCP) {
+    // For e.g. COVID-19 featured space
+    props['featuredSpace'] = window.SCP.featuredSpace
+  }
+
   const body = {
     body: JSON.stringify({
       event: name,
@@ -170,7 +175,10 @@ export function log(name, props={}) {
   const init = Object.assign(defaultInit, body)
 
   // Remove once Bard and Mixpanel are ready for SCP
-  if ('SCP' in window && window.SCP.environment !== 'production') {
+  if (
+    'SCP' in window && window.SCP.environment !== 'production' &&
+    accessToken !== '' // Remove once Bard supports unregistered users
+  ) {
     fetch(`${bardDomain}/api/event`, init)
   }
 }

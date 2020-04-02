@@ -71,7 +71,7 @@ function getFriendlyFilterListByFacet(facets) {
 /**
  * Log study search metrics.  Might support gene, cell search in future.
  */
-export function logSearch(type, terms, facets, page) {
+export function logSearch(type, searchParams) {
   if (isPageLoadSearch === true) {
     // This prevents over-reporting searches.
     // Loading home page triggers search, which is a side-effect / artifact
@@ -81,6 +81,12 @@ export function logSearch(type, terms, facets, page) {
     return
   }
 
+  const terms = searchParams.terms
+  const facets = searchParams.facets
+  const page = searchParams.page
+
+  const preset = searchParams.preset
+
   const numTerms = getNumberOfTerms(terms)
   const [numFacets, numFilters] = getNumFacetsAndFilters(facets)
   const facetList = Object.keys(facets)
@@ -88,16 +94,20 @@ export function logSearch(type, terms, facets, page) {
   const filterListByFacet = getFriendlyFilterListByFacet(facets)
 
   const simpleProps = {
-    type, terms, page,
+    type, terms, page, preset,
     numTerms, numFacets, numFilters, facetList
   }
   const props = Object.assign(simpleProps, filterListByFacet)
 
   log('search', props)
 
+  let gaEventCategory = 'advanced-search'
+  // e.g. advanced-search-covid19
+  if (preset !== '') gaEventCategory += `-${preset}`
+
   // Google Analytics fallback: remove once Bard and Mixpanel are ready for SCP
   ga( // eslint-disable-line no-undef
-    'send', 'event', 'faceted-search', 'study-search',
+    'send', 'event', gaEventCategory, 'study-search',
     'num-terms', numTerms
   )
 }
@@ -114,7 +124,7 @@ export function logFilterSearch(facet, terms) {
 
   // Google Analytics fallback: remove once Bard and Mixpanel are ready for SCP
   ga( // eslint-disable-line no-undef
-    'send', 'event', 'faceted-search', 'search-filter',
+    'send', 'event', 'advanced-search', 'search-filter',
     'num-terms', numTerms
   )
 }

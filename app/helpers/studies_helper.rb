@@ -35,4 +35,35 @@ module StudiesHelper
   def get_convention_label
     "<span class='fas fa-copyright text-muted' aria-hidden='true' title='Convention Metadata' data-toggle='tooltip'></span>".html_safe
   end
+
+  # get either a count of values for group annotations, or bounds for numeric annotations
+  def get_annotation_bounds(values:, annotation_type:)
+    case annotation_type.to_sym
+    when :group
+      values.size
+    when :numeric
+      # we need to check for NaN as minmax throws an ArgumentError
+      begin
+        values.minmax.join(', ')
+      rescue ArgumentError
+        values.keep_if {|value| !value.to_f.nan?}.minmax.join(', ') + ' (excluding NaN)'
+      end
+    end
+  end
+
+  # helper for displaying sorted, unique values from a given group annotation
+  # if there are too many values (> 100), then only a count is displayed
+  # does not return anything for numeric annotations
+  def get_sorted_group_values(values:, annotation_type:)
+    if annotation_type.to_sym == :group
+      if CellMetadatum::GROUP_VIZ_THRESHOLD === values.size || values.size == 1
+        Naturally.sort(values).join(', ')
+      else
+        label = "<big><span class='label label-warning' data-toggle='tooltip' " + \
+        "title='Group-based annotations with over 100 groups are not visualized for performance reasons'>" + \
+        "<i class='fas fa-exclamation-triangle'></i> List too long, will not visualize</span></big>"
+        label.html_safe
+      end
+    end
+  end
 end
