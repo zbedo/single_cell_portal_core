@@ -9,11 +9,11 @@ class ResetDefaultAnnotations < Mongoid::Migration
           case annotation_scope
           when 'study'
             annotation = study.cell_metadata.by_name_and_type(annotation_name, annotation_type)
-            can_visualize = annotation.can_visualize?
+            can_visualize = annotation.present? && annotation.can_visualize?
           when 'cluster'
             cluster = study.default_cluster
             annotation = cluster.cell_annotations.detect {|annot| annot[:name] == annotation_name}
-            can_visualize = cluster.can_visualize_cell_annotation?(annotation)
+            can_visualize = cluster.present? && annotation.present? && cluster.can_visualize_cell_annotation?(annotation)
           end
           # if we have a bad annotation, reset to the first available cell metadata annotation
           # that can visualize.  if nothing else is available, leave as-is
