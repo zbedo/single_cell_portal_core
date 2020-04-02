@@ -1,9 +1,8 @@
-import React, { useContext, useEffect } from 'react'
+import React, { useContext } from 'react'
 import { faSearch } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { getDisplayNameForFacet } from 'components/search/SearchFacetProvider'
 import { SearchSelectionContext } from './search/SearchSelectionProvider'
-import { StudySearchContext } from 'components/search/StudySearchProvider'
 import Button from 'react-bootstrap/lib/Button'
 
 
