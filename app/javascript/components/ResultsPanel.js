@@ -12,7 +12,6 @@ import SearchQueryDisplay from './SearchQueryDisplay'
  */
 const ResultsPanel = props => {
   const searchContext = useContext(StudySearchContext)
-  console.log(searchContext.isError)
   const results = searchContext.results
   let panelContent
   if (searchContext.isError) {
@@ -28,7 +27,7 @@ const ResultsPanel = props => {
         Loading &nbsp;
         <FontAwesomeIcon icon={faDna} className="gene-load-spinner"/>
       </div>
-  } else if (results.studies && results.studies.length > 0) {
+  } else if (results.studies && (results.studies.length > 0)) {
     panelContent =
       <>
         <SearchQueryDisplay terms={results.termList} facets={results.facets}/>
