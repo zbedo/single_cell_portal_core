@@ -53,8 +53,7 @@ export const ClearAllButton = () => {
       terms: '',
       facets: emptyFilters
     }
-    searchContext.updateSearch(emptySearchParams)
-    selectionContext.updateSelection(emptySearchParams)
+    selectionContext.updateSelection(emptySearchParams, true)
   }
   return (
     <Button onClick = {clearSearch}>Clear All</Button>)

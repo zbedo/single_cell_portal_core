@@ -25,6 +25,7 @@ function FilterCheckboxes(props) {
               <input
                 type='checkbox'
                 aria-label='checkbox'
+                onChange={e => {updateSelection(filter.id, e.target.checked)}}
                 id={filter.id}
                 name={filter.id}
                 checked={props.selection.includes(filter.id)}

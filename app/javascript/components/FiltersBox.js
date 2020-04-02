@@ -1,4 +1,4 @@
-import React, { useContext, setState } from 'react'
+import React, { useContext } from 'react'
 import _isEqual from 'lodash/isEqual'
 import Button from 'react-bootstrap/lib/Button'
 
@@ -63,7 +63,6 @@ function ApplyButton(props) {
 export default function FiltersBox(props) {
   const searchContext = useContext(StudySearchContext)
   const selectionContext = useContext(SearchSelectionContext)
-  const [selectedFilters, setSelectedFilters] = setState()
 
   let appliedSelection = searchContext.params.facets[props.facet.id]
   appliedSelection = appliedSelection ? appliedSelection : []
@@ -92,13 +91,15 @@ export default function FiltersBox(props) {
     if (props.facet.type === 'number' &&
         appliedSelection.length === 0 &&
         selection.length === 0) {
-      // case wconste a user clicks apply without changing the slider
+      // case where a user clicks apply without changing the slider
       const defaultSelection = [
         props.facet.min,
         props.facet.max,
         props.facet.unit
       ]
       selectionContext.updateFacet(props.facet.id, defaultSelection, true)
+    } else {
+      selectionContext.performSearch()
     }
     if (props.setShow) {
       props.setShow(false)

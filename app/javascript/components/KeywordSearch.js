@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect, useRef } from 'react'
+import React, { useContext } from 'react'
 import Button from 'react-bootstrap/lib/Button'
 import InputGroup from 'react-bootstrap/lib/InputGroup'
 import Form from 'react-bootstrap/lib/Form'
@@ -19,9 +19,6 @@ export default function KeywordSearch({ keywordPrompt }) {
   //  as long as the text hasn't been updated
   const showClear = searchContext.params.terms === selectionContext.terms &&
                     selectionContext.terms != ''
-  // Store a reference to the input's DOM node
-  const inputRef = useRef()
-  const [value, setValue] = useState(selectionContext.terms)
   /**
    * Updates terms in search context upon submitting keyword search
    */
@@ -29,16 +26,15 @@ export default function KeywordSearch({ keywordPrompt }) {
     event.preventDefault()
     if (showClear) {
       selectionContext.updateSelection({ terms: '' }, true)
+    } else {
+      selectionContext.performSearch()
     }
-    selectionContext.updateSelection({ terms: value })
   }
 
   function handleKeywordChange(newValue) {
-    setValue(newValue)
+    selectionContext.updateSelection({ terms: newValue })
   }
 
-  useEffect(() => {
-  }, [useRef, selectionContext.selection, showClear])
   return (
     <Form
       horizontal
@@ -47,11 +43,10 @@ export default function KeywordSearch({ keywordPrompt }) {
     >
       <InputGroup>
         <input
-          ref={inputRef}
           className="form-control"
           size="30"
           type="text"
-          value={value}
+          value={selectionContext.terms}
           onChange={e => handleKeywordChange(e.target.value) }
           placeholder={placeholder}
           name="keywordText"/>

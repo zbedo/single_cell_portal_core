@@ -19,7 +19,7 @@ export default function SearchSelectionProvider(props) {
       { terms: '', facets: {} })
   selection.updateSelection = updateSelection
   selection.updateFacet = updateFacet
-
+  selection.performSearch = performSearch
   /** merges the update into the current selection */
   function updateSelection(value, searchNow) {
     const newSelection = Object.assign({}, selection, value)
@@ -28,9 +28,6 @@ export default function SearchSelectionProvider(props) {
     }
     setSelection(newSelection)
   }
-  useEffect(() => {
-    searchContext.updateSearch(selection)
-  }, [selection])
 
   /** merges the facet update into the current selection */
   function updateFacet(facetId, value, searchNow) {
@@ -41,6 +38,10 @@ export default function SearchSelectionProvider(props) {
     newSelection.facets = facetObj
 
     setSelection(newSelection)
+  }
+
+  function performSearch() {
+    searchContext.updateSearch(selection)
   }
 
 
