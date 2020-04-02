@@ -84,7 +84,7 @@ class ApplicationController < ActionController::Base
     }
     unless @default_cluster.nil?
       @default_cluster_annotations['Cluster-based'] = @default_cluster.cell_annotations
-                                                          .keep_if {|annot| @cluster.can_visualize_cell_annotation?(annot)}
+                                                          .keep_if {|annot| @default_cluster.can_visualize_cell_annotation?(annot)}
                                                           .map {|annot| @default_cluster.formatted_cell_annotation(annot)}
     end
   end
