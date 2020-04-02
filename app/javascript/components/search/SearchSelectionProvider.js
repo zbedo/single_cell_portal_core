@@ -38,7 +38,10 @@ export default function SearchSelectionProvider(props) {
     const facetObj = Object.assign({}, selection.facets, updatedFacet)
     const newSelection = Object.assign({}, selection)
     newSelection.facets = facetObj
-
+    if (searchNow) {
+      searchContext.updateSearch(newSelection)
+    }
+    setSelection(newSelection)
     setSelection(newSelection)
   }
   /** execute the search on the server */
