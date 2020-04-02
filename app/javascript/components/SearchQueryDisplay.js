@@ -42,7 +42,6 @@ function formatFacet(facet, index, numFacets) {
 
 export const ClearAllButton = () => {
   const selectionContext = useContext(SearchSelectionContext)
-  const searchContext = useContext(StudySearchContext)
   const clearSearch = () => {
     const emptyFilters = {}
     Object.keys(selectionContext.facets

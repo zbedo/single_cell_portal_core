@@ -6,7 +6,8 @@ import _clone from 'lodash/clone'
 export const SearchSelectionContext = React.createContext({
   terms: '',
   facets: {},
-  updateSelection: undefined
+  updateSelection: undefined,
+  performSearch: undefined
 })
 
 /** Renders its children within a SearchSelectionContext provider */
@@ -20,6 +21,7 @@ export default function SearchSelectionProvider(props) {
   selection.updateSelection = updateSelection
   selection.updateFacet = updateFacet
   selection.performSearch = performSearch
+
   /** merges the update into the current selection */
   function updateSelection(value, searchNow) {
     const newSelection = Object.assign({}, selection, value)
@@ -39,7 +41,7 @@ export default function SearchSelectionProvider(props) {
 
     setSelection(newSelection)
   }
-
+  /** execute the search on the server */
   function performSearch() {
     searchContext.updateSearch(selection)
   }
