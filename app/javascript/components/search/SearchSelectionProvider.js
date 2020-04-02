@@ -42,13 +42,12 @@ export default function SearchSelectionProvider(props) {
       searchContext.updateSearch(newSelection)
     }
     setSelection(newSelection)
-    setSelection(newSelection)
   }
+
   /** execute the search on the server */
   function performSearch() {
     searchContext.updateSearch(selection)
   }
-
 
   return (
     <SearchSelectionContext.Provider value={selection}>
