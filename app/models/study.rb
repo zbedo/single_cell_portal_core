@@ -974,8 +974,7 @@ class Study
 
   # return the value of the expression axis label
   def default_expression_label
-    label = self.default_options[:expression_label].presence
-    label.nil? ? 'Expression' : label
+    self.default_options[:expression_label].present? ? self.default_options[:expression_label] : 'Expression'
   end
 
   # determine if a user has supplied an expression label
