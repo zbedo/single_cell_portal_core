@@ -1484,7 +1484,8 @@ class Study
         file = File.open(@file_location, 'rb')
       end
       # first determine if this is a MM coordinate file or not
-      cells = file.readline.split(/[\t,]/).map(&:strip)
+      raw_cells = file.readline.rstrip.split(/[\t,]/).map(&:strip)
+      cells = self.sanitize_input_array(raw_cells)
       @last_line = "#{expression_file.name}, line 1"
       if !['gene', ''].include?(cells.first.downcase) || cells.size <= 1
         # file did not have correct header information, but may be an export from R which will have one less column
