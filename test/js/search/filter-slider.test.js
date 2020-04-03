@@ -6,8 +6,8 @@ import * as Reach from '@reach/router'
 const fetch = require('node-fetch')
 
 import FacetControl from 'components/FacetControl'
-import { PropsStudySearchProvider } from 'components/search/StudySearchProvider'
-import { SearchSelectionContext } from 'components/search/SearchSelectionProvider'
+import { PropsStudySearchProvider } from 'providers/StudySearchProvider'
+import { SearchSelectionContext } from 'providers/SearchSelectionProvider'
 
 const testNoUnitFacet = {
   name: "bmi",

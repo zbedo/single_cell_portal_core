@@ -3,7 +3,7 @@ import React from 'react'
 import StudyResultsContainer, { StudyResults } from
   '../../app/javascript/components/StudyResultsContainer'
 import { StudySearchContext } from
-  '../../app/javascript/components/search/StudySearchProvider'
+  'providers/StudySearchProvider'
 import ResultsPanel from '../../app/javascript/components/ResultsPanel'
 import { mount } from 'enzyme'
 React.useLayoutEffect = React.useEffect

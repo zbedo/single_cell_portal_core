@@ -3,7 +3,7 @@ import * as Reach from '@reach/router'
 import { mount } from 'enzyme'
 
 import KeywordSearch from '../../app/javascript/components/KeywordSearch'
-import { PropsStudySearchProvider } from 'components/search/StudySearchProvider';
+import { PropsStudySearchProvider } from 'providers/StudySearchProvider';
 
 describe('<KeywordSearch/> rendering>', () => {
   it('should render </KeywordSearch> elements', () => {

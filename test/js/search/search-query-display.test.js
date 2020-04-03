@@ -4,7 +4,7 @@ import { mount } from 'enzyme'
 const fetch = require('node-fetch')
 
 import SearchQueryDisplay, { ClearAllButton } from 'components/SearchQueryDisplay'
-import { PropsStudySearchProvider } from 'components/search/StudySearchProvider'
+import { PropsStudySearchProvider } from 'providers/StudySearchProvider'
 import KeywordSearch from 'components/KeywordSearch'
 import FacetControl from 'components/FacetControl'
 

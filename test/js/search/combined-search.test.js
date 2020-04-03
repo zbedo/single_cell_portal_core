@@ -7,7 +7,7 @@ const fetch = require('node-fetch');
 
 import FacetControl from 'components/FacetControl';
 import KeywordSearch from 'components/KeywordSearch';
-import { PropsStudySearchProvider } from 'components/search/StudySearchProvider';
+import { PropsStudySearchProvider } from 'providers/StudySearchProvider';
 import * as ScpAPI from 'lib/scp-api'
 
 const speciesFacet = {

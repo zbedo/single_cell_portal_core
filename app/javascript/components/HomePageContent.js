@@ -1,9 +1,9 @@
 import React from 'react'
 import SearchPanel from './SearchPanel'
 import ResultsPanel from './ResultsPanel'
-import StudySearchProvider from 'components/search/StudySearchProvider'
-import SearchFacetProvider from 'components/search/SearchFacetProvider'
-import UserProvider from 'components/UserProvider'
+import StudySearchProvider from 'providers/StudySearchProvider'
+import SearchFacetProvider from 'providers/SearchFacetProvider'
+import UserProvider from 'providers/UserProvider'
 import FeatureFlagProvider from 'providers/FeatureFlagProvider'
 import ErrorBoundary from 'lib/ErrorBoundary'
 

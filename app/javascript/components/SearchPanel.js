@@ -3,8 +3,8 @@ import React, { useContext } from 'react'
 import KeywordSearch from './KeywordSearch'
 import FacetsPanel from './FacetsPanel'
 import DownloadButton from './DownloadButton'
-import DownloadProvider from 'components/search/DownloadProvider'
-import { StudySearchContext } from 'components/search/StudySearchProvider'
+import DownloadProvider from 'providers/DownloadProvider'
+import { StudySearchContext } from 'providers/StudySearchProvider'
 import { FeatureFlagContext } from 'providers/FeatureFlagProvider'
 
 function CommonSearchButtons() {

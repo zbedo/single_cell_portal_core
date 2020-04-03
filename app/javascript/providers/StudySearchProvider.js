@@ -7,7 +7,7 @@ import * as queryString from 'query-string'
 import {
   fetchSearch, buildSearchQueryString, buildFacetsFromQueryString
 } from 'lib/scp-api'
-import SearchSelectionProvider from 'components/search/SearchSelectionProvider'
+import SearchSelectionProvider from './SearchSelectionProvider'
 
 const emptySearch = {
   params: {
