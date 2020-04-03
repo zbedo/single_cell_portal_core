@@ -5,7 +5,7 @@ import * as Reach from '@reach/router'
 
 const fetch = require('node-fetch');
 
-import FacetControl from 'components/FacetControl';
+import FacetControl from 'components/search/controls/FacetControl';
 import { PropsStudySearchProvider } from 'providers/StudySearchProvider';
 import * as ScpAPI from 'lib/scp-api'
 

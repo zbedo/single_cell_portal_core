@@ -1,10 +1,10 @@
 import React from 'react'
 
 import StudyResultsContainer, { StudyResults } from
-  'components/StudyResultsContainer'
+  'components/search/results/StudyResultsContainer'
 import { StudySearchContext } from
   'providers/StudySearchProvider'
-import ResultsPanel from 'components/ResultsPanel'
+import ResultsPanel from 'components/search/results/ResultsPanel'
 import { mount } from 'enzyme'
 React.useLayoutEffect = React.useEffect
 describe('<StudyResultsContainer/> rendering>', () => {
