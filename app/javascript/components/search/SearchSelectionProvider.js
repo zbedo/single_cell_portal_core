@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react'
+import React, { useContext, useState, useEffect } from 'react'
 import { StudySearchContext } from 'components/search/StudySearchProvider'
 import _clone from 'lodash/clone'
 

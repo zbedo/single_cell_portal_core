@@ -32,9 +32,30 @@
 
 
       </h3>
-      <span>These are studies that have been identified as having specific relevance to COVID-19. If you would like to include a study in this section, please contact us</span>
+      <span style="font-size:16px">These are studies which have been identified by the study owners as relevant to COVID-19. If you would like to include one of your studies in this section, please
+        <a href="#" id="covid-contact-link">contact us</a>.
+       </span>
       <div class="tab-content top-pad">
         <div id="covid19-page-content"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="covid19-contact-modal" role="dialog" aria-labelledby="covid19-contact-modal" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-body">
+        <h4 class="text-center">Identify a COVID-19 study</h4>
+        <div>
+          <p>Thanks for your interest in helping us identify potentially relevant studies for COVID-19 research.  We are continually working to identify relevant studies. </p>
+          <p>If you would like one of your studies to be featured in this space, please send us an email at <a href="mailto: scp-support@broadinstitute.zendesk.com">scp-support@broadinstitute.zendesk.com</a> with a link to the study and a brief description of its relevance to COVID-19.
+          </p>
+          <p class="text-center">Thank you</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="close" data-dismiss="modal">×</button>
       </div>
     </div>
   </div>
@@ -42,8 +63,12 @@
 <input type="hidden" id="feature-flags" value='<%= User.feature_flags_for_user(current_user).to_json %>'/>
 <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
     $(document).ready(function() {
-        var main = $('.home-page-fix');
-        var height = main.actual('height');
-        main.css('min-height', height - 245);
+      var main = $('.home-page-fix');
+      var height = main.actual('height');
+      main.css('min-height', height - 245);
+      $('#covid-contact-link').on('click', function() {
+        $('#covid19-contact-modal').modal('show');
+        return false;
+      })
     });
 </script>
