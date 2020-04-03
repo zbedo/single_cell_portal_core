@@ -124,13 +124,24 @@ class ClusterGroup
   # generate a formatted select box options array that corresponds to all this cluster_group's cell_annotations
   # can be scoped to cell_annotations of a specific type (group, numeric)
   def cell_annotation_select_option(annotation_type=nil, prepend_name=false)
-    annotations = annotation_type.nil? ? self.cell_annotations : self.cell_annotations.select {|annot| annot[:type] == annotation_type}
+    annot_opts = annotation_type.nil? ? self.cell_annotations : self.cell_annotations.select {|annot| annot[:type] == annotation_type}
+    annotations = annot_opts.keep_if {|annot| self.can_visualize_cell_annotation?(annot)}
     annotations.map {|annot| self.formatted_cell_annotation(annot, prepend_name)}
   end
 
   # list of cell annotation header values by type (group or numeric)
   def cell_annotation_names_by_type(type)
     self.cell_annotations.select {|annotation| annotation['type'] == type}.map {|annotation| annotation['name']}
+  end
+
+  # determine if this annotation is "useful" to visualize
+  def can_visualize_cell_annotation?(annotation)
+    annot = annotation.with_indifferent_access
+    if annot[:type] == 'group'
+      CellMetadatum::GROUP_VIZ_THRESHOLD === annot[:values].count
+    else
+      true
+    end
   end
 
   # method used during parsing to generate representative sub-sampled data_arrays for rendering

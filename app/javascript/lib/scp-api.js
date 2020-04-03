@@ -8,12 +8,12 @@
 
 import camelcaseKeys from 'camelcase-keys'
 import _compact from 'lodash/compact'
+import * as queryString from 'query-string'
 
 import { accessToken } from './../components/UserProvider'
 import {
   logFilterSearch, logSearch, logDownloadAuthorization, mapFiltersForLogging
 } from './scp-api-metrics'
-import * as queryString from 'query-string'
 
 // If true, returns mock data for all API responses.  Only for dev.
 let globalMock = false
@@ -188,7 +188,7 @@ export async function fetchSearch(
 
   const searchResults = await scpApi(path, defaultInit, mock)
 
-  logSearch(type, searchParams.terms, searchParams.facets, searchParams.page)
+  logSearch(type, searchParams)
 
   return searchResults
 }
@@ -219,7 +219,7 @@ function buildFacetQueryString(facets) {
   if (!facets || !Object.keys(facets).length) {
     return ''
   }
-  let rawURL = _compact(Object.keys(facets).map(facetId => {
+  const rawURL = _compact(Object.keys(facets).map(facetId => {
     if (facets[facetId].length) {
       return `${facetId}:${facets[facetId].join(',')}`
     }

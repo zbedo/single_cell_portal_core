@@ -1,3 +1,1 @@
-var trackingID = '<%= ENV['GA_TRACKING_ID'] %>';
-gaTracker(trackingID);
 gaTrack('<%= javascript_safe_url(request.fullpath) %>', 'Single Cell Portal');

@@ -26,7 +26,7 @@ import morpheus from 'morpheus-app'
 import Ideogram from 'ideogram'
 // Per https://ckeditor.com/docs/ckeditor5/latest/builds/guides/integration/advanced-setup.html#scenario-1-integrating-existing-builds
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic'
-import { faVirus } from '@fortawesome/free-solid-svg-icons'
+
 
 // Below import resolves to '/app/javascript/components/HomePageContent.js'
 import HomePageContent from 'components/HomePageContent'
@@ -52,9 +52,16 @@ document.addEventListener('DOMContentLoaded', () => {
     })
   }
   if (document.getElementById('covid19-page-content')) {
+    logPageView()
+
     ReactDOM.render(
       <Covid19PageContent />, document.getElementById('covid19-page-content')
     )
+
+    // Only logs clicks for home page with faceted search UI
+    $(document).on('click', 'body', event => {
+      logClick(event)
+    })
   }
 })
 

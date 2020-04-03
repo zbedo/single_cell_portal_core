@@ -7,7 +7,7 @@ echo "*** COMPLETED ***"
 echo "*** ROLLING OVER LOGS ***"
 ruby /home/app/webapp/bin/cycle_logs.rb
 echo "*** COMPLETED ***"
-if [[ $PASSENGER_APP_ENV = "production" ]] || [[ $PASSENGER_APP_ENV = "staging" ]]
+if [[ $PASSENGER_APP_ENV = "production" ]] || [[ $PASSENGER_APP_ENV = "staging" ]] || [[ $PASSENGER_APP_ENV = "pentest" ]]
 then
     echo "*** PRECOMPILING ASSETS ***"
     sudo -E -u app -H bundle exec rake NODE_ENV=production RAILS_ENV=$PASSENGER_APP_ENV SECRET_KEY_BASE=$SECRET_KEY_BASE yarn:install
@@ -100,9 +100,12 @@ else
 fi
 echo "*** COMPLETED ***"
 
-echo "*** ADDING NIGHTLY ADMIN EMAIL ***"
-(crontab -u app -l ; echo "55 23 * * * . /home/app/.cron_env ; cd /home/app/webapp/; /home/app/webapp/bin/rails runner -e $PASSENGER_APP_ENV \"SingleCellMailer.nightly_admin_report.deliver_now\" >> /home/app/webapp/log/cron_out.log 2>&1") | crontab -u app -
-echo "*** COMPLETED ***"
+if [[ $PASSENGER_APP_ENV = "production" ]]
+then
+  echo "*** ADDING NIGHTLY ADMIN EMAIL ***"
+  (crontab -u app -l ; echo "55 23 * * * . /home/app/.cron_env ; cd /home/app/webapp/; /home/app/webapp/bin/rails runner -e $PASSENGER_APP_ENV \"SingleCellMailer.nightly_admin_report.deliver_now\" >> /home/app/webapp/log/cron_out.log 2>&1") | crontab -u app -
+  echo "*** COMPLETED ***"
+fi
 
 echo "*** ADDING DAILY RESET OF USER DOWNLOAD QUOTAS ***"
 (crontab -u app -l ; echo "@daily . /home/app/.cron_env ; cd /home/app/webapp/; /home/app/webapp/bin/rails runner -e $PASSENGER_APP_ENV \"User.update_all(daily_download_quota: 0)\" >> /home/app/webapp/log/cron_out.log 2>&1") | crontab -u app -

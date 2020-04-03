@@ -1,13 +1,33 @@
 require "test_helper"
 
-# DEPRECATED
-# This test case is deprecated in favor of subsampling in scp-ingest-pipeline
-
 class ClusterGroupTest < ActiveSupport::TestCase
   def setup
     @cluster_group = ClusterGroup.first
   end
 
+  test 'should not visualize unique group annotations over 100' do
+    puts "#{File.basename(__FILE__)}: #{self.method_name}"
+
+    annotation_values = []
+    200.times { annotation_values << SecureRandom.uuid }
+    cell_annotation = {name: 'Group Annotation', type: 'group', values: annotation_values}
+    cluster = ClusterGroup.new(name: 'Group Count Test', cluster_type: '2d', cell_annotations: [cell_annotation])
+    can_visualize = cluster.can_visualize_cell_annotation?(cell_annotation)
+    assert !can_visualize, "Should not be able to visualize group cell annotation with more that 100 unique values: #{can_visualize}"
+
+    # check numeric annotations are still fine
+    new_cell_annotation = {name: 'Numeric Annotation', type: 'numeric', values: []}
+    cluster.cell_annotations << new_cell_annotation
+    can_visualize_numeric  = cluster.can_visualize_cell_annotation?(new_cell_annotation)
+    assert can_visualize_numeric, "Should be able to visualize numeric cell annotation at any level: #{can_visualize_numeric}"
+
+    puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
+  end
+
+  # DEPRECATED
+  # This test case is deprecated in favor of subsampling in scp-ingest-pipeline, but is still necessary as a
+  # data loading function for downstream user annotation tests
+  #
   # test to validate that subsampling algorithm creates representative samples and also maintains relationships
   # checks for cluster-level annotations of type 'group'
   def test_generate_subsample_arrays_group_cluster
