@@ -1,7 +1,7 @@
 import React, { useContext } from 'react'
 import FacetControl from './FacetControl'
 import MoreFacetsButton from './MoreFacetsButton'
-import { SearchFacetContext } from './search/SearchFacetProvider'
+import { SearchFacetContext } from 'providers/SearchFacetProvider'
 
 /**
  * Container for horizontal list of facet buttons, and "More Facets" button

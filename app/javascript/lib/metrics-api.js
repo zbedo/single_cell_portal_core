@@ -5,7 +5,7 @@
  * as well as generic a logging function that integrates with Bard / Mixpanel.
  */
 
-import { accessToken } from './../components/UserProvider'
+import { accessToken } from 'providers/UserProvider'
 
 const defaultInit = {
   method: 'POST',

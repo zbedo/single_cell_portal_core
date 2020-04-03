@@ -6,7 +6,7 @@ import {
   fetchAuthCode,
   fetchFacetFilters,
   setGlobalMockFlag
-} from '../../app/javascript/lib/scp-api'
+} from 'lib/scp-api'
 
 describe('JavaScript client for SCP REST API', () => {
   beforeAll(() => {

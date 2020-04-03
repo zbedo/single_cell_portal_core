@@ -2,7 +2,7 @@ import React, { useContext } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDna, faExclamationCircle } from '@fortawesome/free-solid-svg-icons'
 
-import { StudySearchContext } from 'components/search/StudySearchProvider'
+import { StudySearchContext } from 'providers/StudySearchProvider'
 import { StudyResults } from './StudyResultsContainer'
 import SearchQueryDisplay from './SearchQueryDisplay'
 

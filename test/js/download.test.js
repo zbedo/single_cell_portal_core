@@ -5,12 +5,12 @@ import { mount } from 'enzyme'
 
 const fetch = require('node-fetch')
 
-import DownloadButton from '../../app/javascript/components/DownloadButton'
-import * as UserProvider from '../../app/javascript/components/UserProvider'
+import DownloadButton from 'components/search/controls/DownloadButton'
+import * as UserProvider from 'providers/UserProvider'
 import * as StudySearchProvider
-  from '../../app/javascript/components/search/StudySearchProvider'
+  from 'providers/StudySearchProvider'
 import * as DownloadProvider
-  from '../../app/javascript/components/search/DownloadProvider'
+  from 'providers/DownloadProvider'
 
 describe('Download components for faceted search', () => {
   beforeAll(() => {

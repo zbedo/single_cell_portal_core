@@ -58,10 +58,10 @@ export function StudyResults(props) {
   let pageControlDisplay = <></>
   if (results.totalPages > 1) {
     pageControlDisplay = <PagingControl currentPage={results.currentPage}
-                                        totalPages={results.totalPages}
-                                        changePage={changePage}
-                                        canPreviousPage={canPreviousPage}
-                                        canNextPage={canNextPage}/>
+      totalPages={results.totalPages}
+      changePage={changePage}
+      canPreviousPage={canPreviousPage}
+      canNextPage={canNextPage}/>
   }
 
   function getRowProps(row) {

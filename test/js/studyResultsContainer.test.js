@@ -1,7 +1,7 @@
 import React from 'react'
-import { StudyResults } from '../../app/javascript/components/StudyResultsContainer'
-import PagingControl from '../../app/javascript/components/PagingControl'
-import Study from '../../app/javascript/components/Study'
+import { StudyResults } from 'components/search/results/StudyResultsContainer'
+import PagingControl from 'components/search/results/PagingControl'
+import Study from 'components/search/results/Study'
 import { mount } from 'enzyme'
 
 describe('<StudyResults/> rendering>', () => {

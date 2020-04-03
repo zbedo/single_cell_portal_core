@@ -5,8 +5,8 @@ import * as Reach from '@reach/router'
 
 const fetch = require('node-fetch');
 
-import MoreFacetsButton from 'components/MoreFacetsButton';
-import { PropsStudySearchProvider } from 'components/search/StudySearchProvider';
+import MoreFacetsButton from 'components/search/controls/MoreFacetsButton';
+import { PropsStudySearchProvider } from 'providers/StudySearchProvider';
 
 import * as ScpAPI from 'lib/scp-api'
 

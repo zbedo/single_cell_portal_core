@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSlidersH } from '@fortawesome/free-solid-svg-icons'
 
 import FacetsAccordion from './FacetsAccordion'
-import { StudySearchContext } from 'components/search/StudySearchProvider'
+import { StudySearchContext } from 'providers/StudySearchProvider'
 
 /**
  * Component for "More Facets" button.  Clicking shows facets accordion box.

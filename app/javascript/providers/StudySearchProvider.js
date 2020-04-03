@@ -7,7 +7,7 @@ import * as queryString from 'query-string'
 import {
   fetchSearch, buildSearchQueryString, buildFacetsFromQueryString
 } from 'lib/scp-api'
-import SearchSelectionProvider from 'components/search/SearchSelectionProvider'
+import SearchSelectionProvider from './SearchSelectionProvider'
 
 const emptySearch = {
   params: {
@@ -93,7 +93,7 @@ export function PropsStudySearchProvider(props) {
    * @param {Object} newParams Parameters to update
    */
   async function updateSearch(newParams) {
-    let search = Object.assign({}, searchParams, newParams)
+    const search = Object.assign({}, searchParams, newParams)
     search.facets = Object.assign({}, searchParams.facets, newParams.facets)
     // reset the page to 1 for new searches, unless otherwise specified
     search.page = newParams.page ? newParams.page : 1

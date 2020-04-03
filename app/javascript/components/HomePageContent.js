@@ -1,13 +1,15 @@
+
 import React, { useContext, useEffect } from 'react'
 import { Router, Link, useLocation } from '@reach/router'
 
-import SearchPanel from './SearchPanel'
 import GeneSearchView from 'components/search/genes/GeneSearchView'
 import GeneSearchProvider from 'components/search/genes/GeneSearchProvider'
-import ResultsPanel from './ResultsPanel'
-import StudySearchProvider, { StudySearchContext } from 'components/search/StudySearchProvider'
-import SearchFacetProvider from 'components/search/SearchFacetProvider'
-import UserProvider from 'components/UserProvider'
+import SearchPanel from 'components/search/controls/SearchPanel'
+import ResultsPanel from 'components/search/results/ResultsPanel'
+import StudySearchProvider from 'providers/StudySearchProvider'
+import SearchFacetProvider from 'providers/SearchFacetProvider'
+import UserProvider from 'providers/UserProvider'
+import FeatureFlagProvider from 'providers/FeatureFlagProvider'
 import ErrorBoundary from 'lib/ErrorBoundary'
 import { getFlagValue } from 'lib/feature-flags'
 
@@ -56,15 +58,17 @@ function RawHomePageContent() {
   return (
     <ErrorBoundary>
       <UserProvider>
-        <SearchFacetProvider>
-          <StudySearchProvider>
-            <GeneSearchProvider>
-               { getFlagValue('linkable_gene_search')
-                  ? <LinkableSearchTabs/>
-                  : <StudySearchView/> }
-            </GeneSearchProvider>
-          </StudySearchProvider>
-        </SearchFacetProvider>
+        <FeatureFlagProvider>
+          <SearchFacetProvider>
+            <StudySearchProvider>
+              <GeneSearchProvider>
+                 { getFlagValue('linkable_gene_search')
+                    ? <LinkableSearchTabs/>
+                    : <StudySearchView/> }
+              </GeneSearchProvider>
+            </StudySearchProvider>
+          </SearchFacetProvider>
+        </FeatureFlagProvider>
       </UserProvider>
     </ErrorBoundary>
   )
