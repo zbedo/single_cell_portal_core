@@ -219,8 +219,14 @@ export default function DownloadButton(props) {
     downloadContext.isLoaded
   )
 
-  let hint = 'To download, first do a search'
-  if (active) hint = 'Download files for your search results'
+  let hint = 'Download files for your search results'
+  if (!active) {
+    if (userContext.accessToken === '') {
+      hint = 'To download, please sign in'
+    } else {
+      hint = 'To download, first do a search'
+    }
+  }
 
   const handleClose = () => setShow(false)
 
