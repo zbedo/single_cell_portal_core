@@ -2,7 +2,7 @@ import React from 'react'
 import * as Reach from '@reach/router'
 import { mount } from 'enzyme'
 
-import KeywordSearch from '../../app/javascript/components/KeywordSearch'
+import KeywordSearch from 'components/KeywordSearch'
 import { PropsStudySearchProvider } from 'providers/StudySearchProvider';
 
 describe('<KeywordSearch/> rendering>', () => {

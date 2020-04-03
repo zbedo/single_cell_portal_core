@@ -1,6 +1,6 @@
 import React from 'react'
 import { mount } from 'enzyme'
-import { highlightText, shortenDescription, descriptionCharacterLimit } from '../../app/javascript/components/Study'
+import { highlightText, shortenDescription, descriptionCharacterLimit } from 'components/Study'
 
 
 describe('highlightText', () => {

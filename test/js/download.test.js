@@ -5,7 +5,7 @@ import { mount } from 'enzyme'
 
 const fetch = require('node-fetch')
 
-import DownloadButton from '../../app/javascript/components/DownloadButton'
+import DownloadButton from 'components/DownloadButton'
 import * as UserProvider from 'providers/UserProvider'
 import * as StudySearchProvider
   from 'providers/StudySearchProvider'
