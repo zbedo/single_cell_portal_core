@@ -17,8 +17,8 @@ export default function Covid19PageContent() {
           <StudySearchProvider preset="covid19" >
             <ErrorBoundary>
               <SearchPanel showCommonButtons={false}
-                           showDownloadButton={false}
-                           keywordPrompt="Search within COVID-19 studies"/>
+                showDownloadButton={false}
+                keywordPrompt="Search within COVID-19 studies"/>
             </ErrorBoundary>
             <ErrorBoundary>
               <ResultsPanel/>

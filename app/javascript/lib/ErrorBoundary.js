@@ -24,7 +24,6 @@ export default class ErrorBoundary extends Component {
   }
 
   componentDidCatch(error, info) {
-
     logError(readableErrorMessage(error, info))
     this.setState({ error, info })
   }
