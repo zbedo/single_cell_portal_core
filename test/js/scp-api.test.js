@@ -5,7 +5,8 @@ const fetch = require('node-fetch')
 import {
   fetchAuthCode,
   fetchFacetFilters,
-  setGlobalMockFlag
+  setGlobalMockFlag,
+  scpApi
 } from '../../app/javascript/lib/scp-api'
 
 describe('JavaScript client for SCP REST API', () => {
@@ -29,34 +30,36 @@ describe('JavaScript client for SCP REST API', () => {
   // nor does anything else.
   //
   // Consider using isolateModules for this type of thing
-  it('includes `Authorization: Bearer` in requests when signed in', done => {
+  it('includes `Authorization: Bearer` in requests when signed in', () => {
+    return new Promise(done => {
     // Spy on `fetch()` and its contingent methods like `json()`,
     // because we want to intercept the outgoing request
-    const mockSuccessResponse = {}
-    const mockJsonPromise = Promise.resolve(mockSuccessResponse)
-    const mockFetchPromise = Promise.resolve({
-      json: () => {mockJsonPromise}
-    })
-    jest.spyOn(global, 'fetch').mockImplementation(() => {
-      mockFetchPromise
-    })
-
-    fetchFacetFilters('disease', 'tuberculosis')
-
-    expect(global.fetch).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': 'Bearer test'
-        }
+      const mockSuccessResponse = {}
+      const mockJsonPromise = Promise.resolve(mockSuccessResponse)
+      const mockFetchPromise = Promise.resolve({
+        json: () => {mockJsonPromise}
       })
-    )
-    process.nextTick(() => {
-      jest.restoreAllMocks()
-      done()
+      jest.spyOn(global, 'fetch').mockImplementation(() => {
+        mockFetchPromise
+      })
+
+      fetchFacetFilters('disease', 'tuberculosis')
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': 'Bearer test'
+          }
+        })
+      )
+      process.nextTick(() => {
+        jest.restoreAllMocks()
+        done()
+      })
     })
   })
 })
