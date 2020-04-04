@@ -3,15 +3,14 @@ import React, { useContext, useEffect } from 'react'
 import { Router, Link, useLocation } from '@reach/router'
 
 import GeneSearchView from 'components/search/genes/GeneSearchView'
-import GeneSearchProvider from 'components/search/genes/GeneSearchProvider'
+import GeneSearchProvider from 'providers/GeneSearchProvider'
 import SearchPanel from 'components/search/controls/SearchPanel'
 import ResultsPanel from 'components/search/results/ResultsPanel'
-import StudySearchProvider from 'providers/StudySearchProvider'
+import StudySearchProvider, { StudySearchContext } from 'providers/StudySearchProvider'
 import SearchFacetProvider from 'providers/SearchFacetProvider'
 import UserProvider from 'providers/UserProvider'
-import FeatureFlagProvider from 'providers/FeatureFlagProvider'
+import FeatureFlagProvider, { FeatureFlagContext } from 'providers/FeatureFlagProvider'
 import ErrorBoundary from 'lib/ErrorBoundary'
-import { getFlagValue } from 'lib/feature-flags'
 
 const StudySearchView = function() {
   const studySearchState = useContext(StudySearchContext)
@@ -51,25 +50,41 @@ const LinkableSearchTabs = function(props) {
   )
 }
 
+function HomePageView() {
+  const featureFlagState = useContext(FeatureFlagContext)
+  if (featureFlagState.linkable_gene_search) {
+    return <LinkableSearchTabs/>
+  }
+  return <StudySearchView/>
+}
+
+
+/* renders all the page-level providers */
+function ProviderStack(props) {
+  return (
+    <UserProvider>
+      <FeatureFlagProvider>
+        <SearchFacetProvider>
+          <StudySearchProvider>
+            <GeneSearchProvider>
+               { props.children }
+            </GeneSearchProvider>
+          </StudySearchProvider>
+        </SearchFacetProvider>
+      </FeatureFlagProvider>
+    </UserProvider>
+  )
+}
+
 /**
  * Wrapper component for search and result panels
  */
 function RawHomePageContent() {
   return (
     <ErrorBoundary>
-      <UserProvider>
-        <FeatureFlagProvider>
-          <SearchFacetProvider>
-            <StudySearchProvider>
-              <GeneSearchProvider>
-                 { getFlagValue('linkable_gene_search')
-                    ? <LinkableSearchTabs/>
-                    : <StudySearchView/> }
-              </GeneSearchProvider>
-            </StudySearchProvider>
-          </SearchFacetProvider>
-        </FeatureFlagProvider>
-      </UserProvider>
+      <ProviderStack>
+        <HomePageView/>
+      </ProviderStack>
     </ErrorBoundary>
   )
 }

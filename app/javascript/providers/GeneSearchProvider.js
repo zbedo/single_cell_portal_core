@@ -5,7 +5,7 @@ import { navigate, useLocation } from '@reach/router'
 import * as queryString from 'query-string'
 
 import { fetchGeneSearch, buildGeneSearchQueryString, buildFacetsFromQueryString } from 'lib/scp-api'
-import { StudySearchContext } from 'components/search/StudySearchProvider'
+import { StudySearchContext } from 'providers/StudySearchProvider'
 
 const emptySearch = {
   params: {
