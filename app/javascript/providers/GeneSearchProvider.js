@@ -4,7 +4,7 @@ import _isEqual from 'lodash/isEqual'
 import { navigate, useLocation } from '@reach/router'
 import * as queryString from 'query-string'
 
-import { fetchGeneSearch, buildGeneSearchQueryString, buildFacetsFromQueryString } from 'lib/scp-api'
+import { fetchSearch, buildSearchQueryString, buildFacetsFromQueryString } from 'lib/scp-api'
 import { StudySearchContext } from 'providers/StudySearchProvider'
 
 const emptySearch = {
@@ -14,6 +14,7 @@ const emptySearch = {
   },
 
   results: [],
+  studyResults: [],
   isLoading: false,
   isLoaded: false,
   isError: false,
@@ -43,14 +44,13 @@ export function PropsGeneSearchProvider(props) {
    *
    * @param {Object} newParams Parameters to update
    */
-  async function updateSearch(newParams, studySearchState) {
-    const genes = ('genes' in newParams) ? newParams.genes : searchParams.genes
-    // reset the page to 1 for new searches, unless otherwise specified
-    const genePage = newParams.genePage ? newParams.genePage : 1
-    const facets = studySearchState.params.facets
-    const terms = studySearchState.params.terms
+  async function updateSearch(newParams, studySearchState, searchWithinStudies) {
 
-    const queryString = buildGeneSearchQueryString(genes, undefined, terms, facets, genePage)
+    let mergedParams = Object.assign({}, newParams)
+    if (searchWithinStudies) {
+      mergedParams = Object.assign(mergedParams, studySearchState.params)
+    }
+    const queryString = buildSearchQueryString('study', newParams)
     navigate(`?${queryString}`)
   }
 
@@ -60,21 +60,16 @@ export function PropsGeneSearchProvider(props) {
     window.scrollTo(0, 0)
     let studyAccessions = undefined
     if (studySearchState.isLoaded) {
-      studyAccessions = studySearchState.results.matchingAccessions
+      params.accessions = studySearchState.results.matchingAccessions
     }
-    const results = await fetchGeneSearch(
-      params.genes,
-      studyAccessions,
-      params.terms,
-      params.facets,
-      params.genePage)
+    const studyResults = await fetchSearch('study', params)
 
     setSearchState({
       params,
       isError: false,
       isLoading: false,
       isLoaded: true,
-      results,
+      studyResults,
       updateSearch
     })
   }
@@ -92,6 +87,7 @@ export function PropsGeneSearchProvider(props) {
       isLoading: true,
       isLoaded: false,
       results: [],
+      studyResults: [],
       updateSearch
     })
   }
@@ -105,20 +101,15 @@ export function PropsGeneSearchProvider(props) {
 
 /**
  * Self-contained component for providing a url-routable
- * StudySearchContext and rendering children.
+ * GeneSearchContext and rendering children.
  * The routing is all via query params
  */
 export default function GeneSearchProvider(props) {
-  // create a wrapper component for the search display since <Router>
-  // assumes that all of its unwrapped children (even nested) be routes
   const location = useLocation()
   const queryParams = queryString.parse(location.search)
   const searchParams = {
     genePage: queryParams.genePage ? parseInt(queryParams.genePage) : 1,
-    genes: queryParams.genes ? queryParams.genes : '',
-    page: queryParams.page ? parseInt(queryParams.page) : 1,
-    terms: queryParams.terms ? queryParams.terms : '',
-    facets: buildFacetsFromQueryString(queryParams.facets)
+    genes: queryParams.genes ? queryParams.genes : ''
   }
   return (
     <PropsGeneSearchProvider searchParams={searchParams}>

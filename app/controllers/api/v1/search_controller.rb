@@ -42,6 +42,13 @@ module Api
             key :type, :string
           end
           parameter do
+            key :name, :genes
+            key :in, :query
+            key :description, 'User-supplied query string'
+            key :required, false
+            key :type, :string
+          end
+          parameter do
             key :name, :preset_search
             key :in, :query
             key :description, 'Identifier of preset/stored query'
@@ -219,6 +226,12 @@ module Api
           @convention_accessions = query_results.map {|match| match[:study_accession]}.uniq
           logger.info "Found #{@convention_accessions.count} matching studies from BQ job #{job_id}: #{@convention_accessions}"
           @studies = @studies.where(:accession.in => @convention_accessions)
+        end
+
+        # filter the studies by genes if asked
+        if params[:genes].present?
+          @gene_results = StudySearchService.find_studies_by_gene_param(params[:genes], @studies.pluck(:id))
+          @studies = @studies.where(:id.in => @gene_results[:study_ids])
         end
 
         # reset order if user requested a custom ordering

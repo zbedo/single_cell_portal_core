@@ -25,6 +25,9 @@ end
 if @preset_search.present? && @preset_search.accession_whitelist.include?(study.accession)
   json.set! :preset_match, true
 end
+if @gene_results.present?
+  json.set! :gene_matches, @gene_results[:genes_by_study][study.id]
+end
 if study.detached
   json.set! :study_files, 'Unavailable (cannot load study workspace or bucket)'
 else

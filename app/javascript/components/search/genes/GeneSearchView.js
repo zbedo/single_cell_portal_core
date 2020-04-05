@@ -8,15 +8,20 @@ import { hasSearchParams, StudySearchContext } from 'providers/StudySearchProvid
 import SearchPanel from 'components/search/controls/SearchPanel'
 import StudyResultsPanel from 'components/search/results/ResultsPanel'
 import SearchQueryDisplay from 'components/search/results/SearchQueryDisplay'
+import GeneResultsPanel from './GeneResultsPanel'
+
+const ALLOW_SEARCH_WITHIN_STUDIES = false
 
 export default function GeneSearchView() {
+
+
   const geneSearchState = useContext(GeneSearchContext)
   const studySearchState = useContext(StudySearchContext)
   let [genes, setGenes] = useState(_clone(geneSearchState.params.genes))
   const [showStudyControls, setShowStudyControls] = useState(hasSearchParams(studySearchState.params))
   function handleSubmit(event) {
     event.preventDefault()
-    geneSearchState.updateSearch({genes: genes}, studySearchState)
+    geneSearchState.updateSearch({genes: genes}, studySearchState, ALLOW_SEARCH_WITHIN_STUDIES)
   }
 
 
@@ -33,10 +38,10 @@ export default function GeneSearchView() {
     // we haven't tried a gene search yet, just show studies
     resultsContent = <StudyResultsPanel/>
   } else {
-    resultsContent = <div> Look at all these genes!!!</div>
+    resultsContent = <GeneResultsPanel/>
   }
 
-  const geneSearchPlaceholder = hasSearchParams(studySearchState.params)
+  const geneSearchPlaceholder = hasSearchParams(studySearchState.params) && ALLOW_SEARCH_WITHIN_STUDIES
                               ? "Search for genes in the filtered studies"
                               : "Search for genes across all studies"
 
@@ -65,24 +70,22 @@ export default function GeneSearchView() {
           </form>
         </div>
       </div>
-      <div className="row gene-study-filter">
-        <div className="col-md-2 text-right">
-          Study Filter &nbsp;
-          <FontAwesomeIcon icon={ showStudyControls ? faMinusSquare : faPlusSquare}
-                           className="action"
-                           onClick={()=>{setShowStudyControls(!showStudyControls)}}/>
+      { ALLOW_SEARCH_WITHIN_STUDIES &&
+        <div className="row gene-study-filter">
+          <div className="col-md-2 text-right">
+            Study Filter &nbsp;
+            <FontAwesomeIcon icon={ showStudyControls ? faMinusSquare : faPlusSquare}
+                             className="action"
+                             onClick={()=>{ setShowStudyControls(!showStudyControls)} }/>
 
-        </div>
-        <div className="col-md-10">
-          { showStudyControls &&
-            <SearchPanel keywordPrompt="Filter studies by keyword"
-                         showCommonButtons={false}
-                         showDownloadButton={false}/> }
-        </div>
-      </div>
-      <div className="row">
-
-      </div>
+          </div>
+          <div className="col-md-10">
+            { showStudyControls &&
+              <SearchPanel keywordPrompt="Filter studies by keyword"
+                           showCommonButtons={false}
+                           showDownloadButton={false}/> }
+          </div>
+        </div> }
       <div className="row">
         <div className="col-md-12">
           { resultsContent }
@@ -112,9 +115,9 @@ export default function GeneSearchView() {
     //         var genes = $('#search_genes').val().split(' ');
     //         var numGenes = genes.length;
     //         // limit number of genes to MAX_GENE_SEARCH
-    //         if (numGenes > <%= Gene::MAX_GENE_SEARCH %>) {
+    //         if (numGenes > <%= StudySearchService::MAX_GENE_SEARCH %>) {
     //             console.log('Too many genes, limiting global gene search');
-    //             alert('<%= Gene::MAX_GENE_SEARCH_MSG %>');
+    //             alert('<%= StudySearchService::MAX_GENE_SEARCH_MSG %>');
     //             genes = genes.slice(0, <%= Gene::MAX_GENE_SEARCH %>);
     //             numGenes = genes.length;
     //             $('#search_genes').val(genes.join(' '));

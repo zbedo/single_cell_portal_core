@@ -2,18 +2,18 @@ import React, { useContext } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDna, faExclamationCircle } from '@fortawesome/free-solid-svg-icons'
 
-import { StudySearchContext } from 'providers/StudySearchProvider'
-import { StudyResults } from './StudyResultsContainer'
-import Study from './Study'
-import SearchQueryDisplay from './SearchQueryDisplay'
-
+import { GeneSearchContext } from 'providers/GeneSearchProvider'
+import { StudyResults } from 'components/search/results/StudyResultsContainer'
+import { PagingControl } from 'components/search/results/PagingControl'
+import StudyGenes from './StudyGenes'
 
 /**
  * Component for Results displayed on the homepage
  */
-const ResultsPanel = props => {
-  const searchContext = useContext(StudySearchContext)
+export default function GeneResultsPanel(props) {
+  const searchContext = useContext(GeneSearchContext)
   const results = searchContext.results
+  const studyResults = searchContext.studyResults
   let panelContent
   if (searchContext.isError) {
     panelContent =
@@ -28,19 +28,17 @@ const ResultsPanel = props => {
         Loading &nbsp;
         <FontAwesomeIcon icon={faDna} className="gene-load-spinner"/>
       </div>
-  } else if (results.studies && results.studies.length > 0) {
+  } else if (studyResults.studies && studyResults.studies.length > 0) {
     panelContent =
       <>
-        <SearchQueryDisplay terms={results.termList} facets={results.facets}/>
         <StudyResults
-          results={results}
+          results={studyResults}
           changePage={pageNum => {searchContext.updateSearch({ page: pageNum })}}
-          StudyComponent={ Study }
+          StudyComponent={ StudyGenes }
         />
       </>
   } else {
     panelContent = (<>
-      <SearchQueryDisplay terms={results.termList} facets={results.facets}/>
       <p>No results</p>
     </>)
   }
@@ -53,4 +51,4 @@ const ResultsPanel = props => {
   )
 }
 
-export default ResultsPanel
+

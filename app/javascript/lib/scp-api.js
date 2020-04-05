@@ -200,7 +200,7 @@ export async function fetchSearch(
 export function buildSearchQueryString(type, searchParams) {
   const facetsParam = buildFacetQueryString(searchParams.facets)
 
-  let otherParamString = ['page', 'order', 'terms', 'preset'].map(param => {
+  let otherParamString = ['page', 'order', 'terms', 'preset', 'genes', 'accessions'].map(param => {
     return searchParams[param] ? `&${param}=${searchParams[param]}` : ''
   }).join('')
   otherParamString = otherParamString.replace('preset=', 'preset_search=')
@@ -238,29 +238,6 @@ export function buildFacetsFromQueryString(facetsParamString) {
     })
   }
   return facets
-}
-
-export async function fetchGeneSearch(
-  genes, studyAccessions, studyFacets, studyKeywords, page, mock=false
-) {
-  const path = `/genes/search?${buildGeneSearchQueryString(genes, studyAccessions, studyFacets, studyKeywords, page)}`
-
-  const searchResults = await scpApi(path, defaultInit, mock)
-
-  logSearch('genes', genes, studyFacets, page)
-
-  return searchResults
-}
-
-/** Constructs query string used for /genes/search REST API endpoint */
-export function buildGeneSearchQueryString(genes, studyAccessions, studyKeywords, studyFacets, page) {
-  const pageParam = page ? page : 1
-  const facetsParam = buildFacetQueryString(studyFacets)
-  let studyAccessionParam = ''
-  if (studyAccessions && studyAccessions.length) {
-    studyAccessionParam = '&studyAccessions=' + studyAccessions.join(',')
-  }
-  return `genes=${encodeURIComponent(genes)}${studyAccessionParam}&genePage=${pageParam}&terms=${studyKeywords}&facets=${facetsParam}`
 }
 
 /** returns the current branding group as specified by the url  */

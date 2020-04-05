@@ -43,6 +43,9 @@ export const StudySearchContext = React.createContext(emptySearch)
  */
 export function getNumberOfTerms(terms) {
   let numTerms = 0
+  if (!terms) {
+    return numTerms
+  }
   const splitTerms = terms.split(' ')
   if (splitTerms.length > 0 && splitTerms[0] !== '') {
     numTerms = splitTerms.length
@@ -54,6 +57,9 @@ export function getNumberOfTerms(terms) {
  * Counts facets (e.g. species, disease) and filters (e.g. human, COVID-19)
  */
 export function getNumFacetsAndFilters(facets) {
+  if (!facets) {
+    return 0
+  }
   const numFacets = Object.keys(facets).length
   const numFilters =
     Object.values(facets).reduce((prevNumFilters, filterArray) => {

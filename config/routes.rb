@@ -31,7 +31,9 @@ Rails.application.routes.draw do
           member do
             post 'sync', to: 'studies#sync_study'
           end
+          resources :genes, only: [:index]
         end
+
         get 'status', to: 'status#index'
         scope :site do
           get 'studies', to: 'site#studies', as: :site_studies
