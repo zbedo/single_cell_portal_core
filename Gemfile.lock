@@ -201,7 +201,7 @@ GEM
       thor (>= 0.14, < 2.0)
     jquery-ui-rails (6.0.1)
       railties (>= 3.2.16)
-    json (1.8.6)
+    json (2.3.0)
     jwt (2.2.1)
     launchy (2.4.3)
       addressable (~> 2.3)
@@ -329,7 +329,7 @@ GEM
     rb-fsevent (0.10.3)
     rb-inotify (0.9.10)
       ffi (>= 0.5.0, < 2)
-    rdoc (4.3.0)
+    rdoc (6.2.1)
     representable (3.0.4)
       declarative (< 0.1.0)
       declarative-option (< 0.2.0)
@@ -363,9 +363,8 @@ GEM
     sassc (1.12.1)
       ffi (~> 1.9.6)
       sass (>= 3.3.0)
-    sdoc (0.4.2)
-      json (~> 1.7, >= 1.7.7)
-      rdoc (~> 4.0)
+    sdoc (1.1.0)
+      rdoc (>= 5.0)
     secure_headers (6.3.0)
     selenium-webdriver (3.14.1)
       childprocess (~> 0.5)
@@ -485,7 +484,7 @@ DEPENDENCIES
   ruby_native_statistics
   rubyzip
   sass-rails (~> 5.0, >= 5.0.6)
-  sdoc (~> 0.4.0)
+  sdoc
   secure_headers
   selenium-webdriver
   sentry-raven
