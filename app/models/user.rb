@@ -104,7 +104,7 @@ class User
     # whether the facet search controls are shown
     "faceted_search" => true,
     # show covid-19 tab on homepage
-    "covid19_page" => false
+    "covid19_page" => true
   }
 
   ###

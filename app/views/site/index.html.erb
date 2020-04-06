@@ -12,7 +12,7 @@
           <li role="presentation" class="home-nav" id="search-genes-nav">
             <a href="#search-genes" class="home-nav-tab" data-toggle="tab"><span class="fas fa-dna"></span> Search Genes</a>
           </li>
-          <% if User.feature_flag_for_user(current_user, 'covid19_page') %>
+          <% if User.feature_flag_for_user(current_user, 'covid19_page') && @selected_branding_group.nil? %>
             <li role="presentation" class="home-nav" id="covid19-tab"
                 style="float:right;
                        background: url(<%= image_url 'covid19-button.png' %>);
@@ -44,6 +44,9 @@
             <% else %>
               <%= render partial: '/site/search/search_studies' %>
             <% end %>
+          </div>
+          <div class="tab-pane" id="search-genes" role="tabpanel">
+            <%= render partial: '/site/search/search_genes' %>
           </div>
         </div>
       <% end %>

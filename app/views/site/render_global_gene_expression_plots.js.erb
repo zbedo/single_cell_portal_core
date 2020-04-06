@@ -11,7 +11,7 @@ var expressionData_<%= @identifier %> = [];
     formatted_array_<%= @identifier %>.push(["<%= cluster %>", <%= raw data[:y] %>]);
     <% end %>
     var title_<%= @identifier %>= "<%= params[:cluster]%>";
-    var data_<%= @identifier %> = createTracesAndLayout(formatted_array_<%= @identifier %>, title_<%= @identifier %>, jitter_var_<%= @identifier %>);
+    var data_<%= @identifier %> = createTracesAndLayout(formatted_array_<%= @identifier %>, title_<%= @identifier %>, jitter_var_<%= @identifier %>, '<%= @y_axis_title %>');
     expressionData_<%= @identifier %> = [].concat.apply([], data_<%= @identifier %>[0] );
     expressionLayout_<%= @identifier %> = data_<%= @identifier %>[1];
 
