@@ -58,7 +58,7 @@ export function getNumberOfTerms(terms) {
  */
 export function getNumFacetsAndFilters(facets) {
   if (!facets) {
-    return 0
+    return [0, 0]
   }
   const numFacets = Object.keys(facets).length
   const numFilters =
