@@ -12,7 +12,7 @@ import FiltersSearchBar from './FiltersSearchBar'
 /**
  * Component for filter search and filter lists
  */
-export default function FiltersBoxSearchable({facet, selection, setSelection, show, setShow}) {
+export default function FiltersBoxSearchable({ facet, selection, setSelection, show, setShow }) {
   // State that is specific to FiltersBox
   const [matchingFilters, setMatchingFilters] = useState(facet.filters.slice(0, 15))
   const [hasFilterSearchResults, setHasFilterSearchResults] = useState(false)
@@ -68,7 +68,7 @@ export default function FiltersBoxSearchable({facet, selection, setSelection, sh
   }
 
   function removeFilter(filterId) {
-    let newSelections = selection.slice()
+    const newSelections = selection.slice()
     _remove(newSelections, id => {return id === filterId})
     setSelection(newSelections)
   }
@@ -79,11 +79,11 @@ export default function FiltersBoxSearchable({facet, selection, setSelection, sh
     selectedFilterBadges = (
       <div className="filter-badge-list">
         { selection.map(filterId => {
-          const matchedFilter = _find(facet.filters, {id: filterId})
+          const matchedFilter = _find(facet.filters, { id: filterId })
           return (
             <span key={filterId}
-                  className="badge"
-                  onClick={() => removeFilter(filterId)}>
+              className="badge"
+              onClick={() => removeFilter(filterId)}>
               {matchedFilter.name} <FontAwesomeIcon icon={faTimesCircle}/>
             </span>
           )

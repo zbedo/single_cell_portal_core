@@ -7,9 +7,9 @@ import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger'
 
 import {
   useContextStudySearch, hasSearchParams
-} from './search/StudySearchProvider'
-import { useContextUser } from './UserProvider'
-import { useContextDownload } from './search/DownloadProvider'
+} from 'providers/StudySearchProvider'
+import { useContextUser } from 'providers/UserProvider'
+import { useContextDownload } from 'providers/DownloadProvider'
 import { fetchAuthCode } from 'lib/scp-api'
 
 /**
