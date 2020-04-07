@@ -50,15 +50,19 @@ module Api
                 Rails.logger.error "Error retrieving user api credentials: #{e.class.name}: #{e.message}"
               end
             end
-            # check for token expiry and unset user if expired
-            if user.api_access_token_expired?
+            # check for token expiry and unset user if expired/timed out
+            if user.api_access_token_expired? || user.api_access_token_timed_out?
               nil
             else
+              # update last_access_at
+              user.update_api_last_access_at!
               user
             end
           elsif controller_name == 'search' && action_name == 'bulk_download'
             Rails.logger.info "Authenticating user via auth_token: #{params[:auth_code]}"
-            User.find_by(totat: params[:auth_code].to_i)
+            user = User.find_by(totat: params[:auth_code].to_i)
+            user.update_api_last_access_at!
+            user
           end
         end
 

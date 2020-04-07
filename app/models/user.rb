@@ -64,7 +64,7 @@ class User
 
   # Google OAuth refresh token fields
   field :refresh_token, type: Mongoid::EncryptedString
-  field :access_token, type: Hash
+  field :access_token, type: Hash # from Google OAuth callback
 
   # Used for time-based one-time access token (TOTAT)
   field :totat, type: Integer
@@ -89,6 +89,12 @@ class User
   field :daily_download_quota, type: Integer, default: 0
   field :admin_email_delivery, type: Boolean, default: true
   field :registered_for_firecloud, type: Boolean, default: false
+  # {
+  #   access_token: String OAuth token,
+  #   expires_in: Integer duration in seconds,
+  #   expires_at: DateTime expiry timestamp,
+  #   last_access_at: DateTime last usage of token
+  # }
   field :api_access_token, type: Hash
 
   # feature_flags should be a hash of true/false values.  If unspecified for a given flag, the
@@ -173,14 +179,34 @@ class User
     self.api_access_token.nil? ? true : Time.at(self.api_access_token[:expires_at]) < Time.now.in_time_zone(self.get_token_timezone(:api_access_token))
   end
 
+  # check if an API access token has 'timed out' due to no usage in the last 30 minutes
+  def api_access_token_timed_out?
+    if self.api_access_token.nil?
+      true
+    else
+      # if token has been used in last 30 min (User.timeout_in), then timestamp + timeout_in > now
+      # therefore, make sure last_access + timeout_in is in the future
+      last_access = self.api_access_token[:last_access_at]
+      last_access.present? ? (last_access + self.timeout_in) < Time.now.in_time_zone(self.get_token_timezone(:api_access_token, :last_access_at)) : true
+    end
+  end
+
+  # refresh API token last_access_at, if token is present
+  def update_api_last_access_at!
+    if self.api_access_token.present?
+      self.api_access_token[:last_access_at] = Time.now.in_time_zone(self.get_token_timezone(:api_access_token, :last_access_at))
+      self.save
+    end
+  end
+
   # return an valid access token (will renew if expired) - does not apply to api access tokens, those cannot be renewed
   def valid_access_token
     self.access_token_expired? ? self.generate_access_token : self.access_token
   end
 
   # extract timezone from an access token to allow correct date math
-  def get_token_timezone(token_method)
-    self.send(token_method)[:expires_at].zone
+  def get_token_timezone(token_method, timestamp=:expires_at)
+    self.send(token_method)[timestamp].zone
   end
 
   ###

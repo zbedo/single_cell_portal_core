@@ -91,6 +91,7 @@ else
                     test/models/analysis_parameter_test.rb
                     test/models/search_facet_test.rb
                     test/models/preset_search_test.rb
+                    test/models/user_test.rb
                     test/integration/lib/search_facet_populator_test.rb
                     test/integration/lib/summary_stats_utils_test.rb
                     test/models/big_query_client_test.rb

@@ -36,6 +36,9 @@ class ApplicationController < ActionController::Base
   around_action :set_current_user
   def set_current_user
     Current.user = current_user
+    if current_user.present?
+      current_user.update_api_last_access_at!
+    end
     yield
   ensure
     # to address the thread variable leak issues in Puma/Thin webserver
