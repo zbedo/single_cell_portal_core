@@ -43,7 +43,7 @@ function arrayMax(arr) {
 
 //This is the master function that creates all the plotly traces.
 //Takes an array of arrays and returns the data array of traces and the layout variable
-function createTracesAndLayout(arr, title, jitter='all'){
+function createTracesAndLayout(arr, title, jitter='all', expressionLabel){
     // Iterate through the formatted array [[name_of_trace, expression_data]...]
     // and create the response plotly objects, returning [plotly data object, plotly layout object]
     var data = Array();
@@ -114,7 +114,7 @@ function createTracesAndLayout(arr, title, jitter='all'){
         yaxis: {
             zeroline: true,
             showline: true,
-            title: 'Expression'
+            title: expressionLabel
         },
         margin: {
             pad: 10,

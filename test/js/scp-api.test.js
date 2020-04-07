@@ -1,10 +1,10 @@
-/* eslint-disable no-undef */
+/* eslint-disable*/
 
 const fetch = require('node-fetch')
 import scpApi, {
   fetchAuthCode,
   fetchFacetFilters
-} from '../../app/javascript/lib/scp-api'
+} from 'lib/scp-api'
 
 describe('JavaScript client for SCP REST API', () => {
   beforeAll(() => {
@@ -27,32 +27,31 @@ describe('JavaScript client for SCP REST API', () => {
     expect(apiData.filters).toHaveLength(10)
   })
 
-  it('includes `Authorization: Bearer` in requests when signed in', () => {
-    return new Promise(done => {
+  it('includes `Authorization: Bearer` in requests when signed in', done => {
     // Spy on `fetch()` and its contingent methods like `json()`,
     // because we want to intercept the outgoing request
-      const mockSuccessResponse = {}
-      const mockJsonPromise = Promise.resolve(mockSuccessResponse)
-      const mockFetchPromise = Promise.resolve({
-        json: () => {mockJsonPromise}
+    const mockSuccessResponse = {}
+    const mockJsonPromise = Promise.resolve(mockSuccessResponse)
+    const mockFetchPromise = Promise.resolve({
+      json: () => {mockJsonPromise}
+    })
+    jest.spyOn(global, 'fetch').mockImplementation(() => {
+      mockFetchPromise
+    })
+    fetchFacetFilters('disease', 'tuberculosis')
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer test'
+        }
       })
-      jest.spyOn(global, 'fetch').mockImplementation(() => {
-        mockFetchPromise
-      })
-
-      fetchFacetFilters('disease', 'tuberculosis')
-
-      expect(global.fetch).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.objectContaining({
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Authorization': 'Bearer test'
-          }
-        })
-      )
+    )
+    process.nextTick(() => {
+      done()
     })
   })
 
@@ -66,14 +65,14 @@ describe('JavaScript client for SCP REST API', () => {
       statusText: 'Internal Server Error'
     }
     jest.spyOn(global, 'fetch').mockReturnValue(Promise.resolve(mockErrorResponse))
-    const actual_response = await scpApi('/test/path', {
+    const actualResponse = await scpApi('/test/path', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       }
     }, false)
-    expect(actual_response.status).toEqual(500)
-    expect(actual_response.ok).toEqual(false)
+    expect(actualResponse.status).toEqual(500)
+    expect(actualResponse.ok).toEqual(false)
   })
 })

@@ -1,11 +1,11 @@
 
 import React, { useState, useEffect, useRef, useContext } from 'react'
 import FiltersBoxSearchable from './FiltersBoxSearchable'
-import { StudySearchContext } from 'components/search/StudySearchProvider'
-import { getDisplayNameForFacet } from 'components/search/SearchFacetProvider'
+import { StudySearchContext } from 'providers/StudySearchProvider'
+import { getDisplayNameForFacet } from 'providers/SearchFacetProvider'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTimesCircle } from '@fortawesome/free-solid-svg-icons'
-import { SearchSelectionContext } from './search/SearchSelectionProvider'
+import { SearchSelectionContext } from 'providers/SearchSelectionProvider'
 import { withErrorBoundary } from 'lib/ErrorBoundary'
 
 /**

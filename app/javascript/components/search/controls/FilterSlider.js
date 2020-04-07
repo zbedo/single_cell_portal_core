@@ -26,7 +26,7 @@ const railStyle = {
  * - Support unit-less numerical facets, e.g. bmi, number_of_reads
  * - Support rate units, e.g. small_molecule_perturbation__concentration
  */
- /*
+/*
   * props.selection should be an array of [min,max,unit]
   */
 export default function FilterSlider(props) {
@@ -36,8 +36,7 @@ export default function FilterSlider(props) {
   const domain = [min, max]
 
 
-
-  let propsSelection = _clone(props.selection)
+  const propsSelection = _clone(props.selection)
   // propsRange indicates the current numeric range for the slider
   // it will always be numeric even if the text values are not (e.g. a text box is blank)
   let propsRange = []
@@ -50,7 +49,7 @@ export default function FilterSlider(props) {
     propsRange = propsRange.map((value, index) => {
       const intVal = parseInt(value)
       // convert blanks to min/max as appropriate so the slider can still render
-      if (isNaN(intVal) ) {
+      if (isNaN(intVal)) {
         return domain[index]
       }
       return intVal
@@ -82,20 +81,20 @@ export default function FilterSlider(props) {
     const units = facet.allUnits
     const unit = propsUnit ? propsUnit : facet.allUnits[0]
     unitControl = (
-        <select value={unit}
-                onChange={event => handleUpdate({unit: event.target.value})}>
-          {units.map((unit, i) =>
-            <option key={i}>{unit}</option>
-          )}
-        </select>
-      )
+      <select value={unit}
+        onChange={event => handleUpdate({ unit: event.target.value })}>
+        {units.map((unit, i) =>
+          <option key={i}>{unit}</option>
+        )}
+      </select>
+    )
   }
 
   return (
     <>
       <input
         id='input-min-organism-age'
-        onChange={event => handleUpdate({min: event.target.value})}
+        onChange={event => handleUpdate({ min: event.target.value })}
         type="number"
         min={min}
         max={max}
@@ -105,7 +104,7 @@ export default function FilterSlider(props) {
       <span style={{ 'margin': '0 4px 0 4px' }}>-</span>
       <input
         id='input-max-organism-age'
-        onChange={event => handleUpdate({max: event.target.value})}
+        onChange={event => handleUpdate({ max: event.target.value })}
         type='number'
         min={min}
         max={max}
@@ -120,7 +119,7 @@ export default function FilterSlider(props) {
           domain={domain}
           rootStyle={sliderStyle}
           onChange={newValues =>
-            handleUpdate({min: newValues[0], max: newValues[1]})
+            handleUpdate({ min: newValues[0], max: newValues[1] })
           }
           values={propsRange}
         >

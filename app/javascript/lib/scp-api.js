@@ -10,7 +10,7 @@ import camelcaseKeys from 'camelcase-keys'
 import _compact from 'lodash/compact'
 import * as queryString from 'query-string'
 
-import { accessToken } from './../components/UserProvider'
+import { accessToken } from 'providers/UserProvider'
 import {
   logFilterSearch, logSearch, logDownloadAuthorization, mapFiltersForLogging
 } from './scp-api-metrics'
@@ -272,11 +272,10 @@ export default async function scpApi(path, init, mock=false) {
     .then(handleErrors)
     .catch(error => error)
   if (response.ok) {
-    const json = await response.json().catch(console.error)
+    const json = await response.json()
     // Converts API's snake_case to JS-preferrable camelCase,
     // for easy destructuring assignment.
     return camelcaseKeys(json)
   }
-  // console.log(response)
   return response
 }

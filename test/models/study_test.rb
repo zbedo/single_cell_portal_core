@@ -56,4 +56,22 @@ class StudyTest < ActiveSupport::TestCase
 
     puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
   end
+
+  test 'should parse dense matrix with quotes' do
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+    quoted_matrix = File.open(Rails.root.join('test', 'test_data', 'expression_matrix_quoted_example.txt'))
+    matrix_file = StudyFile.create(name: 'expression_matrix_quoted_example.txt', file_type: 'Expression Matrix',
+                                   upload: quoted_matrix, parse_status: 'unparsed', status: 'uploaded', study_id: @study.id)
+    user = @study.user
+    current_gene_count = @study.genes.count
+    @study.initialize_gene_expression_data(matrix_file, user)
+    @study.reload
+    end_gene_count = @study.genes.count
+    new_genes = end_gene_count - current_gene_count
+    assert_equal 19, new_genes, "Did not add correct number of genes, should be 19 but found #{new_genes}"
+
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+
+  end
 end

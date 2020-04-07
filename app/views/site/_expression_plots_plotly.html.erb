@@ -156,6 +156,7 @@ var expressionData = [];
 <% else %>
     //Using jitter_var instead of jitter because selector is called jitter, avoid confusion
     var jitter_var = "<%= @values_jitter %>";
+    var expressionLabel = "<%= @y_axis_title %>";
     var formatted_array = [];
     <% @values.sort_by {|k,v| k}.each do |cluster, data| %>
       formatted_array.push(["<%= cluster %>", <%= raw data[:y] %>]);
@@ -164,7 +165,7 @@ var expressionData = [];
     <% if @expression[:all][:x].length >= ClusterGroup::MAX_THRESHOLD %>
     title += ' (subsampled to <%= ClusterGroup::MAX_THRESHOLD %> cells)';
     <% end %>
-    var data = createTracesAndLayout(formatted_array, title, jitter_var);
+    var data = createTracesAndLayout(formatted_array, title, jitter_var, expressionLabel);
     expressionData = [].concat.apply([], data[0] );
     expressionLayout = data[1];
 <% end%>

@@ -104,7 +104,7 @@ class SummaryStatsUtilsTest < ActiveSupport::TestCase
     ingest_runs = SummaryStatsUtils.ingest_run_count
     assert ingest_runs > 0, "Should have found at least one ingest run for today, instead found: #{ingest_runs}"
     tomorrow = @today + 1.day
-    runs_tomorrow = SummaryStatsUtils.ingest_run_count(start_date: tomorrow, end_date: tomorrow)
+    runs_tomorrow = SummaryStatsUtils.ingest_run_count(start_date: tomorrow, end_date: tomorrow + 1.day)
     assert_equal 0, runs_tomorrow, "Should not have found any ingest runs for tomorrow: #{runs_tomorrow}"
 
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"

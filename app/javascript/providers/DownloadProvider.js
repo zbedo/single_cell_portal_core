@@ -1,7 +1,7 @@
 import React, { useContext, useState } from 'react'
 import { useContextStudySearch, hasSearchParams } from './StudySearchProvider'
 
-import { fetchDownloadSize } from './../../lib/scp-api'
+import { fetchDownloadSize } from 'lib/scp-api'
 
 export const DownloadContext = React.createContext({
   searchResults: {},
