@@ -100,15 +100,11 @@ export function PropsStudySearchProvider(props) {
     // reset the scroll in case they scrolled down to read prior results
     window.scrollTo(0, 0)
 
-    const results = await fetchSearch(
-      'study',
-      params.terms,
-      params.facets,
-      params.page)
+    const results = await fetchSearch('study', params)
 
     setSearchState({
       params,
-      isError: !results.ok,
+      isError: results.ok? !results.ok: false,
       isLoading: false,
       isLoaded: true,
       results,

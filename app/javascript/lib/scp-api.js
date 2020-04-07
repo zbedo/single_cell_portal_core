@@ -74,7 +74,7 @@ export async function fetchAuthCode(mock=false) {
 export async function fetchFacets(mock=false) {
   const facets = await scpApi('/search/facets', defaultInit, mock)
 
-  // mapFiltersForLogging(facets, true)
+  mapFiltersForLogging(facets, true)
 
   return facets
 }

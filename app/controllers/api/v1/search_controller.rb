@@ -153,7 +153,6 @@ module Api
       end
 
       def index
-        
         @viewable = Study.viewable(current_api_user)
 
         # filter results by branding group, if specified
