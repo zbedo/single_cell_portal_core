@@ -37,7 +37,7 @@ class ApplicationController < ActionController::Base
   def set_current_user
     Current.user = current_user
     if current_user.present?
-      current_user.update_api_last_access_at!
+      current_user.update_last_access_at!
     end
     yield
   ensure

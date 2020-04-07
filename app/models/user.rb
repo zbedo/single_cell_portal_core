@@ -192,7 +192,7 @@ class User
   end
 
   # refresh API token last_access_at, if token is present
-  def update_api_last_access_at!
+  def update_last_access_at!
     if self.api_access_token.present?
       self.api_access_token[:last_access_at] = Time.now.in_time_zone(self.get_token_timezone(:api_access_token))
       self.save

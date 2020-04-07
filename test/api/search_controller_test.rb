@@ -389,7 +389,7 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
 
     # make sure user is "active" by updating last_access_at
     @user = User.first
-    @user.update_api_last_access_at!
+    @user.update_last_access_at!
     # mark study as false to show if a user is signed in or not
     api_test_study = Study.find_by(name: /API Test Study/)
     api_test_study.update(public: false)
@@ -411,7 +411,7 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert_empty accessions, "Did not successfully time out session, accessions were found: #{accessions}"
     # clean up
     api_test_study.update(public: true)
-    @user.update_api_last_access_at!
+    @user.update_last_access_at!
 
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end

@@ -8,7 +8,7 @@ class UserTest < ActiveSupport::TestCase
   test 'should time out token after inactivity' do
     puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
-    @user.update_api_last_access_at!
+    @user.update_last_access_at!
     last_access = @user.api_access_token[:last_access_at]
     now = Time.now.in_time_zone(@user.get_token_timezone(:api_access_token))
     refute @user.api_access_token_timed_out?,
@@ -21,7 +21,7 @@ class UserTest < ActiveSupport::TestCase
     assert @user.api_access_token_timed_out?,
            "API access token should have timed out, #{invalid_access} is outside #{User.timeout_in} seconds of #{now}"
     # clean up
-    @user.update_api_last_access_at!
+    @user.update_last_access_at!
 
     puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
   end

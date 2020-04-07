@@ -55,13 +55,13 @@ module Api
               nil
             else
               # update last_access_at
-              user.update_api_last_access_at!
+              user.update_last_access_at!
               user
             end
           elsif controller_name == 'search' && action_name == 'bulk_download'
             Rails.logger.info "Authenticating user via auth_token: #{params[:auth_code]}"
             user = User.find_by(totat: params[:auth_code].to_i)
-            user.update_api_last_access_at!
+            user.update_last_access_at!
             user
           end
         end
