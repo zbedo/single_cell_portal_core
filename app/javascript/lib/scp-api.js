@@ -74,7 +74,7 @@ export async function fetchAuthCode(mock=false) {
 export async function fetchFacets(mock=false) {
   const facets = await scpApi('/search/facets', defaultInit, mock)
 
-  mapFiltersForLogging(facets, true)
+  // mapFiltersForLogging(facets, true)
 
   return facets
 }
@@ -262,23 +262,21 @@ export default async function scpApi(path, init, mock=false) {
 
   function handleErrors(response) {
     if (!response.ok) {
-      return Promise.reject({
-        type: 'NetworkError',
-        status: response.status,
-        message: response
-      })
+      return Promise.reject(
+        response
+      )
     }
     return response
   }
   const response = await fetch(fullPath, init)
     .then(handleErrors)
     .catch(error => error)
-
-  if (response.message.ok) {
+  if (response.ok) {
     const json = await response.json().catch(console.error)
     // Converts API's snake_case to JS-preferrable camelCase,
     // for easy destructuring assignment.
     return camelcaseKeys(json)
   }
+  // console.log(response)
   return response
 }

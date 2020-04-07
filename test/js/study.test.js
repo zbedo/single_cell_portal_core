@@ -1,4 +1,3 @@
-import React from 'react'
 import { mount } from 'enzyme'
 import { highlightText, shortenDescription, descriptionCharacterLimit } from '../../app/javascript/components/Study'
 
