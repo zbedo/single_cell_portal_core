@@ -71,10 +71,16 @@ class CellMetadatum
 
   def can_visualize?
     if self.annotation_type == 'group'
-      GROUP_VIZ_THRESHOLD === self.values.count
+      GROUP_VIZ_THRESHOLD === self.values.count && !self.is_ontology_ids?
     else
       true
     end
+  end
+
+  # determine if there is another metadatum that represents labels that map to these IDs
+  # e.g. disease vs. disease__ontology_label
+  def is_ontology_ids?
+    self.class.where(study_id: self.study_id, annotation_type: 'group', name: self.name + '__ontology_label').exists?
   end
 
   ##
