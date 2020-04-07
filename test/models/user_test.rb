@@ -10,7 +10,7 @@ class UserTest < ActiveSupport::TestCase
 
     @user.update_api_last_access_at!
     last_access = @user.api_access_token[:last_access_at]
-    now = Time.now.in_time_zone(@user.get_token_timezone(:api_access_token, :last_access_at))
+    now = Time.now.in_time_zone(@user.get_token_timezone(:api_access_token))
     refute @user.api_access_token_timed_out?,
            "API access token should not have timed out, #{last_access} is within #{User.timeout_in} seconds of #{now}"
     # back-date access token last_access_at

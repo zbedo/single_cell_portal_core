@@ -187,14 +187,14 @@ class User
       # if token has been used in last 30 min (User.timeout_in), then timestamp + timeout_in > now
       # therefore, make sure last_access + timeout_in is in the future
       last_access = self.api_access_token[:last_access_at]
-      last_access.present? ? (last_access + self.timeout_in) < Time.now.in_time_zone(self.get_token_timezone(:api_access_token, :last_access_at)) : true
+      last_access.present? ? (last_access + self.timeout_in) < Time.now.in_time_zone(self.get_token_timezone(:api_access_token)) : true
     end
   end
 
   # refresh API token last_access_at, if token is present
   def update_api_last_access_at!
     if self.api_access_token.present?
-      self.api_access_token[:last_access_at] = Time.now.in_time_zone(self.get_token_timezone(:api_access_token, :last_access_at))
+      self.api_access_token[:last_access_at] = Time.now.in_time_zone(self.get_token_timezone(:api_access_token))
       self.save
     end
   end
@@ -205,8 +205,8 @@ class User
   end
 
   # extract timezone from an access token to allow correct date math
-  def get_token_timezone(token_method, timestamp=:expires_at)
-    self.send(token_method)[timestamp].zone
+  def get_token_timezone(token_method)
+    self.send(token_method)[:expires_at].zone
   end
 
   ###
