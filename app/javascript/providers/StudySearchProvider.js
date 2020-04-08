@@ -102,9 +102,10 @@ export function PropsStudySearchProvider(props) {
 
     const results = await fetchSearch('study', params)
 
+
     setSearchState({
       params,
-      isError: results.ok? !results.ok: false,
+      isError: (results.ok || (results.ok == undefined))? false: !results.ok,
       isLoading: false,
       isLoaded: true,
       results,
