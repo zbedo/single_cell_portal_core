@@ -65,13 +65,7 @@ describe('JavaScript client for SCP REST API', () => {
       statusText: 'Internal Server Error'
     }
     jest.spyOn(global, 'fetch').mockReturnValue(Promise.resolve(mockErrorResponse))
-    const actualResponse = await scpApi('/test/path', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      }
-    }, false)
+    const actualResponse = await scpApi('/test/path', {}, false)
     expect(actualResponse.status).toEqual(500)
     expect(actualResponse.ok).toEqual(false)
   })
