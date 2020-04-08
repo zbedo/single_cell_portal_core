@@ -14,6 +14,7 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
                                                                        })
     sign_in @user
     @random_seed = File.open(Rails.root.join('.random_seed')).read.strip
+    @user.update_last_access_at! # ensure user is marked as active
   end
 
   test 'should get all search facets' do

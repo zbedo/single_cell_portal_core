@@ -27,10 +27,12 @@ module Api
                 token_url = "https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=#{api_access_token}"
                 response = RestClient.get token_url
                 credentials = JSON.parse response.body
+                now = Time.zone.now
                 token_values = {
                     'access_token' => api_access_token,
                     'expires_in' => credentials['expires_in'],
-                    'expires_at' => Time.zone.now + credentials['expires_in'].to_i
+                    'expires_at' => now + credentials['expires_in'].to_i,
+                    'last_access_at' => now
                 }
                 email = credentials['email']
                 user = User.find_by(email: email)
