@@ -100,8 +100,10 @@
                     }
                 });
                 function submitGeneSearch(event) {
-                    if ( $('#search_genes').val() == '' && $('#search_upload').val() == '' ) {
-                        alert('You must specify at least one gene or upload a list of genes to search');
+                    // concatenate all inputs together to see if there is any value anywhere
+                    var allValues = $('#search_genes').val() + $('#search_upload').val() + $('#gene_set').val() + $('#expression').val();
+                    if ( allValues === '' ) {
+                        alert('You must specify at least one gene, gene list, or upload a list of genes to search');
                         setErrorOnBlank($('.search-genes-input'));
                     } else {
                         $(window).off('resizeEnd');
