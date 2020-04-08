@@ -106,6 +106,20 @@ export function setMockOrigin(origin) {
 }
 
 /**
+ *  Returns an object with expression data rendering info
+ *
+ * @param {string} studyAccession study
+ * @param {Array} genes List of gene names or identifiers to get expression data for
+ *
+ */
+export async function fetchExpressionRender(studyAccession, genes, mock=false) {
+  const geneParam = encodeURIComponent(genes.join(','))
+  const apiUrl = `/studies/${studyAccession}/expression_renders?genes=${geneParam}`
+  // don't camelcase the keys since those can be cluster names
+  return await scpApi(apiUrl, defaultInit, mock, false)
+}
+
+/**
  * Returns a list of matching filters for a given facet
  *
  * Docs: https:///singlecell.broadinstitute.org/single_cell/api/swagger_docs/v1#!/Search/search_facet_filters_path
@@ -254,7 +268,7 @@ function getBrandingGroup(path) {
  * @param {Object} init | Object for settings, just like standard fetch `init`
  * @param {Boolean} mock | Whether to use mock data.  Helps development, tests.
  */
-export default async function scpApi(path, init, mock=false) {
+export default async function scpApi(path, init, mock=false, camelCase=true) {
   if (globalMock) mock = true
   const basePath =
     (mock || globalMock) ? `${mockOrigin}/mock_data` : defaultBasePath
@@ -266,5 +280,9 @@ export default async function scpApi(path, init, mock=false) {
 
   // Converts API's snake_case to JS-preferrable camelCase,
   // for easy destructuring assignment.
-  return camelcaseKeys(json)
+  if (camelCase) {
+    return camelcaseKeys(json)
+  } else {
+    return json
+  }
 }

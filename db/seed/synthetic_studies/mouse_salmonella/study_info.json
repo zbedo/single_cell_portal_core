@@ -9,6 +9,10 @@
     {
       "type": "Expression Matrix",
       "filename": "expression_matrix.tsv"
+    },
+    {
+      "type": "Cluster",
+      "filename": "cluster.tsv"
     }
   ]
 }
