@@ -83,6 +83,10 @@ class CellMetadatum
     self.class.where(study_id: self.study_id, annotation_type: 'group', name: self.name + '__ontology_label').exists?
   end
 
+  def is_ontology_labels?
+    self.name.end_with?('__ontology_label')
+  end
+
   ##
   #
   # CLASS INSTANCE METHODS
