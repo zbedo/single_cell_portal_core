@@ -260,16 +260,7 @@ export default async function scpApi(path, init, mock=false) {
   let fullPath = basePath + path
   if (mock) fullPath += '.json' // e.g. /mock_data/search/auth_code.json
 
-  function handleErrors(response) {
-    if (!response.ok) {
-      return Promise.reject(
-        response
-      )
-    }
-    return response
-  }
   const response = await fetch(fullPath, init)
-    .then(handleErrors)
     .catch(error => error)
   if (response.ok) {
     const json = await response.json()

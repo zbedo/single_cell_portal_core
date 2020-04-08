@@ -1,6 +1,7 @@
 {
   "scripts": {
     "test": "jest --coverage",
+    "start": "webpack-dev-server --hot",
     "testDebug": "node --inspect-brk node_modules/.bin/jest --runInBand",
     "lint": "eslint app/javascript",
     "fix-styles": "prettier-stylelint --write 'src/**/*.{css,scss}' "

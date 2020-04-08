@@ -153,6 +153,7 @@ module Api
       end
 
       def index
+        render json:{error: 'blah'}, status:500
         @viewable = Study.viewable(current_api_user)
 
         # filter results by branding group, if specified
@@ -243,7 +244,7 @@ module Api
           @studies = @studies.sort_by(&:view_count).reverse
         else
           # we have sort_type of :none, so preserve original ordering of :view_order
-          @studies = @studies.sort_by(&:view_order)
+          @studies = @studies.sort_by(&:view_order).reverse
         end
 
         # save list of study accessions for bulk_download/bulk_download_size calls, in order of results
