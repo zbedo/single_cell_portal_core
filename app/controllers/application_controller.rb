@@ -82,8 +82,7 @@ class ApplicationController < ActionController::Base
   def set_study_default_options
     @default_cluster = @study.default_cluster
     @default_cluster_annotations = {
-        'Study Wide' => @study.cell_metadata.keep_if {|meta| meta.can_visualize?}
-                            .map {|metadata| metadata.annotation_select_option }
+        'Study Wide' => @study.viewable_metadata.map {|metadata| metadata.annotation_select_option }
     }
     unless @default_cluster.nil?
       @default_cluster_annotations['Cluster-based'] = @default_cluster.cell_annotations

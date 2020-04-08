@@ -87,6 +87,7 @@ else
                     test/models/cluster_group_test.rb # deprecated, but needed to set up for user_annotation_test
                     test/models/user_annotation_test.rb
                     test/models/study_test.rb
+                    test/models/cell_metadatum_test.rb
                     test/models/analysis_configuration_test.rb
                     test/models/analysis_parameter_test.rb
                     test/models/search_facet_test.rb

@@ -23,8 +23,8 @@ class StudiesController < ApplicationController
     check_access_settings
   end
   # special before_action to make sure FireCloud is available and pre-empt any calls when down
-  before_action :check_firecloud_status, except: [:index, :do_upload, :resume_upload, :update_status,
-                                                  :retrieve_wizard_upload, :parse]
+  #before_action :check_firecloud_status, except: [:index, :do_upload, :resume_upload, :update_status,
+  #                                                :retrieve_wizard_upload, :parse]
   before_action :check_study_detached, only: [:edit, :update, :initialize_study, :sync_study, :sync_submission_outputs]
 
   ###
