@@ -31,7 +31,10 @@ async function generateDownloadConfig(matchingAccessions) {
   const url = `${baseUrl}search/bulk_download${queryString}`
 
   // "-k" === "--insecure"
-  const curlSecureFlag = (window.location.host === 'localhost') ? 'k' : ''
+  let curlSecureFlag = ''
+  if (('SCP' in window) && window.location.host === 'localhost') {
+    curlSecureFlag = 'k'
+  }
 
   // This is what the user will run in their terminal to download the data.
   // To consider: check the node environment (either at compile or runtime)
@@ -40,6 +43,8 @@ async function generateDownloadConfig(matchingAccessions) {
     `curl "${url}" -${curlSecureFlag}o cfg.txt; ` +
     `curl -K cfg.txt; rm cfg.txt`
   )
+
+  console.log(`authCode: ${authCode}`)
 
   return {
     authCode,
@@ -86,6 +91,7 @@ function DownloadCommandContainer(props) {
   }
 
   return (
+    'authCode' in downloadConfig &&
     <div>
       <div className='input-group'>
         <input
