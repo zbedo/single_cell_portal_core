@@ -224,9 +224,7 @@ function split(val) {
 // extract last term from a string of autocomplete entries
 function extractLast(term) {
     sanitizedTerm = term.trim().replace(/,$/, ''); // remove trailing whitespace/comma to prevent returning all results
-    var returned = split(sanitizedTerm).pop();
-    console.log('extractLast: ' + returned);
-    return returned;
+    return split(sanitizedTerm).pop();
 }
 
 var keydownIsFromAutocomplete = false;
