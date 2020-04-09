@@ -107,7 +107,7 @@ export function PropsStudySearchProvider(props) {
 
     setSearchState({
       params,
-      // f results.ok is undefined, no error has occurred
+      // if results.ok is undefined, no error has occurred
       isError: results.ok === false,
       isLoading: false,
       isLoaded: true,
