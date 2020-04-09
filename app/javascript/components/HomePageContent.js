@@ -12,17 +12,11 @@ import UserProvider from 'providers/UserProvider'
 import FeatureFlagProvider, { FeatureFlagContext } from 'providers/FeatureFlagProvider'
 import ErrorBoundary from 'lib/ErrorBoundary'
 
-const StudySearchView = function() {
-  const studySearchState = useContext(StudySearchContext)
-
-  useEffect(() => {
-    // if a search isn't already happening, perform one
-    if (!studySearchState.isLoading && !studySearchState.isLoaded) {
-      studySearchState.performSearch()
-    }
-  })
-
-  return <><SearchPanel/><ResultsPanel/></>
+export function StudySearchView() {
+  return <>
+    <SearchPanel searchOnLoad={true}/>
+    <ResultsPanel/>
+  </>
 }
 
 const LinkableSearchTabs = function(props) {
@@ -30,6 +24,7 @@ const LinkableSearchTabs = function(props) {
   // router doesn't own the home path
   const location = useLocation()
   const isShowGenes = location.pathname.startsWith('/single_cell/app/genes')
+  const featureFlagState = useContext(FeatureFlagContext)
   return (
     <div>
       <nav className="nav search-links">
@@ -49,15 +44,6 @@ const LinkableSearchTabs = function(props) {
     </div>
   )
 }
-
-function HomePageView() {
-  const featureFlagState = useContext(FeatureFlagContext)
-  if (featureFlagState.linkable_gene_search) {
-    return <LinkableSearchTabs/>
-  }
-  return <StudySearchView/>
-}
-
 
 /* renders all the page-level providers */
 function ProviderStack(props) {
@@ -83,7 +69,7 @@ function RawHomePageContent() {
   return (
     <ErrorBoundary>
       <ProviderStack>
-        <HomePageView/>
+        <LinkableSearchTabs/>
       </ProviderStack>
     </ErrorBoundary>
   )

@@ -1,4 +1,6 @@
 import React from 'react'
+import { Router } from '@reach/router'
+
 import SearchPanel from 'components/search/controls/SearchPanel'
 import ResultsPanel from 'components/search/results/ResultsPanel'
 import StudySearchProvider from 'providers/StudySearchProvider'
@@ -11,6 +13,14 @@ import ErrorBoundary from 'lib/ErrorBoundary'
  */
 export default function Covid19PageContent() {
   return (
+    <Router>
+      <UnroutedPageContent default/>
+    </Router>
+  )
+}
+
+function UnroutedPageContent() {
+  return (
     <ErrorBoundary>
       <UserProvider>
         <SearchFacetProvider>
@@ -18,7 +28,8 @@ export default function Covid19PageContent() {
             <ErrorBoundary>
               <SearchPanel showCommonButtons={false}
                 showDownloadButton={false}
-                keywordPrompt="Search within COVID-19 studies"/>
+                keywordPrompt="Search within COVID-19 studies"
+                searchOnLoad={true}/>
             </ErrorBoundary>
             <ErrorBoundary>
               <ResultsPanel/>

@@ -2,7 +2,33 @@
 <div class="container-fluid home-page-fix" id="wrap">
   <div class="row section-pad" id="main-body">
     <div class="col-md-12">
-      <% if User.feature_flag_for_user(current_user, "linkable_gene_search") %>
+      <% if User.feature_flag_for_user(current_user, "advanced_search") %>
+        <% if User.feature_flag_for_user(current_user, 'covid19_page') && @selected_branding_group.nil? %>
+          <div class="home-nav" id="covid19-tab"
+              style="float:right;
+                     background: url(<%= image_url 'covid19-button.png' %>);
+                     background-position: right;
+                     background-repeat: no-repeat;
+                     background-color: #1d1e20;
+                     border-radius: 5px;
+                     background-size: contain;">
+            <a href="/single_cell/covid19"
+               style="color: #fff;
+                      font-size: normal;
+                      width:250px;
+                      padding: 10px 15px;
+                      font-size: 16.8px;
+                      display: inline-block">
+              COVID-19 Studies
+            </a>
+          </div>
+        <% end %>
+        <%#
+          This is where React integrates into Rails.
+
+          Ensure any updates to this ID are reflected in the ReactDOM.render call
+          in app/javascript/packs/application.js
+        #%>
         <div id="home-page-content"></div>
       <% else %>
         <ul class="nav nav-tabs sc-tabs" role="tablist" id="home-page-tabs">
@@ -32,18 +58,7 @@
         </ul>
         <div class="tab-content top-pad">
           <div class="tab-pane active in" id="search-studies" role="tabpanel">
-            <%#
-              This is where React integrates into Rails.
-
-              Ensure any updates to this ID are reflected in the ReactDOM.render call
-              in app/javascript/packs/application.js
-            #%>
-            <% if User.feature_flag_for_user(current_user, "advanced_search") %>
-              <div id="home-page-content">
-              </div>
-            <% else %>
-              <%= render partial: '/site/search/search_studies' %>
-            <% end %>
+            <%= render partial: '/site/search/search_studies' %>
           </div>
           <div class="tab-pane" id="search-genes" role="tabpanel">
             <%= render partial: '/site/search/search_genes' %>
