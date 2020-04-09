@@ -17,7 +17,6 @@ const ResultsPanel = props => {
   if (searchContext.isError) {
     panelContent = (
       <div className="error-panel">
-        {' '}
         <Col mdOffset={3} md={6}>
           <FontAwesomeIcon
             icon={faExclamationCircle}
@@ -28,7 +27,7 @@ const ResultsPanel = props => {
           contact support at{' '}
           <a href="mailto:scp-support@broadinstitute.zendesk.com">
             scp-support@broadinstitute.zendesk.com
-          </a>{' '}
+          </a>
         </Col>
       </div>
     )

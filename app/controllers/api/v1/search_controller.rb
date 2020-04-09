@@ -153,6 +153,7 @@ module Api
       end
 
       def index
+        render json:{error: 'blah'}, status:500
         @viewable = Study.viewable(current_api_user)
 
         # filter results by branding group, if specified
