@@ -18,7 +18,7 @@ const ResultsPanel = props => {
       <div className="error-panel  col-md-6 col-md-offset-3">
         <FontAwesomeIcon
           icon={faExclamationCircle}
-          style={{ 'margin-right': '5px' }}
+          className="left-margin-icon"
         />
         Sorry, an error has occurred. Support has been notified. Please try
         again. If this error persists, or you require assistance, please contact
