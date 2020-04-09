@@ -112,9 +112,12 @@ export function setMockOrigin(origin) {
  * @param {Array} genes List of gene names or identifiers to get expression data for
  *
  */
-export async function fetchExpressionRender(studyAccession, genes, mock=false) {
+export async function fetchExpressionRender(studyAccession, genes, cluster, annotation, subsample, mock=false) {
   const geneParam = encodeURIComponent(genes.join(','))
-  const apiUrl = `/studies/${studyAccession}/expression_renders?genes=${geneParam}`
+  const clusterParam = cluster ? `&cluster=${encodeURIComponent(cluster)}` : ''
+  const annotationParam = annotation ? `&annotation=${encodeURIComponent(annotation)}` : ''
+  const subsampleParam = subsample ? `&annotation=${encodeURIComponent(subsample)}` : ''
+  const apiUrl = `/studies/${studyAccession}/expression_renders?genes=${geneParam}${clusterParam}${annotationParam}${subsampleParam}`
   // don't camelcase the keys since those can be cluster names
   return await scpApi(apiUrl, defaultInit, mock, false)
 }
@@ -214,7 +217,7 @@ export async function fetchSearch(
 export function buildSearchQueryString(type, searchParams) {
   const facetsParam = buildFacetQueryString(searchParams.facets)
 
-  let otherParamString = ['page', 'order', 'terms', 'preset', 'genes', 'accessions'].map(param => {
+  let otherParamString = ['page', 'order', 'terms', 'preset', 'genes', 'genePage'].map(param => {
     return searchParams[param] ? `&${param}=${searchParams[param]}` : ''
   }).join('')
   otherParamString = otherParamString.replace('preset=', 'preset_search=')

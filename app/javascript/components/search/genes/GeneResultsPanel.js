@@ -33,7 +33,7 @@ export default function GeneResultsPanel(props) {
       <>
         <StudyResults
           results={studyResults}
-          changePage={pageNum => {searchContext.updateSearch({ page: pageNum })}}
+          changePage={pageNum => {searchContext.updateSearch({ genePage: pageNum })}}
           StudyComponent={ StudyGenes }
         />
       </>

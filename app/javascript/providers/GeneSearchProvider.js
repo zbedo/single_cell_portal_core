@@ -46,11 +46,11 @@ export function PropsGeneSearchProvider(props) {
    */
   async function updateSearch(newParams, studySearchState, searchWithinStudies) {
 
-    let mergedParams = Object.assign({}, newParams)
+    let mergedParams = Object.assign({}, searchParams, newParams)
     if (searchWithinStudies) {
       mergedParams = Object.assign(mergedParams, studySearchState.params)
     }
-    const queryString = buildSearchQueryString('study', newParams)
+    const queryString = buildSearchQueryString('study', mergedParams)
     navigate(`?${queryString}`)
   }
 
@@ -62,7 +62,11 @@ export function PropsGeneSearchProvider(props) {
     if (studySearchState.isLoaded) {
       params.accessions = studySearchState.results.matchingAccessions
     }
-    const studyResults = await fetchSearch('study', params)
+    let sentParams = Object.assign({}, params)
+    // genePage and page are named separately so they don't overlap in navigation urls
+    // but for api requests, we rename genePage to page
+    sentParams.page = params.genePage ? params.genePage : 1
+    const studyResults = await fetchSearch('study', sentParams)
 
     setSearchState({
       params,
