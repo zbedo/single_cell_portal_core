@@ -218,13 +218,15 @@ $(document).on('change', '#panel-genes-search input, #panel-genes-search select'
 
 // split a string on spaces, used for extractLast()
 function split(val) {
-    return val.split(/\s/);
+    return val.split(/[\s,]/);
 }
 
 // extract last term from a string of autocomplete entries
 function extractLast(term) {
-    sanitizedTerm = term.trim(); // remove trailing whitespace to prevent returning all results
-    return split(sanitizedTerm).pop();
+    sanitizedTerm = term.trim().replace(/,$/, ''); // remove trailing whitespace/comma to prevent returning all results
+    var returned = split(sanitizedTerm).pop();
+    console.log('extractLast: ' + returned);
+    return returned;
 }
 
 var keydownIsFromAutocomplete = false;
