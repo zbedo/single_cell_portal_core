@@ -22,7 +22,7 @@ const ResultsPanel = props => {
         />
         Sorry, an error has occurred. Support has been notified. Please try
         again. If this error persists, or you require assistance, please contact
-        support at{' '}
+        support at &nbsp;
         <a href="mailto:scp-support@broadinstitute.zendesk.com">
           scp-support@broadinstitute.zendesk.com
         </a>
