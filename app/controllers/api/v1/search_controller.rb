@@ -243,7 +243,7 @@ module Api
           @studies = @studies.sort_by(&:view_count).reverse
         else
           # we have sort_type of :none, so preserve original ordering of :view_order
-          @studies = @studies.sort_by(&:view_order).reverse
+          @studies = @studies.sort_by(&:view_order)
         end
 
         # save list of study accessions for bulk_download/bulk_download_size calls, in order of results
