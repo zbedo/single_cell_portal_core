@@ -4,35 +4,35 @@ import InputGroup from 'react-bootstrap/lib/InputGroup'
 import Form from 'react-bootstrap/lib/Form'
 import { faSearch, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { SearchSelectionContext } from './search/SearchSelectionProvider'
-import { StudySearchContext } from './search/StudySearchProvider'
+import { SearchSelectionContext } from 'providers/SearchSelectionProvider'
+import { StudySearchContext } from 'providers/StudySearchProvider'
 
 /**
  * Component to search using a keyword value
  * optionally takes a 'keywordValue' prop with the initial value for the field
  */
-export default function KeywordSearch({keywordPrompt}) {
-  const placeholder = keywordPrompt ? keywordPrompt : "Enter keyword"
+export default function KeywordSearch({ keywordPrompt }) {
+  const placeholder = keywordPrompt ? keywordPrompt : 'Enter keyword'
   const selectionContext = useContext(SearchSelectionContext)
   const searchContext = useContext(StudySearchContext)
   // show clear button after a search has been done,
   //  as long as the text hasn't been updated
-  const showClear = searchContext.params.terms === selectionContext.terms
-                    && selectionContext.terms != ''
+  const showClear = searchContext.params.terms === selectionContext.terms &&
+                    selectionContext.terms != ''
   /**
    * Updates terms in search context upon submitting keyword search
    */
   function handleSubmit(event) {
     event.preventDefault()
     if (showClear) {
-      selectionContext.updateSelection({terms: ''}, true)
+      selectionContext.updateSelection({ terms: '' }, true)
     } else {
       selectionContext.performSearch()
     }
   }
 
   function handleKeywordChange(newValue) {
-    selectionContext.updateSelection({terms: newValue})
+    selectionContext.updateSelection({ terms: newValue })
   }
 
   return (

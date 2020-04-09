@@ -5,7 +5,6 @@ import _remove from 'lodash/remove'
  * Component for a list of checkbox filters, e.g. disease, species
  */
 function FilterCheckboxes(props) {
-
   function updateSelection(filterId, value) {
     const newSelection = props.selection.slice()
     if (value && !newSelection.includes(filterId)) {

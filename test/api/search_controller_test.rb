@@ -14,6 +14,7 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
                                                                        })
     sign_in @user
     @random_seed = File.open(Rails.root.join('.random_seed')).read.strip
+    @user.update_last_access_at! # ensure user is marked as active
   end
 
   test 'should get all search facets' do
@@ -380,6 +381,38 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert found_study['preset_match']
     assert_equal ['API Test Study'], found_study['term_matches'], "Did not correctly match on #{search_terms}: #{found_study['term_matches']}"
     @preset_search.destroy # clean up
+
+    puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
+  end
+
+  test 'should log out user after inactivity' do
+    puts "#{File.basename(__FILE__)}: #{self.method_name}"
+
+    # make sure user is "active" by updating last_access_at
+    @user = User.first
+    @user.update_last_access_at!
+    # mark study as false to show if a user is signed in or not
+    api_test_study = Study.find_by(name: /API Test Study/)
+    api_test_study.update(public: false)
+    search_terms = "\"API Test Study\""
+    execute_http_request(:get, api_v1_search_path(type: 'study', terms: search_terms))
+    assert_response :success
+    expected_results = [api_test_study.accession]
+    assert_equal expected_results, json['matching_accessions'],
+                 "Found wrong study with keywords search; expected #{expected_results} but found #{json['matching_accessions']}"
+    # now simulate a user "timing out" by back-dating last_access_at timestamp by double the timeout threshold
+    # and then re-run search
+    last_access = @user.api_access_token[:last_access_at]
+    timed_out_stamp = last_access - User.timeout_in * 2
+    @user.api_access_token[:last_access_at] = timed_out_stamp
+    @user.save
+    execute_http_request(:get, api_v1_search_path(type: 'study', terms: search_terms))
+    assert_response :success
+    accessions = json['matching_accessions']
+    assert_empty accessions, "Did not successfully time out session, accessions were found: #{accessions}"
+    # clean up
+    api_test_study.update(public: true)
+    @user.update_last_access_at!
 
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end

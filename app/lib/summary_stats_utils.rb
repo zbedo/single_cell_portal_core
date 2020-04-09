@@ -66,12 +66,15 @@ class SummaryStatsUtils
     ingest_jobs = 0
     jobs = ApplicationController.papi_client.list_pipelines
     all_from_range = false
+    date_range = start_date..end_date
     until all_from_range
       jobs.operations.each do |job|
-        submission_date = Date.parse(job.metadata['startTime'])
+        submission_date = Time.zone.parse(job.metadata['startTime']).to_date
         # use `dig` to avoid NoMethodError
         database_name = job.metadata.dig('pipeline', 'environment', 'DATABASE_NAME')
-        if submission_date >= start_date && submission_date <= end_date
+        if submission_date > end_date && submission_date > start_date
+          next
+        elsif date_range === submission_date
           ingest_jobs += 1 if schema == database_name
         else
           all_from_range = true

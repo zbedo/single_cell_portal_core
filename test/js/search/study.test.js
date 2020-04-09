@@ -2,7 +2,7 @@ import React from 'react';
 import * as ReactAll from 'react';
 import { mount } from 'enzyme';
 
-import Study from 'components/Study';
+import Study from 'components/search/results/Study';
 
 const facetMatchedStudy = {
   name: 'Tuberculosis subtypes in human male blood',

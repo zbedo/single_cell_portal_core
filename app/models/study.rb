@@ -881,6 +881,23 @@ class Study
     self.can_visualize_clusters? || self.can_visualize_genome_data?
   end
 
+  # quick getter to return any cell metadata that can_visualize?
+  def viewable_metadata
+    viewable = []
+    all_metadata = self.cell_metadata
+    all_names = all_metadata.pluck(:name)
+    all_metadata.each do |meta|
+      if meta.annotation_type == 'numeric'
+        viewable << meta
+      else
+        if CellMetadatum::GROUP_VIZ_THRESHOLD === meta.values.size
+          viewable << meta unless all_names.include?(meta.name + '__ontology_label')
+        end
+      end
+    end
+    viewable
+  end
+
   ###
   #
   # DATA PATHS & URLS
@@ -974,8 +991,7 @@ class Study
 
   # return the value of the expression axis label
   def default_expression_label
-    label = self.default_options[:expression_label].presence
-    label.nil? ? 'Expression' : label
+    self.default_options[:expression_label].present? ? self.default_options[:expression_label] : 'Expression'
   end
 
   # determine if a user has supplied an expression label
@@ -1128,8 +1144,8 @@ class Study
   # dropdowns for selecting annotations.  can be scoped to one specific cluster, or return all with 'Cluster: ' prepended on the name
   def formatted_annotation_select(cluster: nil, annotation_type: nil)
     options = {}
-    meta_opts = annotation_type.nil? ? self.cell_metadata : self.cell_metadata.where(annotation_type: annotation_type)
-    metadata = meta_opts.keep_if(&:can_visualize?)
+    viewable = self.viewable_metadata
+    metadata = annotation_type.nil? ? viewable : viewable.select {|m| m.annotation_type == annotation_type}
     options['Study Wide'] = metadata.map(&:annotation_select_option)
     if cluster.present?
       options['Cluster-Based'] = cluster.cell_annotation_select_option(annotation_type)
@@ -1484,7 +1500,8 @@ class Study
         file = File.open(@file_location, 'rb')
       end
       # first determine if this is a MM coordinate file or not
-      cells = file.readline.split(/[\t,]/).map(&:strip)
+      raw_cells = file.readline.rstrip.split(/[\t,]/).map(&:strip)
+      cells = self.sanitize_input_array(raw_cells)
       @last_line = "#{expression_file.name}, line 1"
       if !['gene', ''].include?(cells.first.downcase) || cells.size <= 1
         # file did not have correct header information, but may be an export from R which will have one less column

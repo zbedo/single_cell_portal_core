@@ -2,8 +2,8 @@ import React, { useContext } from 'react'
 import _isEqual from 'lodash/isEqual'
 import Button from 'react-bootstrap/lib/Button'
 
-import { StudySearchContext } from 'components/search/StudySearchProvider'
-import { SearchSelectionContext } from './search/SearchSelectionProvider'
+import { StudySearchContext } from 'providers/StudySearchProvider'
+import { SearchSelectionContext } from 'providers/SearchSelectionProvider'
 import Filters from './Filters'
 
 
@@ -92,7 +92,7 @@ export default function FiltersBox(props) {
         appliedSelection.length === 0 &&
         selection.length === 0) {
       // case where a user clicks apply without changing the slider
-      let defaultSelection = [
+      const defaultSelection = [
         props.facet.min,
         props.facet.max,
         props.facet.unit

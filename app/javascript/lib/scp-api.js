@@ -10,7 +10,7 @@ import camelcaseKeys from 'camelcase-keys'
 import _compact from 'lodash/compact'
 import * as queryString from 'query-string'
 
-import { accessToken } from './../components/UserProvider'
+import { accessToken } from 'providers/UserProvider'
 import {
   logFilterSearch, logSearch, logDownloadAuthorization, mapFiltersForLogging
 } from './scp-api-metrics'

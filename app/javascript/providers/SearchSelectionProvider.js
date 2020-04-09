@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react'
-import { StudySearchContext } from 'components/search/StudySearchProvider'
+import { StudySearchContext } from './StudySearchProvider'
 import _clone from 'lodash/clone'
 
 /** The currently selected state of the search panel */

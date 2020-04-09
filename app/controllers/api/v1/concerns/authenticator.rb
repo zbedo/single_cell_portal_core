@@ -27,10 +27,12 @@ module Api
                 token_url = "https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=#{api_access_token}"
                 response = RestClient.get token_url
                 credentials = JSON.parse response.body
+                now = Time.zone.now
                 token_values = {
                     'access_token' => api_access_token,
                     'expires_in' => credentials['expires_in'],
-                    'expires_at' => Time.zone.now + credentials['expires_in'].to_i
+                    'expires_at' => now + credentials['expires_in'].to_i,
+                    'last_access_at' => now
                 }
                 email = credentials['email']
                 user = User.find_by(email: email)
@@ -50,15 +52,19 @@ module Api
                 Rails.logger.error "Error retrieving user api credentials: #{e.class.name}: #{e.message}"
               end
             end
-            # check for token expiry and unset user if expired
-            if user.api_access_token_expired?
+            # check for token expiry and unset user if expired/timed out
+            if user.api_access_token_expired? || user.api_access_token_timed_out?
               nil
             else
+              # update last_access_at
+              user.update_last_access_at!
               user
             end
           elsif controller_name == 'search' && action_name == 'bulk_download'
             Rails.logger.info "Authenticating user via auth_token: #{params[:auth_code]}"
-            User.find_by(totat: params[:auth_code].to_i)
+            user = User.find_by(totat: params[:auth_code].to_i)
+            user.update_last_access_at!
+            user
           end
         end
 

@@ -3,7 +3,7 @@ import React from 'react'
 
 export const descriptionCharacterLimit = 750
 export const summaryWordLimit = 150
-import { getDisplayNameForFacet } from 'components/search/SearchFacetProvider'
+import { getDisplayNameForFacet } from 'providers/SearchFacetProvider'
 
 const lengthOfHighlightTag = 21
 
