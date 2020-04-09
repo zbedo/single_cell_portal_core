@@ -1,7 +1,6 @@
 import React, { useContext } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDna, faExclamationCircle } from '@fortawesome/free-solid-svg-icons'
-import Col from 'react-bootstrap/lib/Col'
 
 import { StudySearchContext } from 'providers/StudySearchProvider'
 import { StudyResults } from './StudyResultsContainer'
@@ -16,19 +15,17 @@ const ResultsPanel = props => {
   let panelContent
   if (searchContext.isError) {
     panelContent = (
-      <div className="error-panel">
-        <Col mdOffset={3} md={6}>
-          <FontAwesomeIcon
-            icon={faExclamationCircle}
-            style={{ 'margin-right': '5px' }}
-          />
-          Sorry, an error has occurred. Support has been notified. Please try
-          again. If this error persists, or you require assistance, please
-          contact support at{' '}
-          <a href="mailto:scp-support@broadinstitute.zendesk.com">
-            scp-support@broadinstitute.zendesk.com
-          </a>
-        </Col>
+      <div className="error-panel  col-md-6 col-md-offset-3">
+        <FontAwesomeIcon
+          icon={faExclamationCircle}
+          style={{ 'margin-right': '5px' }}
+        />
+        Sorry, an error has occurred. Support has been notified. Please try
+        again. If this error persists, or you require assistance, please contact
+        support at{' '}
+        <a href="mailto:scp-support@broadinstitute.zendesk.com">
+          scp-support@broadinstitute.zendesk.com
+        </a>
       </div>
     )
   } else if (!searchContext.isLoaded) {
