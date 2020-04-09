@@ -1,4 +1,4 @@
-// Without disabling eslint code is Promises are auto inserted
+// Without disabling eslint code, Promises are auto inserted
 /* eslint-disable*/
 
 const fetch = require('node-fetch')
