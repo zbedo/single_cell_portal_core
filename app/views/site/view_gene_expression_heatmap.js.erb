@@ -5,7 +5,8 @@ closeModalSpinner('#spinner_target', '#loading-modal', function () {
     showMessageModal("<%= notice.present? ? notice.html_safe : nil %>", "<%= alert.present? ? alert.html_safe : nil %>")
     $(window).off('resizeEnd');
     enableDefaultActions();
-    var requestUrl = "<%= javascript_safe_url(request.fullpath) %>";
+    var requestUrl = "<%= request.fullpath %>";
+    var encodedUrl = encodeURI(requestUrl);
     ga('send', 'event', 'engaged_user_action', 'study_gene_search_multiple')
-    gaTrack(requestUrl, 'Single Cell Portal');
+    gaTrack(encodedUrl, 'Single Cell Portal');
 });
