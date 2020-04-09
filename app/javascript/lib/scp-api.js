@@ -169,11 +169,11 @@ export async function fetchDownloadSize(accessions, fileTypes, mock=false) {
  *
  * @param {String} type Type of query to perform (study- or cell-based)
  * @param {Object} searchParams  User-supplied search parameters including
- *            {String}  terms: User-supplied query string
- *            {Object}  facets: User-supplied list facets and filters
- *            {Integer} page: User-supplied list facets and filters
- *            {String}  order: User-supplied results ordering field
- *            {String}  preset_search: User-supplied query preset (e.g. 'covid19')
+ * @param {String} terms: User-supplied query string
+ * @param {Object} facets: User-supplied list facets and filters
+ * @param{Integer} page: User-supplied list facets and filters
+ * @param {String} order: User-supplied results ordering field
+ * @param {String} preset_search: User-supplied query preset (e.g. 'covid19')
  * @param {Boolean} mock Whether to use mock data
  * @returns {Promise} Promise object containing camel-cased data from API
  *
