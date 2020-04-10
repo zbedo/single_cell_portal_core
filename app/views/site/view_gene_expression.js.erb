@@ -4,7 +4,8 @@ closeModalSpinner('#spinner_target', '#loading-modal', function () {
     $('#study-visualize').html("<%= escape_javascript(render partial: 'view_gene_expression') %>");
     showMessageModal("<%= notice.present? ? notice.html_safe : nil %>", "<%= alert.present? ? alert.html_safe : nil %>")
     enableDefaultActions();
-    var requestUrl = "<%= javascript_safe_url(request.fullpath) %>";
+    var requestUrl = "<%= request.fullpath %>";
+    var encodedUrl = encodeURI(requestUrl);
     ga('send', 'event', 'engaged_user_action', 'study_gene_search_single');
-    gaTrack(requestUrl, 'Single Cell Portal');
+    gaTrack(encodedUrl, 'Single Cell Portal');
 });

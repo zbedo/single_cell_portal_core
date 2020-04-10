@@ -2077,7 +2077,7 @@ class SiteController < ApplicationController
     if sanitized_terms.is_a?(Array)
       sanitized_terms.map(&:strip)
     else
-      sanitized_terms.split(/[\n\s]/).map(&:strip)
+      sanitized_terms.split(/[\n\s,]/).map(&:strip)
     end
   end
 
