@@ -216,7 +216,7 @@ $(document).on('change', '#panel-genes-search input, #panel-genes-search select'
   $('#perform-gene-search').click();
 });
 
-// split a string on spaces, used for extractLast()
+// split a string on spaces/commas, used for extractLast()
 function split(val) {
     return val.split(/[\s,]/);
 }
