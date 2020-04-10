@@ -14,7 +14,7 @@ export default function StudyGenes({ study }) {
   const [renderParams, setRenderParams] = useState({
     cluster: '',
     annotation: '',
-    subsample: undefined
+    subsample: ''
   })
   function parseResultsToArray(results) {
     const keys = Object.keys(results.values)
@@ -112,16 +112,16 @@ export default function StudyGenes({ study }) {
               </optgroup>
             </select>
           </div>
-          { subsamplingOptions.length > 0 &&
-            <div className="form-group">
-              <label>Subsampling threshold</label>
-              <select className="form-control subsample-select global-gene-subsample">
-                { subsamplingOptions.map((opt, index) => {
-                  return <option key={index} value={opt[1]}>{opt[0]}</option>
-                })}
-              </select>
-            </div>
-          }
+
+          <div className="form-group">
+            <label>Subsampling threshold</label>
+            <select className="form-control subsample-select global-gene-subsample">
+              <option key={999} value=''>All cells</option>
+              { subsamplingOptions.map((opt, index) => {
+                return <option key={index} value={opt}>{opt}</option>
+              })}
+            </select>
+          </div>
         </div>
       </div>
     </div>
