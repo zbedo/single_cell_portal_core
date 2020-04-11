@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDna, faExclamationCircle } from '@fortawesome/free-solid-svg-icons'
 
@@ -12,6 +12,7 @@ export default function StudyGenes({ study }) {
   const [annotationOptions, setAnnotationOptions] = useState({'Study Wide': [], 'Cluster-Based': []})
   const [subsamplingOptions, setSubsamplingOptions] = useState([])
   const [renderParams, setRenderParams] = useState({
+    userUpdated: false,
     cluster: '',
     annotation: '',
     subsample: ''
@@ -25,9 +26,12 @@ export default function StudyGenes({ study }) {
 
   function updateRenderParams(newParams) {
     const mergedParams = Object.assign({}, renderParams, newParams)
-    loadGeneExpressionRender(mergedParams)
+    mergedParams.userUpdated = true
+    setRenderParams(mergedParams)
   }
-  async function loadGeneExpressionRender(paramsToRender) {
+
+  async function loadData(paramsToRender) {
+    setIsLoading(true)
     const results = await fetchExpressionRender(study.accession,
                                                 study.gene_matches,
                                                 paramsToRender.cluster,
@@ -39,24 +43,32 @@ export default function StudyGenes({ study }) {
     let traceData = window.createTracesAndLayout(dataArray, results.rendered_cluster, jitter, results.y_axis_title)
     const expressionData = [].concat.apply([], traceData[0] );
     const expressionLayout = traceData[1];
+
     setIsLoaded(true)
     setIsLoading(false)
     setClusterOptions(results.options)
     setAnnotationOptions(results.cluster_annotations)
     setSubsamplingOptions(results.subsampling_options)
     setRenderParams({
+      userUpdated: false,
       cluster: results.rendered_cluster,
       annotation: results.rendered_annotation,
       subsample: results.rendered_subsample
     })
     window.Plotly.newPlot('expGraph' + study.accession, expressionData, expressionLayout);
   }
-  if (!isLoaded && !isLoading) {
-    loadGeneExpressionRender(renderParams)
-    setIsLoading(true)
-  }
+
+  useEffect(() => {
+    // do a load from the server if this is the initial load or if parameters have been updated by the user
+    // note we need the extra check because the renderParams will actually change after the first server load
+    // as the server sends back the option lists and selected defaults
+    if (!isLoading && !isLoaded || renderParams.userUpdated) {
+      loadData(renderParams)
+    }
+  }, [renderParams.cluster, renderParams.annotation, renderParams.subsample])
+
   return (
-    <div key={study.accession}>
+    <div className="study-gene-result">
       <label htmlFor={study.name} id= 'result-title'>
         <a href={study.study_url} >{ study.name }</a>
       </label>
@@ -73,17 +85,10 @@ export default function StudyGenes({ study }) {
         }
       </div>
       <div className="row">
-        { isLoaded &&
-          <div className="col-md-10">
-            <div className="expression-graph" id={ 'expGraph' + study.accession }></div>
-          </div>
-        }
-        { !isLoaded &&
-          <div className="col-md-10 text-center">
-            <br/>
-            <FontAwesomeIcon icon={faDna} className="gene-load-spinner"/>
-          </div>
-        }
+        <div className="col-md-10">
+          <div className="expression-graph" id={ 'expGraph' + study.accession }></div>
+          { isLoading && <FontAwesomeIcon icon={faDna} className="gene-load-spinner"/> }
+        </div>
         <div className="col-md-2">
           <div className="form-group">
             <label>Load cluster</label>

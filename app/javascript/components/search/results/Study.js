@@ -27,6 +27,10 @@ export function highlightText(text, termMatches) {
   return { styledText: text, matchedIndices }
 }
 
+export function getByline(rawDescription) {
+
+}
+
 
 export function shortenDescription(textDescription, term) {
   const { styledText, matchedIndices } = highlightText(textDescription, term)
