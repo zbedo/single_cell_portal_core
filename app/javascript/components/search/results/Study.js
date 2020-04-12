@@ -27,8 +27,15 @@ export function highlightText(text, termMatches) {
   return { styledText: text, matchedIndices }
 }
 
+// returns the first 140 characters of the description in plain text
 export function getByline(rawDescription) {
-
+  const bylineCharLimit = 140
+  const plainText = stripTags(rawDescription).trim()
+  let bylineText = plainText.substring(0, bylineCharLimit)
+  if (plainText.length > bylineCharLimit) {
+    bylineText = bylineText + '...'
+  }
+  return bylineText
 }
 
 
