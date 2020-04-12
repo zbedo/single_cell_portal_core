@@ -47,6 +47,8 @@ export function PropsGeneSearchProvider(props) {
   async function updateSearch(newParams, studySearchState, searchWithinStudies) {
 
     let mergedParams = Object.assign({}, searchParams, newParams)
+    // reset the page to 1 for new searches, unless otherwise specified
+    mergedParams.genePage = newParams.genePage ? newParams.genePage : 1
     if (searchWithinStudies) {
       mergedParams = Object.assign(mergedParams, studySearchState.params)
     }

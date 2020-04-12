@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useContext } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDna, faExclamationCircle } from '@fortawesome/free-solid-svg-icons'
 
 import { fetchExpressionViolin, fetchExpressionHeatmap, studyNameAsUrlParam } from 'lib/scp-api'
 import { getByline } from 'components/search/results/Study'
+import { UserContext } from 'providers/UserProvider'
 
 export default function StudyGeneExpressions({ study }) {
   let StudyRenderComponent
@@ -36,6 +37,7 @@ export default function StudyGeneExpressions({ study }) {
 }
 
 export function MultiGeneExpression({ study }) {
+  const userState = useContext(UserContext)
   const [isLoaded, setIsLoaded] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   async function loadData() {
@@ -43,15 +45,15 @@ export function MultiGeneExpression({ study }) {
     if (study.gene_matches.length > 1) {
       const geneParam = study.gene_matches.join('+')
       window.renderMorpheus(
-        `/single_cell/study/${study.accession}/${studyNameAsUrlParam(study.name)}/expression_query?search[genes]=${geneParam}&row_centered=&row_centered=&cluster=`,
-        `/single_cell/study/${study.accession}/${studyNameAsUrlParam(study.name)}/annotation_query?cluster=&annotation=CLUSTER--group--study&request_user_token=`,
+        `/single_cell/study/${study.accession}/${studyNameAsUrlParam(study.name)}/expression_query?search[genes]=${geneParam}&row_centered=&row_centered=&cluster=&request_user_token=${userState.accessToken}`,
+        `/single_cell/study/${study.accession}/${studyNameAsUrlParam(study.name)}/annotation_query?cluster=&annotation=CLUSTER--group--study&request_user_token=${userState.accessToken}`,
         'CLUSTER',
         'group',
         `#expGraph${study.accession}`,
         { name: "CLUSTER",
           type: "group",
           scope: "study",
-          values: ["DG", "GABAergic", "CA1", "CA3", "Glia", "Ependymal", "CA2", "Non"]},
+          values: study.cluster_names},
         '',
         450,
         'relative'
