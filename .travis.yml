@@ -3,7 +3,7 @@ rvm:
   - 2.5.7
 install:
   - gem install travis
-  - yarn
+  - yarn install
 branches:
   only:
     - master
