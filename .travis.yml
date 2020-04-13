@@ -3,6 +3,10 @@ rvm:
   - 2.5.7
 install:
   - gem install travis
+  - bundle install
+  - nvm install node
+  - node -v
+  - npm i -g yarn
   - yarn install
 branches:
   only:
