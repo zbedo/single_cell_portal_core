@@ -56,7 +56,7 @@ class AnalysisParameter
   # determine if values need to be scoped by a study or not
   def study_scoped?
     if self.associated_model.present?
-      self.associated_model_class.method_defined?(:study_id)
+      self.associated_model == "Study" || self.associated_model_class.method_defined?(:study_id)
     else
       false
     end

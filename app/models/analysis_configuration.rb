@@ -310,12 +310,13 @@ class AnalysisConfiguration
           parameter_name = vals.join('.')
           parameter_type = data_type == 'inputs' ? setting['inputType'] : setting['outputType']
           optional = setting['optional'] == true
+          param_val = repo_config['payloadObject'][data_type]["#{call_name}.#{parameter_name}"]
           config_attr = {
               data_type: data_type,
               parameter_type: parameter_type,
               call_name: call_name,
               parameter_name: parameter_name,
-              parameter_value: repo_config['payloadObject'][data_type]["#{call_name}.#{parameter_name}"],
+              parameter_value: param_val.blank? ? "" : param_val,
               optional: optional
           }
           last_config = config_attr.dup
