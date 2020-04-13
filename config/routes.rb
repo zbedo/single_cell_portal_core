@@ -19,7 +19,8 @@ Rails.application.routes.draw do
         # convention metadata schemas endpoints
         scope :metadata_schemas do
           get '/', to: 'metadata_schemas#index', as: :metadata_schemas
-          get ':project_name/:version/:schema_format', to: 'metadata_schemas#load_schema', as: :metadata_schemas_load_convention_schema
+          get ':project_name/:version/:schema_format', to: 'metadata_schemas#load_schema', as: :metadata_schemas_load_convention_schema,
+              constraints: {version: /.*/}
         end
         resources :taxons, only: [:index, :show]
         resources :studies, only: [:index, :show, :create, :update, :destroy] do
