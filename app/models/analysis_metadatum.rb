@@ -268,12 +268,14 @@ class AnalysisMetadatum
           outputs = []
           workflows.each do |workflow|
             outs = workflow['outputs'].values
-            outs.each do |o|
-              outputs << {
-                  'name' => o.split('/').last,
-                  'file_path' => o,
-                  'format' => o.split('.').last
-              }
+            if outs.present?
+              outs.each do |o|
+                outputs << {
+                    'name' => o.split('/').last,
+                    'file_path' => o,
+                    'format' => o.split('.').last
+                }
+              end
             end
           end
           value = set_value_by_type(definitions, outputs)
