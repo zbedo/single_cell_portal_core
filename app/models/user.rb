@@ -98,9 +98,9 @@ class User
 
   DEFAULT_FEATURE_FLAGS = {
     # whether the home page uses React and the new search API
-    "advanced_search" => true,
+    "advanced_search" => false,
     # whether the facet search controls are shown
-    "faceted_search" => true,
+    "faceted_search" => false,
     # show covid-19 tab on homepage
     "covid19_page" => true
   }
@@ -114,7 +114,8 @@ class User
   def self.from_omniauth(access_token)
     data = access_token.info
     provider = access_token.provider
-    uid = access_token.uid
+    uid =
+     access_token.uid
     # create bogus password, Devise will never use it to authenticate
     password = Devise.friendly_token[0,20]
     user = User.find_by(email: data['email'])
