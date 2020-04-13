@@ -103,10 +103,9 @@ module Api
         schema_version = params[:version]
         @schema_pathname = SCHEMAS_BASE_DIR + project_name
         if schema_version != 'latest'
-          @schema_pathname += "snapshots/#{params[:version]}"
+          @schema_pathname += "snapshot/#{params[:version]}"
         end
         @schema_pathname += @schema_filename
-        @schema_pathname
       end
 
       def set_response_type
