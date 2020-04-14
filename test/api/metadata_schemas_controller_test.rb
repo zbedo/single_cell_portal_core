@@ -4,18 +4,12 @@ class MetadataSchemasControllerTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
   include Requests::JsonHelpers
   include Requests::HttpHelpers
+  include Api::V1::Concerns::ConventionSchemas
 
   SCHEMAS_BASE_DIR = Api::V1::MetadataSchemasController::SCHEMAS_BASE_DIR
 
   setup do
-    @schemas = {}
-    projects = Dir.entries(SCHEMAS_BASE_DIR).delete_if {|entry| entry.start_with?('.')}
-    projects.each do |project_name|
-      snapshots_path = SCHEMAS_BASE_DIR + "#{project_name}/snapshot"
-      snapshots = Dir.entries(snapshots_path).delete_if {|entry| entry.start_with?('.')}
-      versions = %w(latest) + Naturally.sort(snapshots).reverse
-      @schemas[project_name] = versions
-    end
+    @schemas = set_available_schemas
   end
 
   test 'should load all available schemas' do
@@ -33,7 +27,7 @@ class MetadataSchemasControllerTest < ActionDispatch::IntegrationTest
 
     project = @schemas.keys.sample
     schema_version = @schemas[project].sample
-    schema_format = %w(json tsv).sample
+    schema_format ='json'
     schema_filename = "#{project}_schema.#{schema_format}"
     if schema_version == 'latest'
       schema_filepath = Rails.root.join(SCHEMAS_BASE_DIR, project, schema_filename)
