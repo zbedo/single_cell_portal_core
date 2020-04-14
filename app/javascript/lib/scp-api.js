@@ -105,9 +105,7 @@ let mockOrigin = ''
  * @param {Boolean} origin Origin (e.g. http://localhost:3000) for mocked SCP API URLs
  */
 export function setMockOrigin(origin) {
-  if (process.env.NOT_DOCKERIZED) {
-    mockOrigin = origin
-  }
+  mockOrigin = origin
 }
 
 /**
