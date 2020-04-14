@@ -3,11 +3,6 @@ rvm:
   - 2.5.7
 install:
   - gem install travis
-  - bundle install
-  - nvm install node
-  - node -v
-  - npm i -g yarn
-  - yarn install
 branches:
   only:
     - master
@@ -23,7 +18,4 @@ before_install:
   - sudo unzip vault_1.0.1_linux_amd64.zip
   - sudo mv vault /usr/local/bin
 script:
-  - yarn test
   - bin/load_env_secrets.sh -p secret/kdux/scp/staging/scp_config.json -s secret/kdux/scp/staging/scp_service_account.json -e test -n single-cell-portal-staging
-after_success:
-  - bundle exec rake assets:precompile

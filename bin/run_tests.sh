@@ -66,6 +66,13 @@ then
   fi
 else
   echo "Running all unit & integration tests..."
+  yarn test
+  code=$? # immediately capture exit code to prevent this from getting clobbered
+  if [[ $code -ne 0 ]]; then
+    RETURN_CODE=$code
+    first_test_to_fail=${first_test_to_fail-"yarn test"}
+    ((FAILED_COUNT++))
+  fi
   declare -a tests=(test/integration/fire_cloud_client_test.rb
                     test/integration/cache_management_test.rb
                     test/integration/tos_acceptance_test.rb
@@ -105,6 +112,7 @@ else
         first_test_to_fail=${first_test_to_fail-"$test_name"}
         ((FAILED_COUNT++))
       fi
+
   done
 fi
 clean_up

@@ -2,10 +2,7 @@
 /* eslint-disable*/
 
 const fetch = require('node-fetch')
-import scpApi, {
-  fetchAuthCode,
-  fetchFacetFilters
-} from 'lib/scp-api'
+import scpApi, { fetchAuthCode, fetchFacetFilters } from 'lib/scp-api'
 
 describe('JavaScript client for SCP REST API', () => {
   beforeAll(() => {
@@ -34,7 +31,9 @@ describe('JavaScript client for SCP REST API', () => {
     const mockSuccessResponse = {}
     const mockJsonPromise = Promise.resolve(mockSuccessResponse)
     const mockFetchPromise = Promise.resolve({
-      json: () => {mockJsonPromise}
+      json: () => {
+        mockJsonPromise
+      }
     })
     jest.spyOn(global, 'fetch').mockImplementation(() => {
       mockFetchPromise
@@ -46,8 +45,8 @@ describe('JavaScript client for SCP REST API', () => {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': 'Bearer test'
+          Accept: 'application/json',
+          Authorization: 'Bearer test'
         }
       })
     )
@@ -65,7 +64,9 @@ describe('JavaScript client for SCP REST API', () => {
       ok: false,
       statusText: 'Internal Server Error'
     }
-    jest.spyOn(global, 'fetch').mockReturnValue(Promise.resolve(mockErrorResponse))
+    jest
+      .spyOn(global, 'fetch')
+      .mockReturnValue(Promise.resolve(mockErrorResponse))
     const actualResponse = await scpApi('/test/path', {}, false)
     expect(actualResponse.status).toEqual(500)
     expect(actualResponse.ok).toEqual(false)
