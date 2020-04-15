@@ -15,6 +15,9 @@ module Api
       # We agreed that there would be no swagger docs for this endpoint, as it is not intended
       # to be used other than by the SCP UI, and may change dramatically
       def show
+        if (!@study.has_expression_data? || !@study.can_visualize_clusters?)
+          render json: {error: "Study #{@study.accession} does not support expression rendering"}, status: 400
+        end
         data_type = params[:data_type]
         if (data_type == 'violin')
           render_violin

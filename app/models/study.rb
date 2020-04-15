@@ -598,6 +598,10 @@ class Study
         key :type, :string
       end
     end
+    property :can_visualize_clusters do
+      key :type, :boolean
+      key :description, 'Whether this study has cluster visualization data available'
+    end
     property :study_files do
       key :type, :object
       key :title, 'StudyFiles'
