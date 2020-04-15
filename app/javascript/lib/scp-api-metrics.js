@@ -92,7 +92,7 @@ export function logSearch(type, searchParams) {
 
   const numTerms = getNumberOfTerms(terms)
   const [numFacets, numFilters] = getNumFacetsAndFilters(facets)
-  const facetList = facets ? Object.keys(facets) : {}
+  const facetList = facets ? Object.keys(facets) : []
 
   const filterListByFacet = getFriendlyFilterListByFacet(facets)
 
