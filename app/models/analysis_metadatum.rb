@@ -268,7 +268,7 @@ class AnalysisMetadatum
           outputs = []
           workflows.each do |workflow|
             outs = workflow['outputs'].values
-            outs.each do |o|
+            outs&.each do |o|
               outputs << {
                   'name' => o.split('/').last,
                   'file_path' => o,
