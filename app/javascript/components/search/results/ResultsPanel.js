@@ -7,7 +7,6 @@ import { StudyResults } from './StudyResultsContainer'
 import Study from './Study'
 import SearchQueryDisplay from './SearchQueryDisplay'
 
-
 /**
  * Component for Results displayed on the homepage
  */
@@ -16,39 +15,51 @@ const ResultsPanel = props => {
   const results = searchContext.results
   let panelContent
   if (searchContext.isError) {
-    panelContent =
-      <div className="error-panel">
-        <FontAwesomeIcon icon={faExclamationCircle}/>
-        Sorry, an error has occurred.  Support has been notified.
-        Please try again.
+    panelContent = (
+      <div className="error-panel  col-md-6 col-md-offset-3">
+        <FontAwesomeIcon
+          icon={faExclamationCircle}
+          className="left-margin-icon"
+        />
+        Sorry, an error has occurred. Support has been notified. Please try
+        again. If this error persists, or you require assistance, please contact
+        support at &nbsp;
+        <a href="mailto:scp-support@broadinstitute.zendesk.com">
+          scp-support@broadinstitute.zendesk.com
+        </a>
       </div>
+    )
   } else if (!searchContext.isLoaded) {
-    panelContent =
+    panelContent = (
       <div className="loading-panel">
         Loading &nbsp;
-        <FontAwesomeIcon icon={faDna} className="gene-load-spinner"/>
+        <FontAwesomeIcon icon={faDna} className="gene-load-spinner" />
       </div>
+    )
   } else if (results.studies && results.studies.length > 0) {
-    panelContent =
+    panelContent = (
       <>
-        <SearchQueryDisplay terms={results.termList} facets={results.facets}/>
+        <SearchQueryDisplay terms={results.termList} facets={results.facets} />
         <StudyResults
           results={results}
-          changePage={pageNum => {searchContext.updateSearch({ page: pageNum })}}
           StudyComponent={ Study }
+          changePage={pageNum => {
+            searchContext.updateSearch({ page: pageNum })
+          }}
         />
       </>
+    )
   } else {
-    panelContent = (<>
-      <SearchQueryDisplay terms={results.termList} facets={results.facets}/>
-      <p>No results</p>
-    </>)
+    panelContent = (
+      <>
+        <SearchQueryDisplay terms={results.termList} facets={results.facets} />
+        <p>No results</p>
+      </>
+    )
   }
   return (
     <div className="results-panel">
-      <div className="results-content">
-        {panelContent}
-      </div>
+      <div className="results-content">{panelContent}</div>
     </div>
   )
 }

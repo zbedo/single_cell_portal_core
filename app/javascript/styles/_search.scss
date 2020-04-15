@@ -268,4 +268,15 @@ nav.search-links, #search-panel {
   .expression-graph {
     min-height: 450px
   }
+  .graph-controls {
+    padding-top: 100px;
+  }
+  .gene-title {
+    position: absolute;
+    font-size: 1.3em;
+    font-weight: bold;
+    top: 25px;
+    left: 30px;
+    z-index: 100;
+  }
 }

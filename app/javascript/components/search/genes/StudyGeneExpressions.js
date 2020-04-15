@@ -11,7 +11,11 @@ import StudyViolinPlot from './StudyViolinPlot'
 export default function StudyGeneExpressions({ study }) {
   let studyRenderComponent
   if (study.gene_matches.length > 1) {
-    studyRenderComponent = <StudyGeneDotPlot study={study} genes={study.gene_matches}/>
+    // for now, this renders a bunch of violins, we should soon ugrade to dot plots
+    // <StudyGeneDotPlot study={study} genes={study.gene_matches}/>
+    studyRenderComponent = study.gene_matches.map((gene) => {
+      return <StudyViolinPlot key={gene} study={study} gene={gene}/>
+    })
   } else {
     studyRenderComponent = <StudyViolinPlot study={study} gene={study.gene_matches[0]}/>
   }

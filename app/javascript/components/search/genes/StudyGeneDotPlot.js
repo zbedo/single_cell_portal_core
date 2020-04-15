@@ -2,7 +2,7 @@ import React, {useState, useContext, useEffect} from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDna } from '@fortawesome/free-solid-svg-icons'
 
-import { studyNameAsUrlParam } from 'lib/scp-api'
+import { studyNameAsUrlParam, fetchAnnotationValues } from 'lib/scp-api'
 import { UserContext } from 'providers/UserProvider'
 
 export default function StudyGeneDotPlot({ study, genes }) {
@@ -11,6 +11,7 @@ export default function StudyGeneDotPlot({ study, genes }) {
   const [isLoading, setIsLoading] = useState(false)
   async function loadData() {
     setIsLoading(true)
+    const annotations = await fetchAnnotationValues(study.accession)
     if (study.gene_matches.length > 1) {
       const geneParam = genes.join('+')
       window.renderMorpheusDotPlot(
@@ -19,7 +20,7 @@ export default function StudyGeneDotPlot({ study, genes }) {
         'CLUSTER',
         'group',
         `#expGraph${study.accession}`,
-        study.annotations,
+        annotations,
         '',
         450,
         `#expGraph${study.accession}-legend`,

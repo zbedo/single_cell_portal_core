@@ -117,8 +117,13 @@ export async function fetchExpressionViolin(studyAccession, gene, cluster, annot
   const clusterParam = cluster ? `&cluster=${encodeURIComponent(cluster)}` : ''
   const annotationParam = annotation ? `&annotation=${encodeURIComponent(annotation)}` : ''
   const subsampleParam = subsample ? `&annotation=${encodeURIComponent(subsample)}` : ''
-  const apiUrl = `/studies/${studyAccession}/expression_violins?gene=${gene}${clusterParam}${annotationParam}${subsampleParam}`
+  const apiUrl = `/studies/${studyAccession}/expression_data/violin?gene=${gene}${clusterParam}${annotationParam}${subsampleParam}`
   // don't camelcase the keys since those can be cluster names, so send false for the 4th argument
+  return await scpApi(apiUrl, defaultInit(), mock, false)
+}
+
+export async function fetchAnnotationValues(studyAccession, mock=false) {
+  const apiUrl = `/studies/${studyAccession}/expression_data/annotations`
   return await scpApi(apiUrl, defaultInit(), mock, false)
 }
 
@@ -282,7 +287,6 @@ export function buildFacetsFromQueryString(facetsParamString) {
 function getBrandingGroup(path) {
   const queryParams = queryString.parse(window.location.search)
   return queryParams.scpbr
-
 }
 
 /**
@@ -292,7 +296,7 @@ function getBrandingGroup(path) {
  * @param {Object} init | Object for settings, just like standard fetch `init`
  * @param {Boolean} mock | Whether to use mock data.  Helps development, tests.
  */
-export default async function scpApi(path, init, mock=false, camelCase=true) {
+export default async function scpApi(path, init, mock=false, camelCase=true, toJson=true) {
   if (globalMock) mock = true
   const basePath =
     (mock || globalMock) ? `${mockOrigin}/mock_data` : defaultBasePath
@@ -300,13 +304,21 @@ export default async function scpApi(path, init, mock=false, camelCase=true) {
   if (mock) fullPath += '.json' // e.g. /mock_data/search/auth_code.json
 
   const response = await fetch(fullPath, init)
-  const json = await response.json()
+    .catch(error => error)
 
-  // Converts API's snake_case to JS-preferrable camelCase,
-  // for easy destructuring assignment.
-  if (camelCase) {
-    return camelcaseKeys(json)
-  } else {
-    return json
+  if (response.ok) {
+    if (toJson) {
+      const json = await response.json()
+      // Converts API's snake_case to JS-preferrable camelCase,
+      // for easy destructuring assignment.
+      if (camelCase) {
+        return camelcaseKeys(json)
+      } else {
+        return json
+      }
+    } else {
+      return response
+    }
   }
+  return response
 }

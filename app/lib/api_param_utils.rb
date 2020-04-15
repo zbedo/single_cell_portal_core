@@ -6,7 +6,7 @@ class ApiParamUtils
     annot_name, annot_type, annot_scope = selector.nil? ? study.default_annotation.split('--') : selector.split('--')
 
     # construct object based on name, type & scope
-    if annot_scope == 'cluster'
+    if annot_scope == 'cluster' && cluster.present?
       selected_annotation = cluster.cell_annotations.find {|ca| ca[:name] == annot_name && ca[:type] == annot_type}
       selected_annotation[:scope] = annot_scope
     elsif annot_scope == 'user'

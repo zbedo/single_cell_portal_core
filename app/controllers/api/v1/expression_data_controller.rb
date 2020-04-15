@@ -1,6 +1,6 @@
 module Api
   module V1
-    class ExpressionViolinsController < ApiBaseController
+    class ExpressionDataController < ApiBaseController
       include Concerns::Authenticator
       include Concerns::StudyAware
       include Swagger::Blocks
@@ -10,11 +10,23 @@ module Api
       before_action :check_study_view_permission
 
 
-      # Returns the expression data for the gene within the given study, optimized for rendering
+      # Returns the specified expression data for the gene within the given study, optimized for rendering
       # by the SCP UI.
       # We agreed that there would be no swagger docs for this endpoint, as it is not intended
       # to be used other than by the SCP UI, and may change dramatically
-      def index
+      def show
+        data_type = params[:id]
+        if (data_type == 'violin')
+          render_violin
+        elsif (data_type == 'annotations')
+          render_annotation_values
+        else
+          render json: {error: "Unknown expression data type: #{data_type}"}, status: 404
+        end
+
+      end
+
+      def render_violin
         cluster = ApiParamUtils.get_cluster_group(params, @study)
         selected_annotation = ApiParamUtils.get_selected_annotation(params, @study, cluster)
         subsample = params[:subsample].blank? ? nil : params[:subsample].to_i
@@ -26,6 +38,11 @@ module Api
         render json: render_data, status: 200
       end
 
+      def render_annotation_values
+        cluster = ApiParamUtils.get_cluster_group(params, @study)
+        annotation = ApiParamUtils.get_selected_annotation(params, @study, cluster)
+        render json: annotation, status: 200
+      end
 
     end
   end

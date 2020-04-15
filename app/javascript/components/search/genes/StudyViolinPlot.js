@@ -4,6 +4,10 @@ import { faDna } from '@fortawesome/free-solid-svg-icons'
 
 import { fetchExpressionViolin } from 'lib/scp-api'
 
+function getGraphElementId(study, gene) {
+  return `expGraph-${study.accession}-${gene}`
+}
+
 /* displays a violin plot of expression data for the given gene and study */
 export default function StudyViolinPlot({ study, gene }) {
   const [isLoaded, setIsLoaded] = useState(false)
@@ -55,7 +59,7 @@ export default function StudyViolinPlot({ study, gene }) {
       annotation: results.rendered_annotation,
       subsample: results.rendered_subsample
     })
-    window.Plotly.newPlot('expGraph' + study.accession, expressionData, expressionLayout);
+    window.Plotly.newPlot(getGraphElementId(study, gene), expressionData, expressionLayout);
   }
 
   useEffect(() => {
@@ -70,10 +74,11 @@ export default function StudyViolinPlot({ study, gene }) {
   return (
     <div className="row">
       <div className="col-md-10">
-        <div className="expression-graph" id={ 'expGraph' + study.accession }></div>
+        <div className="expression-graph" id={ getGraphElementId(study, gene) }></div>
         { isLoading && <FontAwesomeIcon icon={faDna} className="gene-load-spinner"/> }
+        <span className="gene-title">{gene}</span>
       </div>
-      <div className="col-md-2">
+      <div className="col-md-2 graph-controls">
         <div className="form-group">
           <label>Load cluster</label>
           <select className="form-control cluster-select global-gene-cluster"

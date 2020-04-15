@@ -64,7 +64,7 @@ class User
 
   # Google OAuth refresh token fields
   field :refresh_token, type: Mongoid::EncryptedString
-  field :access_token, type: Hash
+  field :access_token, type: Hash # from Google OAuth callback
 
   # Used for time-based one-time access token (TOTAT)
   field :totat, type: Integer
@@ -89,21 +89,18 @@ class User
   field :daily_download_quota, type: Integer, default: 0
   field :admin_email_delivery, type: Boolean, default: true
   field :registered_for_firecloud, type: Boolean, default: false
+  # {
+  #   access_token: String OAuth token,
+  #   expires_in: Integer duration in seconds,
+  #   expires_at: DateTime expiry timestamp,
+  #   last_access_at: DateTime last usage of token
+  # }
   field :api_access_token, type: Hash
 
   # feature_flags should be a hash of true/false values.  If unspecified for a given flag, the
-  # value from DEFAULT_FEATURE_FLAGS should be used.  Accordingly, the helper method feature_flags_with_defaults
+  # default_value from the FeatureFlag should be used.  Accordingly, the helper method feature_flags_with_defaults
   # is provided
   field :feature_flags, default: {}
-
-  DEFAULT_FEATURE_FLAGS = {
-    # whether the home page uses React and the new search API
-    "advanced_search" => false,
-    # whether the facet search controls are shown
-    "faceted_search" => false,
-    # show covid-19 tab on homepage
-    "covid19_page" => true
-  }
 
   ###
   #
@@ -172,6 +169,26 @@ class User
 
   def api_access_token_expired?
     self.api_access_token.nil? ? true : Time.at(self.api_access_token[:expires_at]) < Time.now.in_time_zone(self.get_token_timezone(:api_access_token))
+  end
+
+  # check if an API access token has 'timed out' due to no usage in the last 30 minutes
+  def api_access_token_timed_out?
+    if self.api_access_token.nil?
+      true
+    else
+      # if token has been used in last 30 min (User.timeout_in), then timestamp + timeout_in > now
+      # therefore, make sure last_access + timeout_in is in the future
+      last_access = self.api_access_token[:last_access_at]
+      last_access.present? ? (last_access + self.timeout_in) < Time.now.in_time_zone(self.get_token_timezone(:api_access_token)) : true
+    end
+  end
+
+  # refresh API token last_access_at, if token is present
+  def update_last_access_at!
+    if self.api_access_token.present?
+      self.api_access_token[:last_access_at] = Time.now.in_time_zone(self.get_token_timezone(:api_access_token))
+      self.save
+    end
   end
 
   # return an valid access token (will renew if expired) - does not apply to api access tokens, those cannot be renewed
@@ -279,7 +296,7 @@ class User
   # merges the user flags with the defaults -- this should  always be used in place of feature_flags
   # for determining whether to enable a feature for a given user.
   def feature_flags_with_defaults
-    DEFAULT_FEATURE_FLAGS.merge(feature_flags ? feature_flags : {})
+    FeatureFlag.default_flag_hash.merge(feature_flags ? feature_flags : {})
   end
 
   # gets the feature flag value for a given user, and the default value if no user is given
@@ -287,14 +304,14 @@ class User
     if user.present?
       user.feature_flags_with_defaults[flag_key]
     else
-      DEFAULT_FEATURE_FLAGS[flag_key]
+      FeatureFlag.find_by(name: flag_key)
     end
   end
 
   # returns feature_flags_with_defaults for the user, or the default flags if no user is given
   def self.feature_flags_for_user(user)
     if user.nil?
-      return DEFAULT_FEATURE_FLAGS
+      return FeatureFlag.default_flag_hash
     end
     user.feature_flags_with_defaults
   end

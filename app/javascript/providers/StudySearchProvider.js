@@ -5,7 +5,9 @@ import { navigate, useLocation } from '@reach/router'
 import * as queryString from 'query-string'
 
 import {
-  fetchSearch, buildSearchQueryString, buildFacetsFromQueryString
+  fetchSearch,
+  buildSearchQueryString,
+  buildFacetsFromQueryString
 } from 'lib/scp-api'
 import SearchSelectionProvider from './SearchSelectionProvider'
 
@@ -37,7 +39,6 @@ const emptySearch = {
 
 export const StudySearchContext = React.createContext(emptySearch)
 
-
 /**
  * Count terms, i.e. space-delimited strings, and consider [""] to have 0 terms
  */
@@ -61,10 +62,12 @@ export function getNumFacetsAndFilters(facets) {
     return [0, 0]
   }
   const numFacets = Object.keys(facets).length
-  const numFilters =
-    Object.values(facets).reduce((prevNumFilters, filterArray) => {
+  const numFilters = Object.values(facets).reduce(
+    (prevNumFilters, filterArray) => {
       return prevNumFilters + filterArray.length
-    }, 0)
+    },
+    0
+  )
 
   return [numFacets, numFilters]
 }
@@ -73,7 +76,7 @@ export function getNumFacetsAndFilters(facets) {
 export function hasSearchParams(params) {
   const numTerms = getNumberOfTerms(params.terms)
   const [numFacets, numFilters] = getNumFacetsAndFilters(params.facets)
-  return (numTerms + numFacets + numFilters) > 0
+  return numTerms + numFacets + numFilters > 0
 }
 
 /** Wrapper for deep mocking via Jest / Enzyme */
@@ -82,9 +85,9 @@ export function useContextStudySearch() {
 }
 
 /**
-  * renders a StudySearchContext tied to its props,
-  * fires route navigate on changes to params
-  */
+ * renders a StudySearchContext tied to its props,
+ * fires route navigate on changes to params
+ */
 export function PropsStudySearchProvider(props) {
   let startingState = _cloneDeep(emptySearch)
   startingState.params = props.searchParams
@@ -117,7 +120,7 @@ export function PropsStudySearchProvider(props) {
 
     setSearchState({
       params: searchParams,
-      isError: false,
+      isError: results.ok === false,
       isLoading: false,
       isLoaded: true,
       results,
@@ -138,9 +141,7 @@ export function PropsStudySearchProvider(props) {
   }
   return (
     <StudySearchContext.Provider value={searchState}>
-      <SearchSelectionProvider>
-        { props.children }
-      </SearchSelectionProvider>
+      <SearchSelectionProvider>{props.children}</SearchSelectionProvider>
     </StudySearchContext.Provider>
   )
 }
