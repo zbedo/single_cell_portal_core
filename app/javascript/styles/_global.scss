@@ -55,7 +55,6 @@ label {
   min-height: 50px !important;
   .navbar-header {
     position: relative;
-    top: 10px;
   }
   .nav {
     margin-top: 0px;
@@ -65,6 +64,10 @@ label {
 
 .navbar-brand {
   padding: 0 15px;
+}
+
+#navbar-brand-wrapper {
+  margin-top: 10px;
 }
 
 .bs-callout{
