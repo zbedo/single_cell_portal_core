@@ -1,4 +1,4 @@
-module Api
+©module Api
   module V1
     class SearchController < ApiBaseController
       include Concerns::Authenticator

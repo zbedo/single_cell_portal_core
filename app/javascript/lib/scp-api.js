@@ -260,6 +260,7 @@ function getBrandingGroup(path) {
  */
 export default async function scpApi(path, init, mock = false) {
   if (globalMock) mock = true
+  console.log(mockOrigin)
   const basePath =
     mock || globalMock ? `${mockOrigin}/mock_data` : defaultBasePath
   let fullPath = basePath + path
