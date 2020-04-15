@@ -57,7 +57,7 @@ module Api
           study_obj[:preset_match] = true
         end
         if @gene_results.present?
-          study_obj[:gene_matches] = @gene_results[:genes_by_study][study.id]
+          study_obj[:gene_matches] = @gene_results[:genes_by_study][study.id].uniq
           study_obj[:can_visualize_clusters] = study.can_visualize_clusters?
         end
         if study.detached

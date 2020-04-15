@@ -11,8 +11,9 @@ export default function StudyGeneExpressions({ study }) {
   let studyRenderComponent
   if (!study.can_visualize_clusters) {
     studyRenderComponent = (
-      <div className="text-center detail">
-        [This study does not have data to support visualization]
+      <div className="text-center">
+        This study contains {study.gene_matches.join(', ')} in expression data.<br/>
+          This study does not have cluster data to support visualization in the portal
       </div>
     )
   } else if (study.gene_matches.length > 1) {
