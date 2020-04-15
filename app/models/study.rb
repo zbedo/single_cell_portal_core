@@ -593,6 +593,10 @@ class Study
     property :gene_matches do
       key :type, :array
       key :description, 'Array of ids of the genes that were matched for this study'
+      items do
+        key :title, 'gene match'
+        key :type, :string
+      end
     end
     property :study_files do
       key :type, :object
