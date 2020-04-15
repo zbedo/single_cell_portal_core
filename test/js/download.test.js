@@ -60,9 +60,24 @@ describe('Download components for faceted search', () => {
     expect(wrapper.find('DownloadButton')).toHaveLength(1)
   })
 
+  it('shows expected tooltip for unauthenticated users', async () => {
 
+    const userContext = { accessToken: '' } // as when unauthenticated
+    jest.spyOn(UserProvider, 'useContextUser')
+      .mockImplementation(() => {
+        return userContext
+      })
 
-  // TODO (): Restore test for showing modal upon clicking Download button
+    const wrapper = mount((< DownloadButton />))
+    wrapper.find('#download-button > span').simulate('mouseenter')
+
+    const tooltipHint =
+      wrapper.find('OverlayTrigger').prop('overlay').props['children']
+
+    expect(tooltipHint).toBe('To download, please sign in')
+  })
+
+  // TODO (SCP-2333): Restore test for showing modal upon clicking Download button
   // it('shows modal upon clicking Download button', done => {
   //   const wrapper = mount(<DownloadButton />)
 
