@@ -45,7 +45,7 @@ module Api
           parameter do
             key :name, :genes
             key :in, :query
-            key :description, 'space-delimited lsit of genes.  e.g. "agpat2 farsa"'
+            key :description, 'space-delimited list of genes.  e.g. "agpat2 farsa"'
             key :required, false
             key :type, :string
           end
