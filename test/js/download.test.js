@@ -1,8 +1,9 @@
 /* eslint-disable */
+// ESLint unexpectedly converts use `done` in `it` to a Promise, so disable it
 
 import React from 'react'
 import { mount } from 'enzyme'
-import { act } from 'react-dom/test-utils';
+// import { act } from 'react-dom/test-utils';
 
 const fetch = require('node-fetch')
 

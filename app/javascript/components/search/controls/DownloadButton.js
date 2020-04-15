@@ -44,8 +44,6 @@ async function generateDownloadConfig(matchingAccessions) {
     `curl -K cfg.txt; rm cfg.txt`
   )
 
-  console.log(`authCode: ${authCode}`)
-
   return {
     authCode,
     timeInterval,
