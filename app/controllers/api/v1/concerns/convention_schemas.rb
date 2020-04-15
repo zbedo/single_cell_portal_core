@@ -18,6 +18,15 @@ module Api
           end
           schemas
         end
+
+        # get the latest version number of a given project/schema
+        def get_latest_schema_version(project_name)
+          schemas = set_available_schemas
+          versions = schemas[project_name]
+          # ampersand (&) notation will exit if at any point this evaluates to nil
+          # e.g. get_latest_schema_version('does_not_exist') == nil
+          versions&.delete_if {|version| version == 'latest'}&.first
+        end
       end
     end
   end
