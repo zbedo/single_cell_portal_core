@@ -1,17 +1,18 @@
 
-import React, { useContext, useEffect } from 'react'
+import React, { useContext } from 'react'
 import { Router, Link, useLocation } from '@reach/router'
 
 import GeneSearchView from 'components/search/genes/GeneSearchView'
 import GeneSearchProvider from 'providers/GeneSearchProvider'
 import SearchPanel from 'components/search/controls/SearchPanel'
 import ResultsPanel from 'components/search/results/ResultsPanel'
-import StudySearchProvider, { StudySearchContext } from 'providers/StudySearchProvider'
+import StudySearchProvider from 'providers/StudySearchProvider'
 import SearchFacetProvider from 'providers/SearchFacetProvider'
 import UserProvider from 'providers/UserProvider'
 import FeatureFlagProvider, { FeatureFlagContext } from 'providers/FeatureFlagProvider'
 import ErrorBoundary from 'lib/ErrorBoundary'
 
+/** include search controls and results */
 export function StudySearchView() {
   return <>
     <SearchPanel searchOnLoad={true}/>
@@ -20,18 +21,19 @@ export function StudySearchView() {
 }
 
 const LinkableSearchTabs = function(props) {
-  // we can't use the regular ReachRouter methods for link highlighting since the Reach
-  // router doesn't own the home path
+  // we can't use the regular ReachRouter methods for link highlighting
+  // since the Reach router doesn't own the home path
   const location = useLocation()
   const isShowGenes = location.pathname.startsWith('/single_cell/app/genes')
-  const featureFlagState = useContext(FeatureFlagContext)
   return (
     <div>
       <nav className="nav search-links">
-        <Link to={`/single_cell/app/studies${location.search}`} className={isShowGenes ? '' : 'active'}>
+        <Link to={`/single_cell/app/studies${location.search}`}
+              className={isShowGenes ? '' : 'active'}>
           <span className="fas fa-book"></span> Search Studies
         </Link>
-        <Link to={`/single_cell/app/genes${location.search}`} className={isShowGenes ? 'active' : ''}>
+        <Link to={`/single_cell/app/genes${location.search}`}
+              className={isShowGenes ? 'active' : ''}>
           <span className="fas fa-dna"></span> Search Genes (R)
         </Link>
       </nav>
@@ -45,7 +47,7 @@ const LinkableSearchTabs = function(props) {
   )
 }
 
-/* renders all the page-level providers */
+/** renders all the page-level providers */
 function ProviderStack(props) {
   return (
     <UserProvider>
@@ -53,7 +55,7 @@ function ProviderStack(props) {
         <SearchFacetProvider>
           <StudySearchProvider>
             <GeneSearchProvider>
-               { props.children }
+              { props.children }
             </GeneSearchProvider>
           </StudySearchProvider>
         </SearchFacetProvider>
@@ -75,6 +77,7 @@ function RawHomePageContent() {
   )
 }
 
+/** Include Reach router */
 export default function HomePageContent() {
   return (<Router>
     <RawHomePageContent default/>

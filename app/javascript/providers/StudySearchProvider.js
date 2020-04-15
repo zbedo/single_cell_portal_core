@@ -89,7 +89,7 @@ export function useContextStudySearch() {
  * fires route navigate on changes to params
  */
 export function PropsStudySearchProvider(props) {
-  let startingState = _cloneDeep(emptySearch)
+  const startingState = _cloneDeep(emptySearch)
   startingState.params = props.searchParams
   // attach the perform and update methods to the context to avoid prop-drilling
   startingState.performSearch = performSearch

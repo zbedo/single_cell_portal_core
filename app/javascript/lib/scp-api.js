@@ -26,7 +26,7 @@ function defaultInit() {
     'Accept': 'application/json'
   }
   // accessToken is a blank string when not signed in
-  if ( accessToken !== '') {
+  if (accessToken !== '') {
     headers['Authorization'] = `Bearer ${accessToken}`
   }
   return {
@@ -34,7 +34,6 @@ function defaultInit() {
     headers
   }
 }
-
 
 
 /**
@@ -145,7 +144,7 @@ export async function fetchExpressionHeatmap(studyAccession, genes, cluster, ann
 }
 
 export function studyNameAsUrlParam(studyName) {
-  return studyName.toLowerCase().replace(/ /g, '-').replace(/[^0-9a-z\-]/gi, '')
+  return studyName.toLowerCase().replace(/ /g, '-').replace(/[^0-9a-z-]/gi, '')
 }
 
 /**

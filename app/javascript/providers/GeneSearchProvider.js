@@ -4,10 +4,16 @@ import _isEqual from 'lodash/isEqual'
 import { navigate, useLocation } from '@reach/router'
 import * as queryString from 'query-string'
 
-import { fetchSearch, buildSearchQueryString, buildFacetsFromQueryString } from 'lib/scp-api'
+import { fetchSearch, buildSearchQueryString } from 'lib/scp-api'
 import { StudySearchContext } from 'providers/StudySearchProvider'
 
-const emptySearch = {
+/*
+ * This component and context shares a LOT in common with StudySearchProvider
+ * Once we decide how Study and gene search interact in the UI, these two providers
+ * should be refactored to consolidate search logic
+ */
+
+export const emptySearch = {
   params: {
     genes: '',
     genePage: 1
@@ -45,7 +51,6 @@ export function PropsGeneSearchProvider(props) {
    * @param {Object} newParams Parameters to update
    */
   async function updateSearch(newParams, studySearchState, searchWithinStudies) {
-
     let mergedParams = Object.assign({}, searchParams, newParams)
     // reset the page to 1 for new searches, unless otherwise specified
     mergedParams.genePage = newParams.genePage ? newParams.genePage : 1
@@ -60,11 +65,10 @@ export function PropsGeneSearchProvider(props) {
   async function performSearch(params, studySearchState) {
     // reset the scroll in case they scrolled down to read prior results
     window.scrollTo(0, 0)
-    let studyAccessions = undefined
     if (studySearchState.isLoaded) {
       params.accessions = studySearchState.results.matchingAccessions
     }
-    let sentParams = Object.assign({}, params)
+    const sentParams = Object.assign({}, params)
     // genePage and page are named separately so they don't overlap in navigation urls
     // but for api requests, we rename genePage to page
     sentParams.page = params.genePage ? params.genePage : 1

@@ -3,16 +3,14 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDna, faExclamationCircle } from '@fortawesome/free-solid-svg-icons'
 
 import { GeneSearchContext } from 'providers/GeneSearchProvider'
-import { StudyResults } from 'components/search/results/StudyResultsContainer'
-import { PagingControl } from 'components/search/results/PagingControl'
+import StudyResults from 'components/search/results/StudyResults'
 import StudyGeneExpressions from './StudyGeneExpressions'
 
 /**
- * Component for Results displayed on the homepage
+ * Component for Gene Results displayed on the homepage
  */
 export default function GeneResultsPanel(props) {
   const searchContext = useContext(GeneSearchContext)
-  const results = searchContext.results
   const studyResults = searchContext.studyResults
   let panelContent
   if (searchContext.isError) {
@@ -33,7 +31,9 @@ export default function GeneResultsPanel(props) {
       <>
         <StudyResults
           results={studyResults}
-          changePage={pageNum => {searchContext.updateSearch({ genePage: pageNum })}}
+          changePage={pageNum => {
+            searchContext.updateSearch({ genePage: pageNum })
+          }}
           StudyComponent={ StudyGeneExpressions }
         />
       </>

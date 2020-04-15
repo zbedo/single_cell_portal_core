@@ -28,10 +28,12 @@ function CommonSearchButtons() {
  * Component for SCP faceted search UI
  * showCommonButtons and showDownloadButton both default to true
  */
-export default function SearchPanel({ showCommonButtons,
-                                      keywordPrompt,
-                                      showDownloadButton,
-                                      searchOnLoad }) {
+export default function SearchPanel({
+  showCommonButtons,
+  keywordPrompt,
+  showDownloadButton,
+  searchOnLoad
+}) {
   // Note: This might become  a Higher-Order Component (HOC).
   // This search component is currently specific to the "Studies" tab, but
   // could possibly also enable search for "Genes" and "Cells" tabs.

@@ -1,19 +1,18 @@
-import React, { useState, useEffect, useContext } from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faDna, faExclamationCircle } from '@fortawesome/free-solid-svg-icons'
+import React from 'react'
 
-import { fetchExpressionViolin, fetchExpressionHeatmap, studyNameAsUrlParam } from 'lib/scp-api'
 import { getByline } from 'components/search/results/Study'
-import { UserContext } from 'providers/UserProvider'
-import StudyGeneDotPlot from './StudyGeneDotPlot'
+// import StudyGeneDotPlot from './StudyGeneDotPlot'
 import StudyViolinPlot from './StudyViolinPlot'
 
+/** Renders expression data for a study.  This assumes that the study has a 'gene_matches' property
+    to inform which genes to show data for
+  */
 export default function StudyGeneExpressions({ study }) {
   let studyRenderComponent
   if (study.gene_matches.length > 1) {
     // for now, this renders a bunch of violins, we should soon ugrade to dot plots
     // <StudyGeneDotPlot study={study} genes={study.gene_matches}/>
-    studyRenderComponent = study.gene_matches.map((gene) => {
+    studyRenderComponent = study.gene_matches.map(gene => {
       return <StudyViolinPlot key={gene} study={study} gene={gene}/>
     })
   } else {
@@ -41,10 +40,3 @@ export default function StudyGeneExpressions({ study }) {
     </div>
   )
 }
-
-export function studyByline(study) {
-  return study.description.substring()
-
-}
-
-
