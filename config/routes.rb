@@ -37,7 +37,9 @@ Rails.application.routes.draw do
           member do
             post 'sync', to: 'studies#sync_study'
           end
+          resources :expression_data, only: [:show], param: :data_type
         end
+
         get 'status', to: 'status#index'
         scope :site do
           get 'studies', to: 'site#studies', as: :site_studies
@@ -256,6 +258,11 @@ Rails.application.routes.draw do
     get 'covid19', to: 'site#covid19'
 
     get '/', to: 'site#index', as: :site
+
+    # let react routing handle app and all subpaths under 'app'
+    get 'app', to: 'site#index'
+    get 'app/*path', to: 'site#index'
+
     root to: 'site#index'
   end
 end

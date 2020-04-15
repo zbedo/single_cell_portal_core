@@ -111,7 +111,8 @@ class User
   def self.from_omniauth(access_token)
     data = access_token.info
     provider = access_token.provider
-    uid = access_token.uid
+    uid =
+     access_token.uid
     # create bogus password, Devise will never use it to authenticate
     password = Devise.friendly_token[0,20]
     user = User.find_by(email: data['email'])

@@ -56,6 +56,9 @@ export function mapFiltersForLogging(facetsOrFilters, isFacets=false) {
  */
 function getFriendlyFilterListByFacet(facets) {
   const filterListByFacet = {}
+  if (!facets) {
+    return filterListByFacet
+  }
   Object.entries(facets).forEach(([facet, filters]) => {
     const friendlyFacet = `filters${facet[0].toUpperCase() + facet.slice(1)}`
     const friendlyFilters = filters.map(filterId => {
@@ -89,7 +92,7 @@ export function logSearch(type, searchParams) {
 
   const numTerms = getNumberOfTerms(terms)
   const [numFacets, numFilters] = getNumFacetsAndFilters(facets)
-  const facetList = Object.keys(facets)
+  const facetList = facets ? Object.keys(facets) : []
 
   const filterListByFacet = getFriendlyFilterListByFacet(facets)
 
