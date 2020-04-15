@@ -9,7 +9,13 @@ import StudyViolinPlot from './StudyViolinPlot'
   */
 export default function StudyGeneExpressions({ study }) {
   let studyRenderComponent
-  if (study.gene_matches.length > 1) {
+  if (!study.can_visualize_clusters) {
+    studyRenderComponent = (
+      <div className="text-center detail">
+        [This study does not have data to support visualization]
+      </div>
+    )
+  } else if (study.gene_matches.length > 1) {
     // for now, this renders a bunch of violins, we should soon ugrade to dot plots
     // <StudyGeneDotPlot study={study} genes={study.gene_matches}/>
     studyRenderComponent = study.gene_matches.map(gene => {

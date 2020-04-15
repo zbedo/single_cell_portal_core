@@ -58,6 +58,7 @@ module Api
         end
         if @gene_results.present?
           study_obj[:gene_matches] = @gene_results[:genes_by_study][study.id]
+          study_obj[:can_visualize_clusters] = study.can_visualize_clusters?
         end
         if study.detached
           study_obj[:study_files] = 'Unavailable (cannot load study workspace or bucket)'
