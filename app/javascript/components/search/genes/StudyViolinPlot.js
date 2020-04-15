@@ -47,7 +47,7 @@ export default function StudyViolinPlot({ study, gene }) {
       paramsToRender.subsample)
     // The code below is heavily borrowed from legacy application.js
     const dataArray = parseResultsToArray(results)
-    const jitter = results.values_jitter ? results.values_jitter : undefined
+    const jitter = results.values_jitter ? results.values_jitter : ''
     const traceData = window.createTracesAndLayout(dataArray, results.rendered_cluster, jitter, results.y_axis_title)
     const expressionData = [].concat.apply([], traceData[0])
     const expressionLayout = traceData[1]
