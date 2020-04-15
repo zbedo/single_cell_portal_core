@@ -5,14 +5,14 @@
 
 @import './_colors.scss';
 
-.study-keyword-search {
+.study-keyword-search, .gene-keyword-search {
   box-sizing: border-box;
   display: inline-block;
   height: 37px;
   width: 340px;
   white-space: nowrap;
 
-  input {
+  input.form-control {
     background-color: white;
     border: 1px solid $action-color;
     border-radius: 15px 0px 0px 15px;

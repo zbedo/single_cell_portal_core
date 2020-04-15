@@ -56,15 +56,16 @@ export default function GeneSearchView() {
   return (
     <div>
       <div className="row">
-        <div className="col-md-6 col-sm-12 col-xs-12">
-          <form onSubmit={ handleSubmit }>
+        <div className="col-md-12 col-sm-12 col-xs-12">
+          <form className="gene-keyword-search form-horizontal" onSubmit={ handleSubmit }>
             <div className="input-group">
               <input type="text"
-                className="form-control gene-search-input"
+                className="form-control"
                 value={genes}
+                size="30"
                 onChange={ e => setGenes(e.target.value) }
                 placeholder={ geneSearchPlaceholder }/>
-              <div className="input-group-btn">
+              <div className="input-group-append">
                 <button className="btn btn-info"
                         type="submit"
                         name="commit"
