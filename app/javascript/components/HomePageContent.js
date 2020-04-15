@@ -34,7 +34,7 @@ const LinkableSearchTabs = function(props) {
         </Link>
         <Link to={`/single_cell/app/genes${location.search}`}
               className={isShowGenes ? 'active' : ''}>
-          <span className="fas fa-dna"></span> Search Genes (R)
+          <span className="fas fa-dna"></span> Search Genes
         </Link>
       </nav>
       <div className="tab-content top-pad">

@@ -19,7 +19,7 @@ export default function StudyGeneDotPlot({ study, genes }) {
       const geneParam = genes.join('+')
       window.renderMorpheusDotPlot(
         `/single_cell/study/${study.accession}/${studyNameAsUrlParam(study.name)}/expression_query?search[genes]=${geneParam}&row_centered=&row_centered=&cluster=&request_user_token=${userState.accessToken}`,
-        `/single_cell/study/${study.accession}/${studyNameAsUrlParam(study.name)}/annotation_query?cluster=&annotation=CLUSTER--group--study&request_user_token=${userState.accessToken}`,
+        `/single_cell/study/${study.accession}/${studyNameAsUrlParam(study.name)}/annotation_query?cluster=&annotation=&request_user_token=${userState.accessToken}`,
         'CLUSTER',
         'group',
         `#expGraph${study.accession}`,

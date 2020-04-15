@@ -26,7 +26,8 @@ class StudySearchService
     genes_by_study = {}
     study_ids = []
     gene_match_list.map do |match|
-      genes_by_study[match[2]] = genes_by_study[match[2]].present? ? genes_by_study[match[2]].push(match[1]) : [match[1]]
+      genes_by_study[match[2]] ||= []
+      genes_by_study[match[2]].push(match[1])
       study_ids = study_ids.push(match[2])
     end
     {  genes_by_study: genes_by_study, study_ids: study_ids.uniq }

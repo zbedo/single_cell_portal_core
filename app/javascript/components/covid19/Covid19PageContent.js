@@ -14,12 +14,17 @@ import ErrorBoundary from 'lib/ErrorBoundary'
 export default function Covid19PageContent() {
   return (
     <Router>
-      <UnroutedPageContent default/>
+      <CovidRawPageContent default/>
     </Router>
   )
 }
 
-function UnroutedPageContent() {
+/**
+ * The actual rendered content for the covid19 page.
+ * Note this needs to be used within a Reach <Router> element or
+ * the search component's useLocation hooks will error
+ */
+function CovidRawPageContent() {
   return (
     <ErrorBoundary>
       <UserProvider>

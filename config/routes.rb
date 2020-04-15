@@ -31,7 +31,7 @@ Rails.application.routes.draw do
           member do
             post 'sync', to: 'studies#sync_study'
           end
-          resources :expression_data, only: [:show]
+          resources :expression_data, only: [:show], param: :data_type
         end
 
         get 'status', to: 'status#index'
