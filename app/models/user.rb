@@ -304,7 +304,7 @@ class User
     if user.present?
       user.feature_flags_with_defaults[flag_key]
     else
-      FeatureFlag.find_by(name: flag_key)
+      FeatureFlag.find_by(name: flag_key)&.default_value
     end
   end
 
