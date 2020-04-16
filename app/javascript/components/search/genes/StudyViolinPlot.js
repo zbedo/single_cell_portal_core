@@ -113,7 +113,9 @@ export default function StudyViolinPlot({ study, gene }) {
 
         <div className="form-group">
           <label>Subsampling threshold</label>
-          <select className="form-control subsample-select global-gene-subsample">
+          <select
+            className="form-control subsample-select global-gene-subsample"
+            onChange={event => {updateRenderParams({ subsample: event.target.value })}}>
             <option key={999} value=''>All cells</option>
             { subsamplingOptions.map((opt, index) => {
               return <option key={index} value={opt}>{opt}</option>
