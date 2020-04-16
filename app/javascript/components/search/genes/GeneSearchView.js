@@ -72,8 +72,8 @@ export default function GeneSearchView() {
                 value={genes}
                 size="50"
                 onChange={ e => setGenes(e.target.value) }
-                placeholder={ geneSearchPlaceholder }/>
-
+                placeholder={ geneSearchPlaceholder }
+                name="genesText"/>
               <div className="input-group-append">
                 <Button type="submit">
                   <FontAwesomeIcon icon={ faSearch } />

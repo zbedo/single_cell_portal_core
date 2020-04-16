@@ -23,11 +23,7 @@ export default function KeywordSearch({ keywordPrompt }) {
    */
   function handleSubmit(event) {
     event.preventDefault()
-    if (showClear) {
-      selectionContext.updateSelection({ terms: '' }, true)
-    } else {
-      selectionContext.performSearch()
-    }
+    selectionContext.performSearch()
   }
 
   function handleKeywordChange(newValue) {
