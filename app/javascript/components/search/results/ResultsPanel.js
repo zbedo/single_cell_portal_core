@@ -6,12 +6,14 @@ import { StudySearchContext } from 'providers/StudySearchProvider'
 import StudyResults from './StudyResults'
 import Study from './Study'
 import SearchQueryDisplay from './SearchQueryDisplay'
+import { FeatureFlagContext } from 'providers/FeatureFlagProvider'
 
 /**
  * Component for Results displayed on the homepage
  */
 const ResultsPanel = props => {
   const searchContext = useContext(StudySearchContext)
+  const featureFlagState = useContext(FeatureFlagContext)
   const results = searchContext.results
   let panelContent
   if (searchContext.isError) {
@@ -39,7 +41,8 @@ const ResultsPanel = props => {
   } else if (results.studies && results.studies.length > 0) {
     panelContent = (
       <>
-        <SearchQueryDisplay terms={results.termList} facets={results.facets} />
+        { featureFlagState.faceted_search &&
+          <SearchQueryDisplay terms={results.termList} facets={results.facets} /> }
         <StudyResults
           results={results}
           StudyComponent={ Study }
