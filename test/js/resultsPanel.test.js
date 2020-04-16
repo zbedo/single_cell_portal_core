@@ -1,10 +1,10 @@
 import React from 'react'
 
-import StudyResultsContainer, { StudyResults } from
-  '../../app/javascript/components/StudyResultsContainer'
+import StudyResults from
+  'components/search/results/StudyResults'
 import { StudySearchContext } from
-  '../../app/javascript/components/search/StudySearchProvider'
-import ResultsPanel from '../../app/javascript/components/ResultsPanel'
+  'providers/StudySearchProvider'
+import ResultsPanel from 'components/search/results/ResultsPanel'
 import { mount } from 'enzyme'
 React.useLayoutEffect = React.useEffect
 describe('<StudyResultsContainer/> rendering>', () => {
@@ -30,7 +30,7 @@ describe('<StudyResultsContainer/> rendering>', () => {
     expect(resultsPanel.find('.error-panel')).toHaveLength(0)
     expect(resultsPanel.find(StudyResults)).toHaveLength(0)
   })
-  it('should render 1 <StudyResultsContainer/>', () => {
+  it('should render 1 <StudyResults/>', () => {
     const resultsPanel = mount(
       <StudySearchContext.Provider value={
         {

@@ -590,6 +590,18 @@ class Study
       key :type, :boolean
       key :description, 'Indication this study was whitelisted by a preset search'
     end
+    property :gene_matches do
+      key :type, :array
+      key :description, 'Array of ids of the genes that were matched for this study'
+      items do
+        key :title, 'gene match'
+        key :type, :string
+      end
+    end
+    property :can_visualize_clusters do
+      key :type, :boolean
+      key :description, 'Whether this study has cluster visualization data available'
+    end
     property :study_files do
       key :type, :object
       key :title, 'StudyFiles'
@@ -881,6 +893,23 @@ class Study
     self.can_visualize_clusters? || self.can_visualize_genome_data?
   end
 
+  # quick getter to return any cell metadata that can_visualize?
+  def viewable_metadata
+    viewable = []
+    all_metadata = self.cell_metadata
+    all_names = all_metadata.pluck(:name)
+    all_metadata.each do |meta|
+      if meta.annotation_type == 'numeric'
+        viewable << meta
+      else
+        if CellMetadatum::GROUP_VIZ_THRESHOLD === meta.values.size
+          viewable << meta unless all_names.include?(meta.name + '__ontology_label')
+        end
+      end
+    end
+    viewable
+  end
+
   ###
   #
   # DATA PATHS & URLS
@@ -1127,8 +1156,8 @@ class Study
   # dropdowns for selecting annotations.  can be scoped to one specific cluster, or return all with 'Cluster: ' prepended on the name
   def formatted_annotation_select(cluster: nil, annotation_type: nil)
     options = {}
-    meta_opts = annotation_type.nil? ? self.cell_metadata : self.cell_metadata.where(annotation_type: annotation_type)
-    metadata = meta_opts.keep_if(&:can_visualize?)
+    viewable = self.viewable_metadata
+    metadata = annotation_type.nil? ? viewable : viewable.select {|m| m.annotation_type == annotation_type}
     options['Study Wide'] = metadata.map(&:annotation_select_option)
     if cluster.present?
       options['Cluster-Based'] = cluster.cell_annotation_select_option(annotation_type)

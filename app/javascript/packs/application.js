@@ -14,7 +14,6 @@ import 'styles/application.scss'
 import React from 'react'
 import ReactDOM from 'react-dom'
 import $ from 'jquery'
-import jQuery from 'jquery'
 import { Spinner } from 'spin.js'
 import 'jquery-ui/ui/widgets/datepicker'
 import 'jquery-ui/ui/widgets/autocomplete'
@@ -67,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // SCP expects these variables to be global.
 window.$ = $
-window.jQuery = jQuery
+window.jQuery = $
 window.ClassicEditor = ClassicEditor
 window.Spinner = Spinner
 window.morpheus = morpheus

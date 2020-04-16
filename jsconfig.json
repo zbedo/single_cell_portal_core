@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "es2017",
+    "allowSyntheticDefaultImports": false,
+    "baseUrl": "./",
+    "paths": {
+      "components/*": ["app/javascript/components/*"],
+      "lib/*": ["app/javascript/lib/*"],
+      "packs/*": ["app/javascript/packs/*"],
+      "providers/*": ["app/javascript/providers/*"],
+      "styles/*": ["app/javascript/styles/*"]
+    }
+  },
+  "exclude": ["node_modules", "dist"]
+}

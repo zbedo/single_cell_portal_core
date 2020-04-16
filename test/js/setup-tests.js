@@ -6,7 +6,7 @@ configure({ adapter: new Adapter() })
 import {
   setGlobalMockFlag,
   setMockOrigin
-} from '../../app/javascript/lib/scp-api'
+} from 'lib/scp-api'
 
 setGlobalMockFlag(true)
 setMockOrigin('http://localhost:3000')

@@ -138,6 +138,11 @@
           <th>Name</th>
           <th>Type</th>
           <th>Size/Range</th>
+          <th class="slick-header-columns">
+            Viewable&nbsp;<span data-toggle="tooltip"
+                             title="Group-based annotations can only have 2-100 distinct values and not be based on ontology IDs to be viewable as annotations">
+            <i class="fas fa-question-circle"></i></span>
+          </th>
           <th>Values</th>
         </tr>
         </thead>
@@ -149,6 +154,7 @@
               <td><%= metadata.name %></td>
               <td><%= metadata.annotation_type %></td>
               <td><%= get_annotation_bounds(values: values, annotation_type: metadata.annotation_type) %></td>
+              <td><%= get_boolean_label(metadata.can_visualize?) %></td>
               <td><%= get_sorted_group_values(values: values, annotation_type: metadata.annotation_type) %></td>
             </tr>
           <% end %>
@@ -160,6 +166,7 @@
                 <td><%= annotation[:name] %></td>
                 <td><%= annotation[:type] %></td>
                 <td><%= get_annotation_bounds(values: values, annotation_type: annotation[:type]) %></td>
+                <td><%= get_boolean_label(cluster_group.can_visualize_cell_annotation?(annotation)) %></td>
                 <td><%= get_sorted_group_values(values: values, annotation_type: annotation[:type]) %></td>
               </tr>
             <% end %>
