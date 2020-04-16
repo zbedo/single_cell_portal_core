@@ -392,7 +392,6 @@ class IngestJob
                                                                         host: URL_OPTIONS[:host],
                                                                         protocol: URL_OPTIONS[:protocol])
         message << "This metadata file was validated against the latest <a href='#{schema_url}'>Metadata Convention</a>"
-        message << "Metadata Convention: #{project_name}, v#{current_schema_version}"
       end
       cell_metadata = CellMetadatum.where(study_id: self.study.id, study_file_id: self.study_file.id)
       message << "Entries created:"
