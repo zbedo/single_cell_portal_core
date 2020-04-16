@@ -106,7 +106,12 @@ export function logSearch(type, searchParams) {
 
   let gaEventCategory = 'advanced-search'
   // e.g. advanced-search-covid19
-  if (preset !== '') gaEventCategory += `-${preset}`
+  if (
+    preset !== '' &&
+    typeof preset !== 'undefined'
+  ) {
+    gaEventCategory += `-${preset}`
+  }
 
   // Google Analytics fallback: remove once Bard and Mixpanel are ready for SCP
   ga( // eslint-disable-line no-undef
