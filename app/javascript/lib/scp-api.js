@@ -115,7 +115,7 @@ export function setMockOrigin(origin) {
 export async function fetchExpressionViolin(studyAccession, gene, cluster, annotation, subsample, mock=false) {
   const clusterParam = cluster ? `&cluster=${encodeURIComponent(cluster)}` : ''
   const annotationParam = annotation ? `&annotation=${encodeURIComponent(annotation)}` : ''
-  const subsampleParam = subsample ? `&annotation=${encodeURIComponent(subsample)}` : ''
+  const subsampleParam = subsample ? `&subsample=${encodeURIComponent(subsample)}` : ''
   const apiUrl = `/studies/${studyAccession}/expression_data/violin?gene=${gene}${clusterParam}${annotationParam}${subsampleParam}`
   // don't camelcase the keys since those can be cluster names, so send false for the 4th argument
   return await scpApi(apiUrl, defaultInit(), mock, false)

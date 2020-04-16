@@ -57,8 +57,8 @@ describe('Gene search page study filter', () => {
     ))
     expect(wrapper.find('.gene-study-filter')).toHaveLength(0)
     expect(wrapper.find(SearchPanel)).toHaveLength(0)
-    wrapper.find('.gene-search-input').simulate('change', {target: { value: 'test345'}});
-    wrapper.find('.gene-search-input').simulate('submit')
+    wrapper.find('input[name="genesText"]').simulate('change', {target: { value: 'test345'}});
+    wrapper.find('input[name="genesText"]').simulate('submit')
     expect(routerNav).toHaveBeenLastCalledWith('?type=study&page=1&genes=test345&genePage=1')
   })
   it('shows and applies study filter when feature flag is on', async () => {
@@ -74,8 +74,8 @@ describe('Gene search page study filter', () => {
     ))
     expect(wrapper.find('.gene-study-filter')).toHaveLength(1)
     expect(wrapper.find(SearchPanel)).toHaveLength(1)
-    wrapper.find('.gene-search-input').simulate('change', {target: { value: 'test567'}});
-    wrapper.find('.gene-search-input').simulate('submit')
+    wrapper.find('input[name="genesText"]').simulate('change', {target: { value: 'test567'}});
+    wrapper.find('input[name="genesText"]').simulate('submit')
     expect(routerNav).toHaveBeenLastCalledWith('?type=study&page=1&terms=foobar2&genes=test567&genePage=1')
   })
 })

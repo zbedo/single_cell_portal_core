@@ -1,7 +1,9 @@
 import React, { useContext, useState, useEffect } from 'react'
 import _clone from 'lodash/clone'
-import { faPlusSquare, faMinusSquare } from '@fortawesome/free-solid-svg-icons'
+import { faPlusSquare, faMinusSquare, faTimes, faSearch } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import Button from 'react-bootstrap/lib/Button'
+import Modal from 'react-bootstrap/lib/Modal'
 
 import { GeneSearchContext } from 'providers/GeneSearchProvider'
 import { hasSearchParams, StudySearchContext } from 'providers/StudySearchProvider'
@@ -20,14 +22,20 @@ export default function GeneSearchView() {
   const geneSearchState = useContext(GeneSearchContext)
   const studySearchState = useContext(StudySearchContext)
   const [genes, setGenes] = useState(_clone(geneSearchState.params.genes))
+  const [showEmptySearchModal, setShowEmptySearchModal] = useState(false)
   const [showStudyControls, setShowStudyControls] = useState(hasSearchParams(studySearchState.params))
 
   /** handles a user submitting a gene search */
   function handleSubmit(event) {
     event.preventDefault()
-    geneSearchState.updateSearch({ genes }, studySearchState, featureFlagState.gene_study_filter)
+    if (genes && genes.length) {
+      geneSearchState.updateSearch({ genes }, studySearchState, featureFlagState.gene_study_filter)
+    } else {
+      setShowEmptySearchModal(true)
+    }
   }
 
+  const showClear = genes && genes.length
   let resultsContent
   const showStudySearchResults = !geneSearchState.isLoaded &&
                                  !geneSearchState.isLoading &&
@@ -56,22 +64,27 @@ export default function GeneSearchView() {
   return (
     <div>
       <div className="row">
-        <div className="col-md-6 col-sm-12 col-xs-12">
-          <form onSubmit={ handleSubmit }>
+        <div className="col-md-12 col-sm-12 col-xs-12">
+          <form className="gene-keyword-search form-horizontal" onSubmit={ handleSubmit }>
             <div className="input-group">
               <input type="text"
-                className="form-control gene-search-input"
+                className="form-control"
                 value={genes}
+                size="50"
                 onChange={ e => setGenes(e.target.value) }
-                placeholder={ geneSearchPlaceholder }/>
-              <div className="input-group-btn">
-                <button className="btn btn-info"
-                        type="submit"
-                        name="commit"
-                        id="submit-gene-search">
-                  <span className="fas fa-search"></span>
-                </button>
+                placeholder={ geneSearchPlaceholder }
+                name="genesText"/>
+              <div className="input-group-append">
+                <Button type="submit">
+                  <FontAwesomeIcon icon={ faSearch } />
+                </Button>
               </div>
+              { showClear &&
+                <Button className="keyword-clear"
+                        type='button'
+                        onClick={ e => setGenes('') } >
+                  <FontAwesomeIcon icon={ faTimes } />
+                </Button> }
             </div>
           </form>
         </div>
@@ -100,6 +113,15 @@ export default function GeneSearchView() {
           <div id="load-more-genes-target"></div>
         </div>
       </div>
+      <Modal
+        show={showEmptySearchModal}
+        onHide={() => {setShowEmptySearchModal(false)}}
+        animation={false}
+        bsSize='small'>
+        <Modal.Body className="text-center">
+          You must enter at least one gene to search
+        </Modal.Body>
+      </Modal>
     </div>
   )
 }
