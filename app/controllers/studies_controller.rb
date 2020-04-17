@@ -323,7 +323,13 @@ class StudiesController < ApplicationController
               study_id: @study.id,
               version: '4.6.1'
           }
-          AnalysisMetadatum.create(metadata_attr)
+          begin
+            AnalysisMetadatum.create(metadata_attr)
+          rescue => e
+            error_context = ErrorTracker.format_extra_context(@study, {params: params, analysis_metadata: metadata_attr})
+            ErrorTracker.report_exception(e, current_user, error_context)
+            logger.error "Unable to create analysis metadatum for #{params[:submission_id]}: #{e.class.name}:: #{e.message}"
+          end
         end
       end
       @available_files = @unsynced_files.map {|f| {name: f.name, generation: f.generation, size: f.upload_file_size}}
