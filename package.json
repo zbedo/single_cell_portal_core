@@ -1,7 +1,7 @@
 {
   "scripts": {
     "test": "jest --coverage",
-    "ui-test": "jest test/js/search/",
+    "ui-test": "jest test/js/search/*",
     "testDebug": "node --inspect-brk node_modules/.bin/jest --runInBand",
     "lint": "eslint app/javascript",
     "fix-styles": "prettier-stylelint --write 'src/**/*.{css,scss}' "
