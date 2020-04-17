@@ -9,7 +9,7 @@ class MetadataSchemasControllerTest < ActionDispatch::IntegrationTest
   SCHEMAS_BASE_DIR = Api::V1::MetadataSchemasController::SCHEMAS_BASE_DIR
 
   setup do
-    @schemas = set_available_schemas
+    @schemas = get_available_schemas
   end
 
   test 'should load all available schemas' do
