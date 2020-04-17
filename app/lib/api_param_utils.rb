@@ -34,4 +34,15 @@ class ApiParamUtils
       study.cluster_groups.by_name(selector)
     end
   end
+
+  # sanitizes a page param into an integer.  Will default to 1 if the value
+  # is nil or otherwise can't be read
+  def self.sanitize_page_param(page_param)
+    page_num = 1
+    parsed_num = page_param.to_i
+    if (parsed_num > 0)
+      page_num = parsed_num
+    end
+    page_num
+  end
 end
