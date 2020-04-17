@@ -1,0 +1,10 @@
+// let user know if the requested annotation wasn't available
+var requestedAnnotation = '<%= params[:annotation] %>'
+var loadedAnnotation = '<%= @selected_annotation[:identifier] %>'
+var loadedAnnotationName = '<%= @selected_annotation[:name] %> (Study Wide)'
+var showAlert = requestedAnnotation !== loadedAnnotation;
+
+if (showAlert) {
+    alert('The annotation that you selected is not available to view on this cluster.  ' +
+        'We have defaulted back to the first available annotation: ' + loadedAnnotationName)
+}
