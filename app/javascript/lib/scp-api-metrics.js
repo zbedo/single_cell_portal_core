@@ -143,5 +143,5 @@ export function logFilterSearch(facet, terms) {
  */
 export function logDownloadAuthorization() {
   log('download-authorization')
-  ga('send', 'event', 'faceted-search', 'download-authorization') // eslint-disable-line no-undef, max-len
+  ga('send', 'event', 'advanced-search', 'download-authorization') // eslint-disable-line no-undef, max-len
 }
