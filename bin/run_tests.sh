@@ -66,7 +66,7 @@ then
   fi
 else
   echo "Running all unit & integration tests..."
-  yarn test
+  yarn ui-test
   code=$? # immediately capture exit code to prevent this from getting clobbered
   if [[ $code -ne 0 ]]; then
     RETURN_CODE=$code

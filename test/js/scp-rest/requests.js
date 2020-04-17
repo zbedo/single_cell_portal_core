@@ -47,4 +47,4 @@ describe('JavaScript client for SCP REST API', () => {
       done()
     })
   })
-}
+})
