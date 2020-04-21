@@ -1,8 +1,4 @@
 {
-  "jest": {
-    "testPathIgnorePatterns": [
-      "fetch"
-    ]
   },
   "scripts": {
     "test": "jest --coverage",
