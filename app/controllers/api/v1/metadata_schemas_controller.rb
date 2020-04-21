@@ -19,7 +19,7 @@ module Api
       end
 
       def index
-        schemas = set_available_schemas
+        schemas = get_available_schemas
         render json: schemas
       end
 
