@@ -81,15 +81,16 @@ class SiteController < ApplicationController
       @cell_count = 0
     end
 
+    page_num = RequestUtils.sanitize_page_param(params[:page])
     # if search params are present, filter accordingly
     if !params[:search_terms].blank?
       search_terms = sanitize_search_values(params[:search_terms])
       # determine if search values contain possible study accessions
       possible_accessions = StudyAccession.sanitize_accessions(search_terms.split)
       @studies = @viewable.any_of({:$text => {:$search => search_terms}}, {:accession.in => possible_accessions}).
-          paginate(page: params[:page], per_page: Study.per_page)
+          paginate(page: page_num, per_page: Study.per_page)
     else
-      @studies = @viewable.paginate(page: params[:page], per_page: Study.per_page)
+      @studies = @viewable.paginate(page: page_num, per_page: Study.per_page)
     end
   end
 
@@ -136,9 +137,9 @@ class SiteController < ApplicationController
   def search_genes
     @terms = parse_search_terms(:genes)
     # limit gene search for performance reasons
-    if @terms.size > Gene::MAX_GENE_SEARCH
-      @terms = @terms.take(Gene::MAX_GENE_SEARCH)
-      search_message = Gene::MAX_GENE_SEARCH_MSG
+    if @terms.size > StudySearchService::MAX_GENE_SEARCH
+      @terms = @terms.take(StudySearchService::MAX_GENE_SEARCH)
+      search_message = StudySearchService::MAX_GENE_SEARCH_MSG
     end
     # grab saved params for loaded cluster, boxpoints mode, annotations, consensus and other view settings
     cluster = params[:search][:cluster]
@@ -195,9 +196,9 @@ class SiteController < ApplicationController
     if @selected_branding_group.present?
       @studies = @studies.where(branding_group_id: @selected_branding_group.id)
     end
-
+    page_num = RequestUtils.sanitize_page_param(params[:page])
     # restrict studies to initialized only
-    @studies = @studies.where(initialized: true).paginate(page: params[:page], per_page: Study.per_page)
+    @studies = @studies.where(initialized: true).paginate(page: page_num, per_page: Study.per_page)
   end
 
   # global gene search, will return a list of studies that contain the requested gene(s)
@@ -211,8 +212,8 @@ class SiteController < ApplicationController
       raw_genes = params[:search][:genes].split(delim)
       @genes = sanitize_search_values(raw_genes).split(',').map(&:strip)
       # limit gene search for performance reasons
-      if @genes.size > Gene::MAX_GENE_SEARCH
-        @genes = @genes.take(Gene::MAX_GENE_SEARCH)
+      if @genes.size > StudySearchService::MAX_GENE_SEARCH
+        @genes = @genes.take(StudySearchService::MAX_GENE_SEARCH)
       end
       @results = []
       if !@study.initialized?
@@ -1397,37 +1398,11 @@ class SiteController < ApplicationController
   end
 
   def set_cluster_group
-    # determine which URL param to use for selection
-    selector = params[:cluster].nil? ? params[:gene_set_cluster] : params[:cluster]
-    if selector.nil? || selector.empty?
-      @cluster = @study.default_cluster
-    else
-      @cluster = @study.cluster_groups.by_name(selector)
-    end
+    @cluster = RequestUtils.get_cluster_group(params, @study)
   end
 
   def set_selected_annotation
-    # determine which URL param to use for selection and construct base object
-    selector = params[:annotation].nil? ? params[:gene_set_annotation] : params[:annotation]
-    annot_name, annot_type, annot_scope = selector.nil? ? @study.default_annotation.split('--') : selector.split('--')
-    # construct object based on name, type & scope
-    if annot_scope == 'cluster'
-      @selected_annotation = @cluster.cell_annotations.find {|ca| ca[:name] == annot_name && ca[:type] == annot_type}
-      @selected_annotation[:scope] = annot_scope
-    elsif annot_scope == 'user'
-      # in the case of user annotations, the 'name' value that gets passed is actually the ID
-      user_annotation = UserAnnotation.find(annot_name)
-      @selected_annotation = {name: user_annotation.name, type: annot_type, scope: annot_scope, id: annot_name}
-      @selected_annotation[:values] = user_annotation.values
-    else
-      @selected_annotation = {name: annot_name, type: annot_type, scope: annot_scope}
-      if annot_type == 'group'
-        @selected_annotation[:values] = @study.cell_metadata.by_name_and_type(annot_name, annot_type).values
-      else
-        @selected_annotation[:values] = []
-      end
-    end
-    @selected_annotation
+    @selected_annotation = RequestUtils.get_selected_annotation(params, @study, @cluster)
   end
 
   def set_workspace_samples
