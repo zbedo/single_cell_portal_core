@@ -81,7 +81,7 @@ class SiteController < ApplicationController
       @cell_count = 0
     end
 
-    page_num = ApiParamUtils.sanitize_page_param(params[:page])
+    page_num = RequestUtils.sanitize_page_param(params[:page])
     # if search params are present, filter accordingly
     if !params[:search_terms].blank?
       search_terms = sanitize_search_values(params[:search_terms])
@@ -196,7 +196,7 @@ class SiteController < ApplicationController
     if @selected_branding_group.present?
       @studies = @studies.where(branding_group_id: @selected_branding_group.id)
     end
-    page_num = ApiParamUtils.sanitize_page_param(params[:page])
+    page_num = RequestUtils.sanitize_page_param(params[:page])
     # restrict studies to initialized only
     @studies = @studies.where(initialized: true).paginate(page: page_num, per_page: Study.per_page)
   end
