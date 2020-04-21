@@ -9,7 +9,7 @@
 @random_seed = File.open(Rails.root.join('.random_seed')).read.strip
 user_access_token = {access_token: 'test-api-token', expires_in: 3600, expires_at: Time.zone.now + 1.hour}
 user = User.create!(email:'testing.user@gmail.com', password:'password', admin: true, uid: '12345',
-                    api_access_token: user_access_token, access_token: user_access_token,
+                    api_access_token: user_access_token, access_token: user_access_token, registered_for_firecloud: true,
                     authentication_token: Devise.friendly_token(32))
 user_2 = User.create!(email: 'sharing.user@gmail.com', password: 'password', uid: '67890',
                     api_access_token: user_access_token, access_token: user_access_token)
@@ -17,6 +17,8 @@ user_2 = User.create!(email: 'sharing.user@gmail.com', password: 'password', uid
 TosAcceptance.create(email: user_2.email)
 study = Study.create!(name: "Testing Study #{@random_seed}", description: '<p>This is the test study.</p>',
                       firecloud_project: ENV['PORTAL_NAMESPACE'], data_dir: 'test', user_id: user.id)
+StudyShare.create!(email: 'my-user-group@firecloud.org', permission: 'Reviewer', study_id: study.id,
+                   firecloud_project: study.firecloud_project, firecloud_workspace: study.firecloud_workspace)
 expression_file = StudyFile.create!(name: 'expression_matrix.txt', upload_file_name: 'expression_matrix.txt', study_id: study.id,
                                     file_type: 'Expression Matrix', y_axis_label: 'Expression Scores')
 cluster_file = StudyFile.create!(name: 'Test Cluster', upload_file_name: 'coordinates.txt', study_id: study.id,
