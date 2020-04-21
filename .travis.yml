@@ -8,7 +8,6 @@ branches:
     - master
     - development
     - ingest-pipeline-launch
-    - ea-ci
 services:
   - docker
 before_install:
