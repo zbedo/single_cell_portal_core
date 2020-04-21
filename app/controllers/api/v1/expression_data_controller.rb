@@ -30,8 +30,8 @@ module Api
       end
 
       def render_violin
-        cluster = ApiParamUtils.get_cluster_group(params, @study)
-        selected_annotation = ApiParamUtils.get_selected_annotation(params, @study, cluster)
+        cluster = RequestUtils.get_cluster_group(params, @study)
+        selected_annotation = RequestUtils.get_selected_annotation(params, @study, cluster)
         subsample = params[:subsample].blank? ? nil : params[:subsample].to_i
         gene = @study.genes.by_name_or_id(params[:gene], @study.expression_matrix_files.map(&:id))
 
@@ -42,8 +42,8 @@ module Api
       end
 
       def render_annotation_values
-        cluster = ApiParamUtils.get_cluster_group(params, @study)
-        annotation = ApiParamUtils.get_selected_annotation(params, @study, cluster)
+        cluster = RequestUtils.get_cluster_group(params, @study)
+        annotation = RequestUtils.get_selected_annotation(params, @study, cluster)
         render json: annotation, status: 200
       end
     end
