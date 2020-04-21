@@ -6,6 +6,11 @@
     "lint": "eslint app/javascript",
     "fix-styles": "prettier-stylelint --write 'src/**/*.{css,scss}' "
   },
+  "husky": {
+    "hooks": {
+      "pre-push": "npm test"
+    }
+  },
   "dependencies": {
     "@babel/preset-react": "^7.8.3",
     "@ckeditor/ckeditor5-build-classic": "12.3.1",
@@ -48,6 +53,7 @@
     "eslint-plugin-jsx-a11y": "*",
     "eslint-plugin-prettier": "^3.1.2",
     "eslint-plugin-react": "^7.18.3",
+    "husky": "^4.2.5",
     "jest-cli": "^25.1.0",
     "jest-environment-enzyme": "^7.1.2",
     "jest-enzyme": "^7.1.2",
