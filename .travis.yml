@@ -7,7 +7,6 @@ branches:
   only:
     - master
     - development
-    - ingest-pipeline-launch
     - ea-ci
 services:
   - docker
