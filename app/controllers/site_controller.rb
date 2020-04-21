@@ -354,6 +354,7 @@ class SiteController < ApplicationController
     @user_can_edit = @study.can_edit?(current_user)
     @user_can_compute = false
     @user_can_download = @study.can_download?(current_user)
+    @user_embargoed = @study.embargoed?(current_user)
 
     if @allow_firecloud_access && @allow_computes && @study.can_compute?(current_user)
       @user_can_compute = true
@@ -1444,10 +1445,32 @@ class SiteController < ApplicationController
 
   # check various firecloud statuses/permissions, but only if a study is not 'detached'
   def set_firecloud_permissions(study_detached)
-    @allow_firecloud_access = study_detached ? false : AdminConfiguration.firecloud_access_enabled?
-    @allow_downloads = study_detached ? false : Study.firecloud_client.services_available?('GoogleBuckets')
-    @allow_computes = study_detached ? false : Study.firecloud_client.services_available?('Sam', 'Agora', 'Rawls')
-    @allow_edits = study_detached ? false : Study.firecloud_client.services_available?('Sam', 'Rawls')
+    @allow_firecloud_access = false
+    @allow_downloads = false
+    @allow_computes = false
+    @allow_edits = false
+    if !study_detached
+      begin
+        @allow_firecloud_access = AdminConfiguration.firecloud_access_enabled?
+        api_status = Study.firecloud_client.api_status
+        # reuse status object because firecloud_client.services_available? each makes a separate status call
+        # calling Hash#dig will gracefully handle any key lookup errors in case of a larger outage
+        if api_status.is_a?(Hash)
+          system_status = api_status['systems']
+          sam_ok = system_status.dig('Sam', 'ok') == true # do equality check in case 'ok' node isn't present
+          agora_ok = system_status.dig('Agora', 'ok') == true
+          rawls_ok = system_status.dig('Rawls', 'ok') == true
+          buckets_ok = system_status.dig('GoogleBuckets', 'ok') == true
+          @allow_downloads = buckets_ok
+          @allow_computes = sam_ok && agora_ok && rawls_ok
+          @allow_edits = sam_ok && rawls_ok
+        end
+      rescue => e
+        logger.error "Error checking FireCloud API status: #{e.class.name} -- #{e.message}"
+        error_context = ErrorTracker.format_extra_context(@study, {firecloud_status: api_status})
+        ErrorTracker.report_exception(e, current_user, error_context)
+      end
+    end
   end
 
   # whitelist parameters for updating studies on study settings tab (smaller list than in studies controller)

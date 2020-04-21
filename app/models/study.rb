@@ -764,20 +764,25 @@ class Study
     if user.nil? || !user.registered_for_firecloud?
       false
     else
-      begin
-        workspace_acl = Study.firecloud_client.get_workspace_acl(self.firecloud_project, self.firecloud_workspace)
-        if workspace_acl['acl'][user.email].nil?
-          # check if user has project-level permissions
-          user_client = FireCloudClient.new(user, self.firecloud_project)
-          projects = user_client.get_billing_projects
-          # billing project users can only create workspaces, so unless user is an owner, user cannot compute
-          projects.detect {|project| project['projectName'] == self.firecloud_project && project['role'] == 'Owner'}.present?
-        else
-          workspace_acl['acl'][user.email]['canCompute']
+      # don't check permissions if API is not 'ok'
+      if Study.firecloud_client.services_available?('Sam', 'Rawls', 'Agora')
+        begin
+          workspace_acl = Study.firecloud_client.get_workspace_acl(self.firecloud_project, self.firecloud_workspace)
+          if workspace_acl['acl'][user.email].nil?
+            # check if user has project-level permissions
+            user_client = FireCloudClient.new(user, self.firecloud_project)
+            projects = user_client.get_billing_projects
+            # billing project users can only create workspaces, so unless user is an owner, user cannot compute
+            projects.detect {|project| project['projectName'] == self.firecloud_project && project['role'] == 'Owner'}.present?
+          else
+            workspace_acl['acl'][user.email]['canCompute']
+          end
+        rescue => e
+          ErrorTracker.report_exception(e, user, {study: self.attributes.to_h})
+          Rails.logger.error "Unable to retrieve compute permissions for #{user.email}: #{e.message}"
+          false
         end
-      rescue => e
-        ErrorTracker.report_exception(e, user, {study: self.attributes.to_h})
-        Rails.logger.error "Unable to retrieve compute permissions for #{user.email}: #{e.message}"
+      else
         false
       end
     end
@@ -785,7 +790,8 @@ class Study
 
   # check if a user has access to a study via a user group
   def user_in_group_share?(user, *permissions)
-    if user.registered_for_firecloud
+    # check if api status is ok, otherwise exit without checking to prevent UI hanging on repeated calls
+    if user.registered_for_firecloud && Study.firecloud_client.services_available?('Sam', 'Rawls', 'Thurloe')
       group_shares = self.study_shares.keep_if {|share| share.is_group_share?}.select {|share| permissions.include?(share.permission)}.map(&:email)
       # get user's FC groups
       if user.access_token.present?
@@ -796,9 +802,15 @@ class Study
       else
         false
       end
-      user_groups = client.get_user_groups.map {|g| g['groupEmail']}
-      # use native array intersection to determine if any of the user's groups have been shared with this study at the correct permission
-      (user_groups & group_shares).any?
+      begin
+        user_groups = client.get_user_groups.map {|g| g['groupEmail']}
+        # use native array intersection to determine if any of the user's groups have been shared with this study at the correct permission
+        (user_groups & group_shares).any?
+      rescue => e
+        ErrorTracker.report_exception(e, user, {user_groups: user_groups, study: self.attributes.to_h})
+        Rails.logger.error "Unable to retrieve user groups for #{user.email}: #{e.class.name} -- #{e.message}"
+        false
+      end
     else
       false # if user is not registered for firecloud, default to false
     end
