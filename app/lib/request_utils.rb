@@ -1,4 +1,4 @@
-class ApiParamUtils
+class RequestUtils
   def self.get_selected_annotation(params, study, cluster)
     selector = params[:annotation].nil? ? params[:gene_set_annotation] : params[:annotation]
     annot_name, annot_type, annot_scope = selector.nil? ? study.default_annotation.split('--') : selector.split('--')
