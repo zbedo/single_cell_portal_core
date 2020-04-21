@@ -1,4 +1,4 @@
-<% if @study.embargoed?(current_user) %>
+<% if @user_embargoed %>
     <span class="label label-warning embargoed-file"><i class="fas fa-ban"></i> Not available until <%= @study.embargo.to_s(:long) %></span>
 <% else %>
   <% if study_file.upload_file_name.nil? && study_file.human_data %>
