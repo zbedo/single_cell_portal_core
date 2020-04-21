@@ -38,7 +38,6 @@ function defaultInit() {
   }
 }
 
-
 /**
  * Get a one-time authorization code for download, and its lifetime in seconds
  *
@@ -74,13 +73,8 @@ export async function fetchAuthCode(mock = false) {
  * @param {Boolean} mock Whether to use mock data.  Helps development, tests.
  * @returns {Promise} Promise object containing camel-cased data from API
  */
-<<<<<<< HEAD
 export async function fetchFacets(mock = false) {
-  const facets = await scpApi('/search/facets', defaultInit, mock)
-=======
-export async function fetchFacets(mock=false) {
   const facets = await scpApi('/search/facets', defaultInit(), mock)
->>>>>>> d206c17a5e82a41083081c7645702344609943cc
 
   mapFiltersForLogging(facets, true)
 
@@ -120,16 +114,27 @@ export function setMockOrigin(origin) {
  * @param {Array} genes List of gene names or identifiers to get expression data for
  *
  */
-export async function fetchExpressionViolin(studyAccession, gene, cluster, annotation, subsample, mock=false) {
+export async function fetchExpressionViolin(
+  studyAccession,
+  gene,
+  cluster,
+  annotation,
+  subsample,
+  mock = false
+) {
   const clusterParam = cluster ? `&cluster=${encodeURIComponent(cluster)}` : ''
-  const annotationParam = annotation ? `&annotation=${encodeURIComponent(annotation)}` : ''
-  const subsampleParam = subsample ? `&subsample=${encodeURIComponent(subsample)}` : ''
+  const annotationParam = annotation ?
+    `&annotation=${encodeURIComponent(annotation)}` :
+    ''
+  const subsampleParam = subsample ?
+    `&subsample=${encodeURIComponent(subsample)}` :
+    ''
   const apiUrl = `/studies/${studyAccession}/expression_data/violin?gene=${gene}${clusterParam}${annotationParam}${subsampleParam}`
   // don't camelcase the keys since those can be cluster names, so send false for the 4th argument
   return await scpApi(apiUrl, defaultInit(), mock, false)
 }
 
-export async function fetchAnnotationValues(studyAccession, mock=false) {
+export async function fetchAnnotationValues(studyAccession, mock = false) {
   const apiUrl = `/studies/${studyAccession}/expression_data/annotations`
   return await scpApi(apiUrl, defaultInit(), mock, false)
 }
@@ -141,10 +146,21 @@ export async function fetchAnnotationValues(studyAccession, mock=false) {
  * @param {Array} genes List of gene names or identifiers to get expression data for
  *
  */
-export async function fetchExpressionHeatmap(studyAccession, genes, cluster, annotation, subsample, mock=false) {
+export async function fetchExpressionHeatmap(
+  studyAccession,
+  genes,
+  cluster,
+  annotation,
+  subsample,
+  mock = false
+) {
   const clusterParam = cluster ? `&cluster=${encodeURIComponent(cluster)}` : ''
-  const annotationParam = annotation ? `&annotation=${encodeURIComponent(annotation)}` : ''
-  const subsampleParam = subsample ? `&annotation=${encodeURIComponent(subsample)}` : ''
+  const annotationParam = annotation ?
+    `&annotation=${encodeURIComponent(annotation)}` :
+    ''
+  const subsampleParam = subsample ?
+    `&annotation=${encodeURIComponent(subsample)}` :
+    ''
   const genesParam = encodeURIComponent(genes.join(','))
   const apiUrl = `/studies/${studyAccession}/expression_heatmaps?genes=${genesParam}${clusterParam}${annotationParam}${subsampleParam}`
   // don't camelcase the keys since those can be cluster names, so send false for the 4th argument
@@ -152,7 +168,10 @@ export async function fetchExpressionHeatmap(studyAccession, genes, cluster, ann
 }
 
 export function studyNameAsUrlParam(studyName) {
-  return studyName.toLowerCase().replace(/ /g, '-').replace(/[^0-9a-z-]/gi, '')
+  return studyName
+    .toLowerCase()
+    .replace(/ /g, '-')
+    .replace(/[^0-9a-z-]/gi, '')
 }
 
 /**
@@ -248,17 +267,18 @@ export async function fetchSearch(type, searchParams, mock = false) {
 export function buildSearchQueryString(type, searchParams) {
   const facetsParam = buildFacetQueryString(searchParams.facets)
 
-<<<<<<< HEAD
-  let otherParamString = ['page', 'order', 'terms', 'preset']
+  let otherParamString = [
+    'page',
+    'order',
+    'terms',
+    'preset',
+    'genes',
+    'genePage'
+  ]
     .map(param => {
       return searchParams[param] ? `&${param}=${searchParams[param]}` : ''
     })
     .join('')
-=======
-  let otherParamString = ['page', 'order', 'terms', 'preset', 'genes', 'genePage'].map(param => {
-    return searchParams[param] ? `&${param}=${searchParams[param]}` : ''
-  }).join('')
->>>>>>> d206c17a5e82a41083081c7645702344609943cc
   otherParamString = otherParamString.replace('preset=', 'preset_search=')
 
   let brandingGroupParam = ''
@@ -311,24 +331,21 @@ function getBrandingGroup(path) {
  * @param {Object} init | Object for settings, just like standard fetch `init`
  * @param {Boolean} mock | Whether to use mock data.  Helps development, tests.
  */
-<<<<<<< HEAD
-export default async function scpApi(path, init, mock = false) {
-=======
-export default async function scpApi(path, init, mock=false, camelCase=true, toJson=true) {
->>>>>>> d206c17a5e82a41083081c7645702344609943cc
+export default async function scpApi(
+  path,
+  init,
+  mock = false,
+  camelCase = true,
+  toJson = true
+) {
   if (globalMock) mock = true
   const basePath =
     mock || globalMock ? `${mockOrigin}/mock_data` : defaultBasePath
   let fullPath = basePath + path
   if (mock) fullPath += '.json' // e.g. /mock_data/search/auth_code.json
 
-<<<<<<< HEAD
   const response = await fetch(fullPath, init).catch(error => error)
-=======
-  const response = await fetch(fullPath, init)
-    .catch(error => error)
 
->>>>>>> d206c17a5e82a41083081c7645702344609943cc
   if (response.ok) {
     if (toJson) {
       const json = await response.json()
