@@ -157,6 +157,20 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end
 
+  test 'should return search results using accessions' do
+    puts "#{File.basename(__FILE__)}: #{self.method_name}"
+
+    # test single accession
+    term = Study.where(public: true).first.accession
+    execute_http_request(:get, api_v1_search_path(type: 'study', terms: term))
+    assert_response :success
+    expected_accessions = [term]
+    assert_equal expected_accessions, json['matching_accessions'],
+                 "Did not return correct array of matching accessions, expected #{expected_accessions} but found #{json['matching_accessions']}"
+
+    puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
+  end
+
   # should generate an auth code for a given user
   test 'should generate auth code' do
     puts "#{File.basename(__FILE__)}: #{self.method_name}"

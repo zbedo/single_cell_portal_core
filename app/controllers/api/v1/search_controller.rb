@@ -246,7 +246,15 @@ module Api
         when :keyword
           @studies = @studies.sort_by {|study| -study.search_weight(@term_list)[:total] }
         when :accession
-          @studies = @studies.sort_by {|study| possible_accessions.index(study.accession) }
+          @studies = @studies.sort_by do |study|
+            accession_index = possible_accessions.index(study.accession)
+            if accession_index.nil?
+              # study was not a true accession match, it matches the accession term in its description
+              # make this appear after the proper accession matches, in order of wieght match
+              accession_index = 9999 - study.search_weight(@term_list)[:total]
+            end
+            accession_index
+          end
         when :whitelist
           @studies = @studies.sort_by {|study| @whitelist.index(study.accession) }
         when :facet
