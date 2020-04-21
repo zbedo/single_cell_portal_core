@@ -7,7 +7,6 @@ branches:
   only:
     - master
     - development
-    - ea-ci
 services:
   - docker
 before_install:
