@@ -4,14 +4,9 @@ import Adapter from 'enzyme-adapter-react-16'
 configure({ adapter: new Adapter() })
 
 import { setGlobalMockFlag, setMockOrigin } from 'lib/scp-api'
-console.log('process.env.NOT_DOCKERIZED:')
-console.log(process.env.NOT_DOCKERIZED)
+
 setGlobalMockFlag(true)
-if (process.env.NOT_DOCKERIZED) {
-  setMockOrigin('http://localhost:3000')
-} else {
-  setMockOrigin('https://localhost')
-}
+setMockOrigin('http://localhost:3000')
 
 // convert scrolls to no-ops as otherwise they will error
 global.scrollTo = jest.fn()
