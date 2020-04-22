@@ -28,6 +28,7 @@ class StudyTest < ActiveSupport::TestCase
 
     # mock group list
     @user_groups = [{"groupEmail"=>"my-user-group@firecloud.org", "groupName"=>"my-user-group", "role"=>"Member"}]
+    @services_args = [String, String, String]
   end
 
   test 'should honor case in gene search within study' do
@@ -99,8 +100,8 @@ class StudyTest < ActiveSupport::TestCase
     # now simulate outage to prove checks do not happen and return false
     # each mock/expectation can only be used once, hence the duplicate declarations
     status_mock = Minitest::Mock.new
-    status_mock.expect :services_available?, false, ['Sam', 'Rawls', 'Agora']
-    status_mock.expect :services_available?, false, ['Sam', 'Rawls', 'Thurloe']
+    status_mock.expect :services_available?, false, @services_args
+    status_mock.expect :services_available?, false, @services_args
     Study.stub :firecloud_client, status_mock do
       compute_in_outage = @study.can_compute?(user)
       group_share_in_outage = @study.user_in_group_share?(user, 'Reviewer')
