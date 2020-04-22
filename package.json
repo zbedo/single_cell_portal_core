@@ -1,14 +1,14 @@
 {
   "scripts": {
     "test": "jest --coverage",
-    "ui-test": "jest test/js --testPathIgnorePatterns=scp-api.test.js",
+    "ui-test": "jest test/js --testPathIgnorePatterns=fetch/*",
     "testDebug": "node --inspect-brk node_modules/.bin/jest --runInBand",
     "lint": "eslint app/javascript",
     "fix-styles": "prettier-stylelint --write 'src/**/*.{css,scss}' "
   },
   "husky": {
     "hooks": {
-      "pre-push": "npm test"
+      "pre-push": "yarn test"
     }
   },
   "dependencies": {
