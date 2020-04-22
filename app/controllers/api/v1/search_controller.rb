@@ -250,7 +250,7 @@ module Api
             accession_index = possible_accessions.index(study.accession)
             if accession_index.nil?
               # study was not a true accession match, it matches the accession term in its description
-              # make this appear after the proper accession matches, in order of wieght match
+              # make this appear after the proper accession matches, in order of weight match
               accession_index = 9999 - study.search_weight(@term_list)[:total]
             end
             accession_index
