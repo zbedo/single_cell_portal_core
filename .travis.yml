@@ -1,20 +1,20 @@
 language: ruby
 rvm:
   - 2.5.7
-install: gem install travis
+install:
+  - gem install travis
 branches:
   only:
-  - master
-  - development
-  - ingest-pipeline-launch
+    - master
+    - development
 services:
-- docker
+  - docker
 before_install:
-- gem uninstall -v '>= 2' -i $(rvm gemdir)@global -ax bundler || true
-- gem install bundler -v '< 2'
-- sudo apt-get update && sudo apt-get -y install curl unzip jq
-- sudo curl -O https://releases.hashicorp.com/vault/1.0.1/vault_1.0.1_linux_amd64.zip
-- sudo unzip vault_1.0.1_linux_amd64.zip
-- sudo mv vault /usr/local/bin
+  - gem uninstall -v '>= 2' -i $(rvm gemdir)@global -ax bundler || true
+  - gem install bundler -v '< 2'
+  - sudo apt-get update && sudo apt-get -y install curl unzip jq
+  - sudo curl -O https://releases.hashicorp.com/vault/1.0.1/vault_1.0.1_linux_amd64.zip
+  - sudo unzip vault_1.0.1_linux_amd64.zip
+  - sudo mv vault /usr/local/bin
 script:
-- bin/load_env_secrets.sh -p secret/kdux/scp/staging/scp_config.json -s secret/kdux/scp/staging/scp_service_account.json -e test -n single-cell-portal-staging
+  - bin/load_env_secrets.sh -p secret/kdux/scp/staging/scp_config.json -s secret/kdux/scp/staging/scp_service_account.json -e test -n single-cell-portal-staging
