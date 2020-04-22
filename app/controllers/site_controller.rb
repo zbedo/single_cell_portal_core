@@ -291,7 +291,7 @@ class SiteController < ApplicationController
 
           # double check on download availability: first, check if administrator has disabled downloads
           # then check if FireCloud is available and disable download links if either is true
-          @allow_downloads = Study.firecloud_client.services_available?('GoogleBuckets')
+          @allow_downloads = Study.firecloud_client.services_available?(FireCloudClient::BUCKETS_SERVICE)
         else
           set_study_default_options
         end
@@ -749,7 +749,7 @@ class SiteController < ApplicationController
     # next check if downloads have been disabled by administrator, this will abort the download
     # download links shouldn't be rendered in any case, this just catches someone doing a straight GET on a file
     # also check if workspace google buckets are available
-    if !AdminConfiguration.firecloud_access_enabled? || !Study.firecloud_client.services_available?('GoogleBuckets')
+    if !AdminConfiguration.firecloud_access_enabled? || !Study.firecloud_client.services_available?(FireCloudClient::BUCKETS_SERVICE)
       head 503 and return
     end
 
@@ -1451,10 +1451,10 @@ class SiteController < ApplicationController
       # calling Hash#dig will gracefully handle any key lookup errors in case of a larger outage
       if api_status.is_a?(Hash)
         system_status = api_status['systems']
-        sam_ok = system_status.dig('Sam', 'ok') == true # do equality check in case 'ok' node isn't present
-        agora_ok = system_status.dig('Agora', 'ok')
-        rawls_ok = system_status.dig('Rawls', 'ok') == true
-        buckets_ok = system_status.dig('GoogleBuckets', 'ok') == true
+        sam_ok = system_status.dig(FireCloudClient::SAM_SERVICE, 'ok') == true # do equality check in case 'ok' node isn't present
+        agora_ok = system_status.dig(FireCloudClient::AGORA_SERVICE, 'ok')
+        rawls_ok = system_status.dig(FireCloudClient::RAWLS_SERVICE, 'ok') == true
+        buckets_ok = system_status.dig(FireCloudClient::BUCKETS_SERVICE, 'ok') == true
         @allow_downloads = buckets_ok
         @allow_edits = sam_ok && rawls_ok
         @allow_computes = sam_ok && rawls_ok && agora_ok
@@ -1518,7 +1518,7 @@ class SiteController < ApplicationController
   # check compute permissions for study
   def check_compute_permissions
     Rails.logger.info "check_compute_permissions"
-    if Study.firecloud_client.services_available?('Sam', 'Rawls')
+    if Study.firecloud_client.services_available?(FireCloudClient::SAM_SERVICE, FireCloudClient::RAWLS_SERVICE)
       if !user_signed_in? || !@study.can_compute?(current_user)
         @alert ='You do not have permission to perform that action.'
         respond_to do |format|

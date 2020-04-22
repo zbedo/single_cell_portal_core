@@ -793,7 +793,7 @@ class Study
       false
     else
       # don't check permissions if API is not 'ok'
-      if Study.firecloud_client.services_available?('Sam', 'Rawls', 'Agora')
+      if Study.firecloud_client.services_available?(FireCloudClient::SAM_SERVICE, FireCloudClient::RAWLS_SERVICE, FireCloudClient::AGORA_SERVICE)
         begin
           workspace_acl = Study.firecloud_client.get_workspace_acl(self.firecloud_project, self.firecloud_workspace)
           if workspace_acl['acl'][user.email].nil?
@@ -819,7 +819,7 @@ class Study
   # check if a user has access to a study via a user group
   def user_in_group_share?(user, *permissions)
     # check if api status is ok, otherwise exit without checking to prevent UI hanging on repeated calls
-    if user.registered_for_firecloud && Study.firecloud_client.services_available?('Sam', 'Rawls', 'Thurloe')
+    if user.registered_for_firecloud && Study.firecloud_client.services_available?(FireCloudClient::SAM_SERVICE, FireCloudClient::RAWLS_SERVICE, FireCloudClient::THURLOE_SERVICE)
       group_shares = self.study_shares.keep_if {|share| share.is_group_share?}.select {|share| permissions.include?(share.permission)}.map(&:email)
       # get user's FC groups
       if user.access_token.present?
