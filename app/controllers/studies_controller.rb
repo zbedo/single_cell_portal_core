@@ -23,8 +23,8 @@ class StudiesController < ApplicationController
     check_access_settings
   end
   # special before_action to make sure FireCloud is available and pre-empt any calls when down
-  #before_action :check_firecloud_status, except: [:index, :do_upload, :resume_upload, :update_status,
-  #                                                :retrieve_wizard_upload, :parse]
+  before_action :check_firecloud_status, except: [:index, :do_upload, :resume_upload, :update_status,
+                                                  :retrieve_wizard_upload, :parse]
   before_action :check_study_detached, only: [:edit, :update, :initialize_study, :sync_study, :sync_submission_outputs]
 
   ###
@@ -46,7 +46,7 @@ class StudiesController < ApplicationController
     @directories = @study.directory_listings.are_synced
     @primary_data = @study.directory_listings.primary_data
     @other_data = @study.directory_listings.non_primary_data
-    @allow_downloads = Study.firecloud_client.services_available?('GoogleBuckets') && !@study.detached
+    @allow_downloads = Study.firecloud_client.services_available?(FireCloudClient::BUCKETS_SERVICE) && !@study.detached
     @analysis_metadata = @study.analysis_metadata.to_a
     # load study default options
     set_study_default_options
@@ -592,7 +592,7 @@ class StudiesController < ApplicationController
     # next check if downloads have been disabled by administrator, this will abort the download
     # download links shouldn't be rendered in any case, this just catches someone doing a straight GET on a file
     # also check if workspace google buckets are available
-    if !AdminConfiguration.firecloud_access_enabled? || !Study.firecloud_client.services_available?('GoogleBuckets')
+    if !AdminConfiguration.firecloud_access_enabled? || !Study.firecloud_client.services_available?(FireCloudClient::BUCKETS_SERVICE)
       head 503 and return
     end
     begin
@@ -1342,7 +1342,7 @@ class StudiesController < ApplicationController
 
   # check on FireCloud API status and respond accordingly
   def check_firecloud_status
-    unless Study.firecloud_client.services_available?('Sam', 'Rawls')
+    unless Study.firecloud_client.services_available?(FireCloudClient::SAM_SERVICE, FireCloudClient::RAWLS_SERVICE)
       alert = 'Study workspaces are temporarily unavailable, so we cannot complete your request.  Please try again later.'
       respond_to do |format|
         format.js {render js: "$('.modal').modal('hide'); alert('#{alert}')" and return}
