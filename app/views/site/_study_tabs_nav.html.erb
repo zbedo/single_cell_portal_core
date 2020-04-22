@@ -16,8 +16,8 @@
     <% else %>
       <li role="presentation" class="study-nav disabled" id="study-download-nav"><a href="#study-download" data-toggle="tooltip" title="Please sign in to download data">Download <i class="fas fa-fw fa-download"></i></a></li>
     <% end %>
-    <% if @allow_firecloud_access && @user_can_compute %>
-      <% if @allow_computes %>
+    <% if @allow_firecloud_access %>
+      <% if @user_can_compute %>
         <li role="presentation" class="study-nav" id="study-analysis-nav"><a href="#study-analysis" data-toggle="tab">Analysis <i class="fas fa-fw fa-tasks"></i></a></li>
       <% else %>
         <li role="presentation" class="study-nav disabled" id="study-analysis-nav"><a href="#study-analysis" data-toggle="tooltip" title="Study workspaces are currently unavailable - please try again later.">Analysis <i class="fas fa-fw fa-tasks"></i></a></li>
