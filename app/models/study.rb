@@ -728,7 +728,15 @@ class Study
 
   # check if a give use can edit study
   def can_edit?(user)
-    user.nil? ? false : self.admins.include?(user.email) || self.user_in_group_share?(user, 'Edit')
+    if user.nil?
+      false
+    else
+      if self.admins.include?(user.email)
+        return true
+      else
+        self.user_in_group_share?(user, 'Edit')
+      end
+    end
   end
 
   # check if a given user can view study by share (does not take public into account - use Study.viewable(user) instead)
@@ -736,8 +744,16 @@ class Study
     if user.nil?
       false
     else
-      self.can_edit?(user) || self.study_shares.can_view.include?(user.email) || self.user_in_group_share?(user, 'View', 'Reviewer')
+      # use if/elsif with explicit returns to ensure skipping downstream calls
+      if self.study_shares.can_view.include?(user.email)
+        return true
+      elsif self.can_edit?(user)
+        return true
+      else
+        self.user_in_group_share?(user, 'View', 'Reviewer')
+      end
     end
+    false
   end
 
   # check if a user has access to a study's GCS bucket.  will require View or Edit permission at the user or group level
@@ -745,13 +761,25 @@ class Study
     if user.nil?
       false
     else
-      self.user == user || self.study_shares.non_reviewers.include?(user.email) || self.user_in_group_share?(user, 'View', 'Edit')
+      if self.user == user
+        return true
+      elsif self.study_shares.non_reviewers.include?(user.email)
+        return true
+      else
+        self.user_in_group_share?(user, 'View', 'Edit')
+      end
     end
   end
 
   # check if a user has permission do download data from this study (either is public and user is signed in, user is an admin, or user has a direct share)
   def can_download?(user)
-    (self.public? && user.present?) || (user.present? && user.admin?) || self.has_bucket_access?(user)
+    if self.public? && user.present?
+      return true
+    elsif user.present? && user.admin?
+      return true
+    else
+      self.has_bucket_access?(user)
+    end
   end
 
   # check if user can delete a study - only owners can

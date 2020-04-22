@@ -325,6 +325,7 @@ class SiteController < ApplicationController
     # then check individual statuses to see what to enable/disable
     # if the study is 'detached', then everything is set to false by default
     set_firecloud_permissions(@study.detached?)
+    set_study_permissions(@study.detached?)
     set_study_default_options
     # load options and annotations
     if @study.can_visualize_clusters?
@@ -350,14 +351,7 @@ class SiteController < ApplicationController
       end
     end
 
-    # set various permission variables to govern what tabs to show and decrease load times
-    @user_can_edit = @study.can_edit?(current_user)
-    @user_can_compute = false
-    @user_can_download = @study.can_download?(current_user)
-    @user_embargoed = @study.embargoed?(current_user)
-
-    if @allow_firecloud_access && @study.can_compute?(current_user)
-      @user_can_compute = true
+    if @allow_firecloud_access && @user_can_compute
       # load list of previous submissions
       workspace = Study.firecloud_client.get_workspace(@study.firecloud_project, @study.firecloud_workspace)
       @submissions = Study.firecloud_client.get_workspace_submissions(@study.firecloud_project, @study.firecloud_workspace)
@@ -1472,6 +1466,29 @@ class SiteController < ApplicationController
     end
   end
 
+  # set various study permissions based on the results of the above FC permissions
+  def set_study_permissions(study_detached)
+    @user_can_edit = false
+    @user_can_compute = false
+    @user_can_download = false
+    @user_embargoed = false
+    return if study_detached || !@allow_firecloud_access
+    begin
+      @user_can_edit = @study.can_edit?(current_user)
+      if @allow_computes
+        @user_can_compute = @study.can_compute?(current_user)
+      end
+      if @allow_downloads
+        @user_can_download = @user_can_edit ? true : @study.can_download?(current_user)
+        @user_embargoed = @user_can_edit ? false : @study.embargoed?(current_user)
+      end
+    rescue => e
+      logger.error "Error setting study permissions: #{e.class.name} -- #{e.message}"
+      error_context = ErrorTracker.format_extra_context(@study)
+      ErrorTracker.report_exception(e, current_user, error_context)
+    end
+  end
+
   # whitelist parameters for updating studies on study settings tab (smaller list than in studies controller)
   def study_params
     params.require(:study).permit(:name, :description, :public, :embargo, :cell_count, :default_options => [:cluster, :annotation, :color_profile, :expression_label, :deliver_emails, :cluster_point_size, :cluster_point_alpha, :cluster_point_border], study_shares_attributes: [:id, :_destroy, :email, :permission])
@@ -1484,6 +1501,7 @@ class SiteController < ApplicationController
 
   # make sure user has view permissions for selected study
   def check_view_permissions
+    Rails.logger.info "check_view_permissions"
     unless @study.public?
       if (!user_signed_in? && !@study.public?)
         authenticate_user!
@@ -1499,6 +1517,7 @@ class SiteController < ApplicationController
 
   # check compute permissions for study
   def check_compute_permissions
+    Rails.logger.info "check_compute_permissions"
     if Study.firecloud_client.services_available?('Sam', 'Rawls')
       if !user_signed_in? || !@study.can_compute?(current_user)
         @alert ='You do not have permission to perform that action.'
