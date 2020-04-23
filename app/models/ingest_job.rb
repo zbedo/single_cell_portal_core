@@ -6,10 +6,8 @@
 class IngestJob
   include ActiveModel::Model
 
-  # for generating instance-specific URLs for success emails of convention metadata files
+  # for getting the latest convention version
   include Api::V1::Concerns::ConventionSchemas
-  include Rails.application.routes.url_helpers
-  URL_OPTIONS = Rails.application.config.action_controller[:default_url_options].dup.freeze
 
   # Name of pipeline submission running in GCP (from [PapiClient#run_pipeline])
   attr_accessor :pipeline_name
@@ -384,20 +382,17 @@ class IngestJob
       message << "Gene-level entries created: #{genes}"
     when 'Metadata'
       if self.study_file.use_metadata_convention
-        project_name = 'alexandria_convention'
+        project_name = 'alexandria_convention' # hard-coded is fine for now, consider implications if we get more projects
         current_schema_version = get_latest_schema_version(project_name)
-        schema_url = api_v1_metadata_schemas_load_convention_schema_url(project_name: project_name,
-                                                                        version: current_schema_version,
-                                                                        schema_format: 'json',
-                                                                        host: URL_OPTIONS[:host],
-                                                                        protocol: URL_OPTIONS[:protocol])
+        schema_url = 'https://github.com/broadinstitute/single_cell_portal/wiki/Metadata-Convention'
         message << "This metadata file was validated against the latest <a href='#{schema_url}'>Metadata Convention</a>"
+        message << "Convention version: <strong>#{project_name}/#{current_schema_version}</strong>"
       end
       cell_metadata = CellMetadatum.where(study_id: self.study.id, study_file_id: self.study_file.id)
       message << "Entries created:"
       cell_metadata.each do |metadata|
         unless metadata.nil?
-          message << "#{metadata.name}: #{metadata.annotation_type}#{metadata.values.any? ? ' (' + metadata.values.join(', ') + ')' : nil}"
+          message << get_annotation_message(annotation_source: metadata)
         end
       end
     when 'Cluster'
@@ -407,7 +402,7 @@ class IngestJob
         if cluster.cell_annotations.any?
           message << "Annotations:"
           cluster.cell_annotations.each do |annot|
-            message << "#{annot['name']}: #{annot['type']}#{annot['type'] == 'group' ? ' (' + annot['values'].join(',') + ')' : nil}"
+            message << self.get_annotation_message(annotation_source: cluster, cell_annotation: annot)
           end
         end
         message << "Total points in cluster: #{cluster.points}"
@@ -462,6 +457,37 @@ class IngestJob
   def log_error_messages
     self.event_messages.each do |message|
       Rails.logger.error "#{self.pipeline_name} log: #{message}"
+    end
+  end
+
+  # render out a list of annotations, or message stating why list cannot be shown (e.g. too long)
+  #
+  # *params*
+  #  - +annotation_source+ (CellMetadatum/ClusterGroup) => Source of annotation, i.e. parent class instance
+  #  - +cell_annotation+ (Hash) => Cell annotation from a ClusterGroup (defaults to nil)
+  #
+  # *returns*
+  #  - (String) => String showing annotation information for email
+  def get_annotation_message(annotation_source:, cell_annotation: nil)
+    case annotation_source.class
+    when CellMetadatum
+      message = "#{annotation_source.name}: #{annotation_source.annotation_type}"
+      if annotation_source.can_visualize?
+        values = annotation_source.values.any? ? ' (' + annotation_source.values.join(', ') + ')' : ''
+      else
+        values = ' (List too large for email)'
+      end
+      message + values
+    when ClusterGroup
+      message = "#{cell_annotation['name']}: #{cell_annotation['type']}"
+      if annotation_source.can_visualize_cell_annotation?(cell_annotation)
+        values = cell_annotation['type'] == 'group' ? ' (' + cell_annotation['values'].join(',') + ')' : ''
+      else
+        values = ' (List too large for email)'
+      end
+      message + values
+    else
+      nil
     end
   end
 end
