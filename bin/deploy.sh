@@ -91,6 +91,7 @@ function main {
     echo "### COMPLETED ###"
 
     # init repo if this is the first deploy on this host
+    $SSH_COMMAND "if [ ! -d $DESTINATION_BASE_DIR ]; then mkdir -p $DESTINATION_BASE_DIR; fi"
     run_remote_command "if [ ! -d .git ]; then sudo rm -rf ./* && git clone $SCP_REPO .; fi"
 
     # move secrets to remote host
