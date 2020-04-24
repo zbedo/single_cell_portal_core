@@ -26,6 +26,10 @@ module Api
           key :description, 'Keyword and Faceted search operations'
         end
         tag do
+          key :name, 'ExpressionData'
+          key :description, 'Gene Expression data rendering service'
+        end
+        tag do
           key :name, 'Status'
           key :description, 'Status operations'
         end
@@ -94,6 +98,7 @@ module Api
           Taxon,
           AnalysisConfiguration,
           ExternalResource,
+          Api::V1::ExpressionDataController,
           Api::V1::StudiesController,
           Api::V1::StudyFilesController,
           Api::V1::StudyFileBundlesController,
