@@ -31,7 +31,7 @@
 //= require jquery.stickyPanel
 //= require clipboard.min
 //= require scp-igv
-//= require scp-ideogram
+//= require scp-ideogram-infercnv
 //= require scp-dot-plot
 
 var fileUploading = false;
