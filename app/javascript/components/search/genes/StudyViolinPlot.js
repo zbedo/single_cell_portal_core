@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDna } from '@fortawesome/free-solid-svg-icons'
+import Plot from 'react-plotly.js'
 
 import { fetchExpressionViolin } from 'lib/scp-api'
 
@@ -13,6 +14,7 @@ function getGraphElementId(study, gene) {
 export default function StudyViolinPlot({ study, gene }) {
   const [isLoaded, setIsLoaded] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [plotInfo, setPlotInfo] = useState({data: [],layout: {}})
   const [clusterOptions, setClusterOptions] = useState([])
   const [annotationOptions, setAnnotationOptions] = useState({ 'Study Wide': [], 'Cluster-Based': [] })
   const [subsamplingOptions, setSubsamplingOptions] = useState([])
@@ -63,7 +65,7 @@ export default function StudyViolinPlot({ study, gene }) {
       annotation: results.rendered_annotation,
       subsample: results.rendered_subsample
     })
-    window.Plotly.newPlot(getGraphElementId(study, gene), expressionData, expressionLayout)
+    setPlotInfo({data: expressionData, layout: expressionLayout})
   }
 
   useEffect(() => {
@@ -78,7 +80,9 @@ export default function StudyViolinPlot({ study, gene }) {
   return (
     <div className="row">
       <div className="col-md-10">
-        <div className="expression-graph" id={ getGraphElementId(study, gene) }></div>
+        <div className="expression-graph">
+          <Plot data={plotInfo.data} layout={plotInfo.layout}/>
+        </div>
         { isLoading && <FontAwesomeIcon icon={faDna} className="gene-load-spinner"/> }
         <span className="gene-title">{gene}</span>
       </div>

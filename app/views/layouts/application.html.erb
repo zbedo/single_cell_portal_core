@@ -85,7 +85,6 @@
 
   <%= nonced_javascript_pack_tag 'application' %>
   <%= nonced_javascript_include_tag 'application' %>
-  <%= nonced_javascript_include_tag "https://cdn.plot.ly/plotly-1.47.4.min.js" %>
   <%= nonced_javascript_include_tag "https://cdn.datatables.net/plug-ins/1.10.15/sorting/natural.js" %>
   <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
       gaTrack('<%= javascript_safe_url(request.fullpath) %>', 'Single Cell Portal');
