@@ -91,7 +91,7 @@ function main {
     echo "### COMPLETED ###"
 
     # init repo if this is the first deploy on this host
-    run_remote_command "if [ ! -d .git ]; then rm -rf ./* && git clone $SCP_REPO .; fi"
+    run_remote_command "if [ ! -d .git ]; then sudo rm -rf ./* && git clone $SCP_REPO .; fi"
 
     # move secrets to remote host
     echo "### migrating secrets to remote host ###"
