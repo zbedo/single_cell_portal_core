@@ -30,6 +30,7 @@ import ClassicEditor from '@ckeditor/ckeditor5-build-classic'
 // Below import resolves to '/app/javascript/components/HomePageContent.js'
 import HomePageContent from 'components/HomePageContent'
 import Covid19PageContent from 'components/covid19/Covid19PageContent'
+import Plotly from 'plotly.js'
 import { logPageView, logClick } from 'lib/metrics-api'
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -72,6 +73,7 @@ window.Spinner = Spinner
 window.morpheus = morpheus
 window.igv = igv
 window.Ideogram = Ideogram
+window.Plotly = Plotly
 
 /*
  * For down the road, when we use ES6 imports in SCP JS app code
