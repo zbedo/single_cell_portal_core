@@ -16,3 +16,7 @@ global.scrollTo = jest.fn()
 global.ga = function(mock1, mock2, mock3, mock4) {
   return
 }
+
+global.URL = {
+  createObjectURL: () => { return ''}
+}
