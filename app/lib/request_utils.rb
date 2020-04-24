@@ -55,4 +55,13 @@ class RequestUtils
     end
     page_num
   end
+
+  # TODO: remove regex characters, except for ()
+  def self.sanitize_search_param(parameter)
+    if parameter.is_a?(Array)
+      parameter.map(&:strip)
+    else
+      parameter.split(/[\s,]/).map(&:strip)
+    end
+  end
 end

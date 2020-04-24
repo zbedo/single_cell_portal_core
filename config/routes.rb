@@ -46,7 +46,9 @@ Rails.application.routes.draw do
           get 'studies/:accession/download', to: 'site#download_data', as: :site_study_download_data
           get 'studies/:accession/stream', to: 'site#stream_data', as: :site_study_stream_data
           # expression data routes
-          get 'studies/:accession/expression_data/:data_type', to: 'expression_data#show', as: :expression_data
+          get 'studies/:accession/expression_data/violin', to: 'expression_data#violin', as: :site_study_expression_violin
+          get 'studies/:accession/expression_data/heatmap', to: 'expression_data#heatmap', as: :site_study_expression_heatmap
+          get 'studies/:accession/annotations/:data_type', to: 'expression_data#annotations', as: :site_study_get_annotations
           # analysis routes
           get 'analyses', to: 'site#analyses', as: :site_analyses
           get 'analyses/:namespace/:name/:snapshot', to: 'site#get_analysis', as: :site_get_analysis

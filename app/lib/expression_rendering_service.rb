@@ -1,11 +1,11 @@
 class ExpressionRenderingService
-  def self.get_global_expression_render_data(study,
-                                             subsample,
-                                             gene,
-                                             cluster,
-                                             selected_annotation,
-                                             boxpoints,
-                                             current_user)
+  def self.get_single_gene_expression_render_data(study,
+                                                  subsample,
+                                                  gene,
+                                                  cluster,
+                                                  selected_annotation,
+                                                  boxpoints,
+                                                  current_user)
     render_data = {}
 
     render_data[:y_axis_title] = load_expression_axis_title(study)
@@ -23,6 +23,63 @@ class ExpressionRenderingService
     render_data[:rendered_annotation] = "#{selected_annotation[:name]}--#{selected_annotation[:type]}--#{selected_annotation[:scope]}"
     render_data[:rendered_subsample] = subsample
     render_data
+  end
+
+  # return a text file for morpheus to use when rendering dotplots/heatmaps
+  # supports both expression data (gct format) and annotation data
+  def self.get_morpheus_text_data(study: nil,
+                                  file_type: nil,
+                                  genes: nil,
+                                  cluster: nil,
+                                  collapse_by: nil,
+                                  selected_annotation: nil)
+    cells = cluster.concatenate_data_arrays('text', 'cells')
+    row_data = []
+    case file_type
+    when :gct
+      headers = %w(Name Description)
+      cols = cells.size
+      cells.each do |cell|
+        headers << cell
+      end
+      rows = []
+      genes.each do |gene|
+        row = [gene['name'], ""]
+        case collapse_by
+        when 'z-score'
+          vals = Gene.z_score(gene['scores'], cells)
+          row += vals
+        when 'robust-z-score'
+          vals = Gene.robust_z_score(gene['scores'], cells)
+          row += vals
+        else
+          cells.each do |cell|
+            row << gene['scores'][cell].to_f
+          end
+        end
+        rows << row.join("\t")
+      end
+      row_data = ['#1.2', [rows.size, cols].join("\t"), headers.join("\t"), rows.join("\n")]
+    when :annotation
+      headers = ['NAME', selected_annotation[:name]]
+      if selected_annotation[:scope] == 'cluster'
+        annotations = cluster.concatenate_data_arrays(selected_annotation[:name], 'annotations')
+      else
+        study_annotations = study.cell_metadata_values(selected_annotation[:name], selected_annotation[:type])
+        annotations = []
+        cells.each do |cell|
+          annotations << study_annotations[cell]
+        end
+      end
+      # assemble rows of data
+      rows = []
+      cells.each_with_index do |cell, index|
+        rows << [cell, annotations[index]].join("\t")
+      end
+
+      row_data = [headers.join("\t"), rows.join("\n")]
+    end
+    row_data.join("\n")
   end
 
 
