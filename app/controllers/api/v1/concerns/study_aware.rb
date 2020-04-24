@@ -5,7 +5,7 @@ module Api
         extend ActiveSupport::Concern
 
         def set_study
-          @study = Study.find_by(accession: params[:study_id])
+          @study = Study.find_by(accession: params[:accession])
           if @study.nil? || @study.queued_for_deletion?
             head 404 and return
           end

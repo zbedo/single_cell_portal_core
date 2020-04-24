@@ -37,7 +37,6 @@ Rails.application.routes.draw do
           member do
             post 'sync', to: 'studies#sync_study'
           end
-          resources :expression_data, only: [:show], param: :data_type
         end
 
         get 'status', to: 'status#index'
@@ -46,6 +45,9 @@ Rails.application.routes.draw do
           get 'studies/:accession', to: 'site#view_study', as: :site_study_view
           get 'studies/:accession/download', to: 'site#download_data', as: :site_study_download_data
           get 'studies/:accession/stream', to: 'site#stream_data', as: :site_study_stream_data
+          # expression data routes
+          get 'studies/:accession/expression_data/:data_type', to: 'expression_data#show', as: :expression_data
+          # analysis routes
           get 'analyses', to: 'site#analyses', as: :site_analyses
           get 'analyses/:namespace/:name/:snapshot', to: 'site#get_analysis', as: :site_get_analysis
           get 'studies/:accession/analyses/:namespace/:name/:snapshot', to: 'site#get_study_analysis_config', as: :site_get_study_analysis_config
