@@ -1,0 +1,58 @@
+
+.terra-style {
+  font-family: "Montserrat", sans-serif;
+
+  h1 {
+    font-size: 16px;
+    font-weight: bold;
+    padding: 16px 0 16px 15px;
+  }
+
+  .well {
+    border: none;
+    padding: 0;
+    border-radius: 0;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+    background: none;
+  }
+
+  table.table {
+    tbody {
+      background: #fff;
+    }
+    td:first-of-type {
+      padding-left: 1em;
+    }
+    .action-column {
+      min-width: 220px;
+    }
+  }
+
+  .dropdown-menu > li > a {
+    padding: 0.5em 1em;
+  }
+
+  table.dataTable thead .sorting:after, table.dataTable thead .sorting_asc:after, table.dataTable thead .sorting_desc:after {
+    opacity: 1;
+    color: $action-color;
+    position: relative;
+    display: inline;
+    margin-left: 0.5em;
+    top: 0;
+    right: 0;
+  }
+
+  .btn-circle {
+    border-radius: 1.5em;
+    border-color: $action-color;
+    color: $action-color;
+    min-width: 2.5em;
+
+    &.btn-danger {
+      border-color: $danger-color;
+      background: none;
+      color: $danger-color;
+    }
+  }
+}

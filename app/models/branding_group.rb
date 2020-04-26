@@ -7,7 +7,7 @@ class BrandingGroup
   field :name_as_id, type: String
   field :tag_line, type: String
   field :background_color, type: String
-  field :font_family, type: String, default: 'Helvetica Neue, sans-serif'
+  field :font_family, type: String, default: 'Montserrat, sans-serif'
   field :font_color, type: String, default: '#333333'
 
   has_many :studies

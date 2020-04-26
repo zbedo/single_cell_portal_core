@@ -1,16 +1,16 @@
-<h1>My Studies</h1>
+<div class="terra-style">
+<h1>MY STUDIES <%= scp_link_to "<span class='fas fa-fw fa-lg fa-plus-circle'>".html_safe, new_study_path, class: 'action', id: 'create-new-study' %></h1>
 <div class="row">
 	<div class="col-md-12">
 		<div class="table-responsive">
 			<div class="well">
-				<table class="table table-striped" id="studies">
+				<table class="table" id="studies">
 					<thead>
 					<tr>
             <th>Name</th>
             <th>Owner</th>
-						<th>Description</th>
 						<th>Visibility</th>
-            <th># Files</th>
+            <th>#&nbsp;Files</th>
 						<th class="actions">Actions</th>
 					</tr>
 					</thead>
@@ -18,26 +18,61 @@
 					<tbody>
 					<% @studies.each do |study| %>
 						<tr class="study-entry">
-              <td class="study-name"><%= scp_link_to study.name, view_study_path(accession: study.accession, study_name: study.url_safe_name), title: 'View Live', data: {toggle: 'tooltip', placement: 'right'}, id: "#{study.url_safe_name}-view-live-link" %></td>
+              <td class="study-name"><%= scp_link_to study.name, view_study_path(accession: study.accession, study_name: study.url_safe_name), title: 'View Live', data: {toggle: 'tooltip', placement: 'right'}, id: "#{study.url_safe_name}-view-live-link" %><br>
+                <%= strip_tags(truncate_html(study.description, length: 50)) %>
+              </td>
               <td><%= study.user.email %></td>
-							<td><%= strip_tags(truncate_html(study.description, length: 50)) %></td>
 							<td><%= study.visibility %></td>
               <td id="<%= study.url_safe_name %>-study-file-count"><%= study.total_file_count %></td>
-							<td>
+							<td class="action-column">
                 <% if study.can_edit?(current_user) %>
-                  <%= scp_link_to "<span class='fas fa-info-circle'></span> Show Details".html_safe, study_path(study), class: "btn btn-xs btn-info #{study.url_safe_name}-show" %>
-                  <%= scp_link_to "<span class='fas fa-upload'></span> Upload/Edit Data".html_safe, initialize_study_path(study), class: "btn btn-xs btn-success #{study.url_safe_name}-upload" %>
-                  <%= scp_link_to "<span class='fas fa-sync-alt'></span> Sync Workspace".html_safe, sync_study_path(study), class: "btn btn-xs btn-warning #{study.url_safe_name}-sync sync-button" %>
-                  <%= scp_link_to "<span class='fas fa-edit'></span> Edit Study".html_safe, edit_study_path(study), class: "btn btn-xs btn-primary #{study.url_safe_name}-edit" %>
+                  <div class="btn-group">
+                    <button class="btn btn-default dropdown-toggle btn-circle"
+                            type="button"
+                            data-toggle="dropdown"
+                            aria-haspopup="true"
+                            aria-expanded="false">
+                      <span class="fas fa-ellipsis-v"></span>
+                    </button>
+                    <ul class="dropdown-menu">
+                      <li>
+                        <%= scp_link_to "<span class='text-info fas fa-info-circle'></span> Show Details".html_safe, study_path(study), class: "#{study.url_safe_name}-show" %>
+                      </li>
+                      <li>
+                         <%= scp_link_to "<span class='text-success fas fa-upload'></span> Upload/Edit Data".html_safe, initialize_study_path(study), class: "#{study.url_safe_name}-upload" %>
+                      </li>
+                      <li>
+                        <%= scp_link_to "<span class='text-warning fas fa-sync-alt'></span> Sync Workspace".html_safe, sync_study_path(study), class: "#{study.url_safe_name}-sync sync-button" %>
+                      </li>
+                      <li>
+                        <%= scp_link_to "<span class='text-primary fas fa-edit'></span> Edit Study".html_safe, edit_study_path(study), class: "#{study.url_safe_name}-edit" %>
+                      </li>
+                    </ul>
+                  </div>
                   <% if study.can_delete?(current_user) %>
-                    <%= scp_link_to "<span class='fas fa-trash'></span> Delete Study & Workspace".html_safe, study_path(study),
-                                    class: "btn btn-xs btn-danger delete-btn #{study.url_safe_name}-delete",
-                                    title: 'Delete everything, including Terra workspace' , method: :delete,
-                                    data: {toggle: 'tooltip', placement: 'top'} %>
-                    <%= scp_link_to "<span class='fas fa-trash'></span> Delete Study Only".html_safe, study_path(id: study.id, workspace: 'persist'),
-                                    class: "btn btn-xs btn-danger delete-btn #{study.url_safe_name}-delete-local",
-                                    title: 'Delete all database records but keep Terra workspace' , method: :delete,
-                                    data: {toggle: 'tooltip', placement: 'top', workspace: 'persist'} %>
+                    <div class="btn-group">
+                      <button class="btn btn-default dropdown-toggle btn-circle btn-danger"
+                              type="button"
+                              data-toggle="dropdown"
+                              aria-haspopup="true"
+                              aria-expanded="false">
+                        <span class='fas fa-trash'></span>
+                      </button>
+                      <ul class="dropdown-menu">
+                        <li>
+                          <%= scp_link_to "<span class='text-danger fas fa-trash'></span> Delete Study & Workspace".html_safe, study_path(study),
+                                          class: "#{study.url_safe_name}-delete",
+                                          title: 'Delete everything, including Terra workspace' , method: :delete,
+                                          data: {toggle: 'tooltip', placement: 'top'} %>
+                        </li>
+                        <li>
+                          <%= scp_link_to "<span class='text-danger fas fa-trash'></span> Delete Study Only".html_safe, study_path(id: study.id, workspace: 'persist'),
+                                          class: "#{study.url_safe_name}-delete-local",
+                                          title: 'Delete all database records but keep Terra workspace' , method: :delete,
+                                          data: {toggle: 'tooltip', placement: 'top', workspace: 'persist'} %>
+                        </li>
+                      </ul>
+                    </div>
                   <% end %>
                 <% end %>
               </td>
@@ -47,9 +82,6 @@
 				</table>
 			</div>
 		</div>
-		<p>
-      <%= scp_link_to "<span class='fas fa-fw fa-plus'></span> New Study".html_safe, new_study_path, class: 'btn btn-lg btn-success', id: 'create-new-study' %>
-    </p>
 	</div>
 </div>
 <div class="modal fade" id="sync-modal" role="dialog" aria-labelledby="sync-modal-label" aria-hidden="true">
@@ -66,6 +98,7 @@
       </div>
     </div>
   </div>
+</div>
 </div>
 <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 
