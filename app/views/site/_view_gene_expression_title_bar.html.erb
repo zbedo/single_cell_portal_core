@@ -10,5 +10,7 @@
 <script>
   document.querySelector('.study-lead').parentElement.innerHTML +=
     '<div id="ideogramSearchResultsContainer"></div>';
+  window.SCP.taxid = '<%= @taxid %>';
+  window.SCP.organism = '<%= @organism %>';
   createSearchResultsIdeogram();
 </script>

@@ -1,11 +1,10 @@
 /* eslint-disable */
 
-var ensemblBase = 'https://rest.ensembl.org';
-var organism = 'mouse';
-var taxid = '10090';
 var chrHeight = 90;
 var shape = 'triangle';
 var left = 0;
+
+var ensemblBase = 'https://rest.ensembl.org';
 
 var searchResultsLegend = [{
   name: 'Click paralog to search',
@@ -30,7 +29,9 @@ async function fetchEnsembl(path, body=null, method='GET') {
  * Fetch paralogs of searched gene
  */
 async function fetchParalogPositions(annot, annots) {
-  // var taxid = Ideogram.config.taxid;
+  var taxid = window.SCP.taxid;
+  var organism = window.SCP.organism;
+
   var orgUnderscored = organism.replace(/-/g, '_');
 
   var params = '&format=condensed&type=paralogues&target_taxon=' + taxid;
@@ -64,15 +65,13 @@ async function fetchParalogPositions(annot, annots) {
 }
 
 async function plotGeneAndParalogs(geneSymbols) {
+  var organism = window.SCP.organism;
 
   // Refine style
   document.querySelectorAll('.chromosome').forEach(chromosome => {
     chromosome.style.cursor = '';
   })
-  var lastChr = [...document.querySelectorAll('.chromosome-set')].slice(-1)[0]
   var legendLeft = left - 90 - 40;
-  console.log('legendLeft')
-  console.log(legendLeft)
   var topPx = chrHeight + 20;
   var style =
     `float: left; position: relative; top: -${topPx}px; left: ${legendLeft}px;`;
@@ -129,6 +128,8 @@ function createSearchResultsIdeogram() {
     $('#_ideogramOuterWrap').html('')
   }
 
+  var organism = window.SCP.organism;
+
   $('#ideogramWarning, #ideogramTitle').remove();
 
   document.querySelector('#ideogramSearchResultsContainer').style =
@@ -139,9 +140,9 @@ function createSearchResultsIdeogram() {
 
   window.ideoConfig = {
     container: '#ideogramSearchResultsContainer',
-    organism: 'mouse',
+    organism: organism.toLowerCase().replace(/ /g, '-'),
     chrHeight: 80,
-    chrLabelSize: 10,
+    chrLabelSize: 11,
     annotationHeight: 5,
     chrWidth: 8,
     dataDir: 'https://unpkg.com/ideogram@1.19.0/dist/data/bands/native/',
@@ -163,5 +164,5 @@ function createSearchResultsIdeogram() {
     }
   }
 
-  window.ideogram = new Ideogram(window.ideoConfig)
+  window.ideogram = new Ideogram(window.ideoConfig);
 }
