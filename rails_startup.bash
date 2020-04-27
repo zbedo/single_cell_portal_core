@@ -13,10 +13,10 @@ then
     sudo -E -u app -H bundle exec rake NODE_ENV=production RAILS_ENV=$PASSENGER_APP_ENV SECRET_KEY_BASE=$SECRET_KEY_BASE assets:clean
     if [ ! -d /home/app/webapp/node_modules ]; then
         echo "*** DETECTED FRESH INSTALLATION, UPGRADING PACKAGES AND RUNNING FORCE INSTALLATION ***"
-        sudo -E -u app -H rake NODE_ENV=production RAILS_ENV=$PASSENGER_APP_ENV /home/app/webapp/bin yarn upgrade
-        sudo -E -u app -H rake NODE_ENV=production RAILS_ENV=$PASSENGER_APP_ENV /home/app/webapp/bin yarn install --force
+        sudo -E -u app -H NODE_ENV=production RAILS_ENV=$PASSENGER_APP_ENV /home/app/webapp/bin yarn upgrade
+        sudo -E -u app -H NODE_ENV=production RAILS_ENV=$PASSENGER_APP_ENV /home/app/webapp/bin yarn install --force
     else
-        sudo -E -u app -H rake NODE_ENV=production RAILS_ENV=$PASSENGER_APP_ENV /home/app/webapp/bin yarn install
+        sudo -E -u app -H NODE_ENV=production RAILS_ENV=$PASSENGER_APP_ENV /home/app/webapp/bin yarn install
     fi
     sudo -E -u app -H bundle exec rake NODE_ENV=production RAILS_ENV=$PASSENGER_APP_ENV SECRET_KEY_BASE=$SECRET_KEY_BASE assets:precompile
     echo "*** COMPLETED ***"
