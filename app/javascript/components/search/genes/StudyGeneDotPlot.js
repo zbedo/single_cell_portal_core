@@ -18,8 +18,8 @@ export default function StudyGeneDotPlot({ study, genes }) {
     if (study.gene_matches.length > 1) {
       const geneParam = genes.join('+')
       window.renderMorpheusDotPlot(
-        `/single_cell/study/${study.accession}/${studyNameAsUrlParam(study.name)}/expression_query?search[genes]=${geneParam}&row_centered=&row_centered=&cluster=&request_user_token=${userState.accessToken}`,
-        `/single_cell/study/${study.accession}/${studyNameAsUrlParam(study.name)}/annotation_query?cluster=&annotation=&request_user_token=${userState.accessToken}`,
+        `/single_cell/api/v1/site/studies/${study.accession}/expression_data/heatmap?genes=${geneParam}&cluster=`,
+        `/single_cell/api/v1/site/studies/${study.accession}/annotations/text?cluster=&annotation=`,
         'CLUSTER',
         'group',
         `#expGraph${study.accession}`,
