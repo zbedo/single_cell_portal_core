@@ -10,10 +10,15 @@ echo "*** COMPLETED ***"
 if [[ $PASSENGER_APP_ENV = "production" ]] || [[ $PASSENGER_APP_ENV = "staging" ]] || [[ $PASSENGER_APP_ENV = "pentest" ]]
 then
     echo "*** PRECOMPILING ASSETS ***"
-    sudo -E -u app -H bundle exec rake NODE_ENV=production RAILS_ENV=$PASSENGER_APP_ENV SECRET_KEY_BASE=$SECRET_KEY_BASE yarn:install
     sudo -E -u app -H bundle exec rake NODE_ENV=production RAILS_ENV=$PASSENGER_APP_ENV SECRET_KEY_BASE=$SECRET_KEY_BASE assets:clean
+    if [ ! -d /home/app/webapp/node_modules ]; then
+        echo "*** DETECTED FRESH INSTALLATION, UPGRADING PACKAGES AND RUNNING FORCE INSTALLATION ***"
+        sudo -E -u app -H rake NODE_ENV=production RAILS_ENV=$PASSENGER_APP_ENV /home/app/webapp/bin yarn upgrade
+        sudo -E -u app -H rake NODE_ENV=production RAILS_ENV=$PASSENGER_APP_ENV /home/app/webapp/bin yarn install --force
+    else
+        sudo -E -u app -H rake NODE_ENV=production RAILS_ENV=$PASSENGER_APP_ENV /home/app/webapp/bin yarn install
+    fi
     sudo -E -u app -H bundle exec rake NODE_ENV=production RAILS_ENV=$PASSENGER_APP_ENV SECRET_KEY_BASE=$SECRET_KEY_BASE assets:precompile
-    sudo -E -u app -H bundle exec rake NODE_ENV=production RAILS_ENV=$PASSENGER_APP_ENV SECRET_KEY_BASE=$SECRET_KEY_BASE webpacker:compile
     echo "*** COMPLETED ***"
 elif [[ $PASSENGER_APP_ENV = "development" ]]; then
     echo "*** UPGRADING/COMPILING NODE MODULES ***"
