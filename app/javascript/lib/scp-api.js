@@ -121,8 +121,8 @@ export async function fetchExpressionViolin(studyAccession, gene, cluster, annot
   return await scpApi(apiUrl, defaultInit(), mock, false)
 }
 
-export async function fetchAnnotationValues(studyAccession, mock=false) {
-  const apiUrl = `/studies/${studyAccession}/expression_data/annotations`
+export async function fetchAnnotationValues(studyAccession, type='json', mock=false) {
+  const apiUrl = `/site/studies/${studyAccession}/annotations/${type}`
   return await scpApi(apiUrl, defaultInit(), mock, false)
 }
 
