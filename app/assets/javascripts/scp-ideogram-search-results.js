@@ -119,6 +119,8 @@ function handleSearch(event) {
 }
 
 function onClickAnnot(annot) {
+  document.querySelector('#search_genes').value = annot.name;
+  document.querySelector('#perform-gene-search').click();
   plotGeneAndParalogs([annot.name]);
 }
 
