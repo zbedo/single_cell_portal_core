@@ -11,13 +11,10 @@ if [[ $PASSENGER_APP_ENV = "production" ]] || [[ $PASSENGER_APP_ENV = "staging" 
 then
     echo "*** PRECOMPILING ASSETS ***"
     sudo -E -u app -H bundle exec rake NODE_ENV=production RAILS_ENV=$PASSENGER_APP_ENV SECRET_KEY_BASE=$SECRET_KEY_BASE assets:clean
-    if [ ! -d /home/app/webapp/node_modules ]; then
-        echo "*** DETECTED FRESH INSTALLATION, UPGRADING PACKAGES AND RUNNING FORCE INSTALLATION ***"
-        sudo -E -u app -H NODE_ENV=production RAILS_ENV=$PASSENGER_APP_ENV /home/app/webapp/bin/yarn install --force
-        sudo -E -u app -H NODE_ENV=production RAILS_ENV=$PASSENGER_APP_ENV /home/app/webapp/bin/yarn upgrade
-    else
-        sudo -E -u app -H NODE_ENV=production RAILS_ENV=$PASSENGER_APP_ENV /home/app/webapp/bin/yarn install
-    fi
+    sudo -E -u app -H NODE_ENV=production RAILS_ENV=$PASSENGER_APP_ENV yarn install --force
+    # since node-sass has OS-dependent bindings, calling upgrade will force those bindings to install and prevent
+    # the call to rake assets:precompile from failing due to the 'vendor' directory not being there
+    sudo -E -u app -H NODE_ENV=production RAILS_ENV=$PASSENGER_APP_ENV yarn upgrade node-sass
     sudo -E -u app -H bundle exec rake NODE_ENV=production RAILS_ENV=$PASSENGER_APP_ENV SECRET_KEY_BASE=$SECRET_KEY_BASE assets:precompile
     echo "*** COMPLETED ***"
 elif [[ $PASSENGER_APP_ENV = "development" ]]; then
@@ -26,12 +23,6 @@ elif [[ $PASSENGER_APP_ENV = "development" ]]; then
     sudo -E -u app -H mkdir -p /home/app/.cache/yarn
     sudo -E -u app -H yarn install --force
     sudo -E -u app -H /home/app/webapp/bin/webpack
-    if [ $? -ne 0 ]; then
-        echo "***Webpack failed, attempting clean reinstall***"
-        # rebuild sass in case you are switching between containerized/non containerized (this is a no-op if the correct files are already built)
-        sudo -E -u app -H yarn install --force
-        sudo -E -u app -H /home/app/webapp/bin/webpack
-    fi
 fi
 if [[ -n $TCELL_AGENT_APP_ID ]] && [[ -n $TCELL_AGENT_API_KEY ]] ; then
     echo "*** CONFIGURING TCELL WAF ***"
