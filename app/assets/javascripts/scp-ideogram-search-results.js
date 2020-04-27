@@ -5,6 +5,7 @@ var organism = 'mouse';
 var taxid = '10090';
 var chrHeight = 90;
 var shape = 'triangle';
+var left = 0;
 
 var searchResultsLegend = [{
   name: 'Click paralog to search',
@@ -69,10 +70,12 @@ async function plotGeneAndParalogs(geneSymbols) {
     chromosome.style.cursor = '';
   })
   var lastChr = [...document.querySelectorAll('.chromosome-set')].slice(-1)[0]
-  var left = lastChr.getBoundingClientRect().x;
-  var topPx = chrHeight + 40;
+  var legendLeft = left - 90 - 40;
+  console.log('legendLeft')
+  console.log(legendLeft)
+  var topPx = chrHeight + 20;
   var style =
-    `float: left; position: relative; top: -${topPx}px; left: ${left}px;`;
+    `float: left; position: relative; top: -${topPx}px; left: ${legendLeft}px;`;
 
   // Fetch position of searched gene
   var orgUnderscored = organism.replace(/-/g, '_');
@@ -137,7 +140,7 @@ function createSearchResultsIdeogram() {
   window.ideoConfig = {
     container: '#ideogramSearchResultsContainer',
     organism: 'mouse',
-    chrHeight: 85,
+    chrHeight: 80,
     chrLabelSize: 10,
     annotationHeight: 5,
     chrWidth: 8,
@@ -148,8 +151,9 @@ function createSearchResultsIdeogram() {
     showFullyBanded: false,
     onClickAnnot: onClickAnnot,
     onLoad: function() {
-      var left = document.querySelector('#_ideogramInnerWrap').style['max-width'];
-      document.querySelector('#ideogramSearchResultsContainer').style.width = left;
+      left = document.querySelector('#_ideogramInnerWrap').style['max-width'];
+      left = (parseInt(left.slice(0, -2)) + 90);
+      document.querySelector('#ideogramSearchResultsContainer').style.width = left + 'px';
 
       var searchInput = document.querySelector('#search_genes').value.trim();
 
