@@ -25,7 +25,7 @@ SecureHeaders::Configuration.default do |config|
   if ENV['NOT_DOCKERIZED']
     # enable connections to live reload server
     allowed_connect_sources.push('https://localhost:3035')
-    allowed_connect_sources.push('ws://localhost:3035')
+    allowed_connect_sources.push('wss://localhost:3035')
   end
   config.csp = {
       # "meta" values. these will shape the header, but the values are not included in the header.
