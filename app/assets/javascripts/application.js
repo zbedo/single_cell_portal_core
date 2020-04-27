@@ -32,6 +32,7 @@
 //= require clipboard.min
 //= require scp-igv
 //= require scp-ideogram-infercnv
+//= require scp-ideogram-search-results
 //= require scp-dot-plot
 
 var fileUploading = false;
