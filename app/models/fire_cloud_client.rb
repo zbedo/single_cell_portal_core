@@ -44,6 +44,35 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   # by PROJECT_OWNER)
   COMPUTE_BLACKLIST = %w(single-cell-portal)
 
+  ##
+  # SERVICE NAMES AND DESCRIPTIONS
+  #
+  # The following constants are named FireCloud "services" that cover various pieces of functionality that
+  # SCP depends on.  These names are stored here to reduce duplication and prevent typos.
+  # A list of all available service names can be retrieved with FireCloudClient#api_status
+  ##
+
+  # Rawls is the largest service that pertains to workspaces and pipeline submissions via the managed Cromwell instance
+  # SCP uses Rawls for updating studies, uploading/parsing files, launching workflows
+  RAWLS_SERVICE = 'Rawls'
+  # SAM holds most of the workspace permissions and other features
+  # SCP uses Sam for updating studies, uploading/parsing files
+  SAM_SERVICE = 'Sam'
+  # Agora covers the Methods repository and other analysis-oriented features
+  # SCP uses Agora for configuring new analyses, submitting workflows
+  AGORA_SERVICE = 'Agora'
+  # Thurloe covers Terra profiles and billing projects
+  # SCP uses Thurloe for managing user's Terra profiles and billing projects
+  THURLOE_SERVICE = 'Thurloe'
+  # Workspaces come with GCP buckets, and the GoogleBuckets service helps manage permissions
+  # SCP requires GoogleBuckets to be up for uploading/downloading files, even though SCP uses the GCS JSON API directly
+  # via the google-cloud-storage gem.
+  BUCKETS_SERVICE = 'GoogleBuckets'
+
+  ##
+  # METHODS
+  ##
+
   # initialize is called after instantiating with FireCloudClient.new
   # will set the access token, FireCloud api url root and GCP storage driver instance
   #

@@ -63,10 +63,10 @@
     <div class="panel panel-warning">
       <div class="panel-heading">
         <div class="panel-title">
-          <h4><%= link_to "<i class='fas fa-question'></i> Unsynced Sequence Data Directories <span class='fas fa-chevron-down toggle-glyph'></span>".html_safe, '#unsynced-directories', 'data-toggle' => 'collapse' %></h4>
+          <h4><%= link_to "<i class='fas fa-question'></i> Unsynced Sequence Data Directories <span class='fas fa-chevron-down toggle-glyph'></span>".html_safe, '#unsynced-primary-directories', 'data-toggle' => 'collapse' %></h4>
         </div>
       </div>
-      <div id="unsynced-directories" class="panel-collapse collapse in unsynced">
+      <div id="unsynced-primary-directories" class="panel-collapse collapse in unsynced">
         <div class="panel-body">
           <p class="help-block">These are directories containing new or updated primary data (fastq) for which you can supply a block description.</p>
           <div id="unsynced-primary-dirs-forms" class="unsynced-content">
@@ -84,10 +84,10 @@
     <div class="panel panel-default">
       <div class="panel-heading">
         <div class="panel-title">
-          <h4><%= link_to "<i class='fas fa-question'></i> Unsynced Miscellaneous Data Directories <span class='fas fa-chevron-down toggle-glyph'></span>".html_safe, '#unsynced-directories', 'data-toggle' => 'collapse' %></h4>
+          <h4><%= link_to "<i class='fas fa-question'></i> Unsynced Miscellaneous Data Directories <span class='fas fa-chevron-down toggle-glyph'></span>".html_safe, '#unsynced-misc-directories', 'data-toggle' => 'collapse' %></h4>
         </div>
       </div>
-      <div id="unsynced-directories" class="panel-collapse collapse in unsynced">
+      <div id="unsynced-misc-directories" class="panel-collapse collapse in unsynced">
         <div class="panel-body">
           <p class="help-block">These are directories containing groups of 10 or more files of the same extension (20+ for text files) for which you can supply a block description.</p>
           <div id="unsynced-misc-dirs-forms" class="unsynced-content">

@@ -25,6 +25,10 @@ class StudyTest < ActiveSupport::TestCase
       @genes[upcased_gene] = Gene.find_or_create_by!(name: upcased_gene, searchable_name: upcased_gene.downcase,
                                                      study: @study, study_file: @exp_matrix)
     end
+
+    # mock group list
+    @user_groups = [{"groupEmail"=>"my-user-group@firecloud.org", "groupName"=>"my-user-group", "role"=>"Member"}]
+    @services_args = [String, String, String]
   end
 
   test 'should honor case in gene search within study' do
@@ -73,5 +77,41 @@ class StudyTest < ActiveSupport::TestCase
 
     puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
 
+  end
+
+  test 'should skip permission and group check during firecloud service outage' do
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+    # assert that under normal conditions user has compute permissions
+    user = @study.user
+    compute_permission = @study.can_compute?(user)
+    assert compute_permission,
+           "Did not correctly get compute permissions for #{user.email}, can_compute? should be true but found #{compute_permission}"
+
+    # mock call to get groups to assert check happens in normal circumstances
+    group_mock = MiniTest::Mock.new
+    group_mock.expect :get_user_groups, @user_groups
+    FireCloudClient.stub :new, group_mock do
+      in_group_share = @study.user_in_group_share?(user, 'Reviewer')
+      group_mock.verify
+      assert in_group_share, "Did not correctly pick up group share, expected true but found #{in_group_share}"
+    end
+
+    # now simulate outage to prove checks do not happen and return false
+    # each mock/expectation can only be used once, hence the duplicate declarations
+    status_mock = Minitest::Mock.new
+    status_mock.expect :services_available?, false, @services_args
+    status_mock.expect :services_available?, false, @services_args
+    Study.stub :firecloud_client, status_mock do
+      compute_in_outage = @study.can_compute?(user)
+      group_share_in_outage = @study.user_in_group_share?(user, 'Reviewer')
+
+      # only verify once, as we expect :services_available? was called twice now
+      status_mock.verify
+      refute compute_in_outage, "Should not have compute permissions in outage, but can_compute? is #{compute_in_outage}"
+      refute group_share_in_outage, "Should not have group share in outage, but user_in_group_share? is #{group_share_in_outage}"
+    end
+
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
   end
 end

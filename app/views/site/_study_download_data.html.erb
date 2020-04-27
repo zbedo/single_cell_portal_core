@@ -29,7 +29,7 @@
                   </thead>
                 </table>
               <% end %>
-            <% elsif @study.public? && !@study.embargoed?(current_user) %>
+            <% elsif @study.public? && !@user_embargoed %>
                 <p class="lead">To download all files using <code>curl</code>, click the button below to get the download command:</p>
                 <p class="lead command-container" id="command-container-all"><%= link_to "<i class='fas fa-download'></i> Get download command for all study data".html_safe, '#/', class: 'btn btn-default get-download-command', id: 'get-download-command_all' %></p>
                 <% if @directories.any? %>

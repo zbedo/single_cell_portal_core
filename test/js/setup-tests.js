@@ -3,10 +3,7 @@ import Adapter from 'enzyme-adapter-react-16'
 
 configure({ adapter: new Adapter() })
 
-import {
-  setGlobalMockFlag,
-  setMockOrigin
-} from 'lib/scp-api'
+import { setGlobalMockFlag, setMockOrigin } from 'lib/scp-api'
 
 setGlobalMockFlag(true)
 setMockOrigin('http://localhost:3000')

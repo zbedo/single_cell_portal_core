@@ -53,4 +53,21 @@ class SiteControllerTest < ActionDispatch::IntegrationTest
     assert_select ".notification-banner", false, "Notification banner was not deleted and still is present on page."
   end
 
+  test 'should fall back to cell metadata on invalid annotation request' do
+    puts "#{File.basename(__FILE__)}: #{self.method_name}"
+
+    cluster = @study.cluster_groups.first
+    annotation = 'does-not-exist--group--study'
+    metadata_annotation = @study.cell_metadata.first.annotation_select_value
+    get render_cluster_path(accession: @study.accession, study_name: @study.url_safe_name,
+                            cluster: cluster.name, annotation: annotation), xhr: true
+    assert_response 200, "Did not rescue and respond 200 on invalid annotation request: #{@response.status}"
+
+    # extract the JS variable 'loadedAnnotation' from the end of the response
+    loaded_annotation = @response.parsed_body.match("var loadedAnnotation = '#{metadata_annotation}'")
+    assert_not_nil loaded_annotation, "Did not find variable loadedAnnotation with correct value of #{metadata_annotation}"
+
+    puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
+  end
+
 end

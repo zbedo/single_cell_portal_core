@@ -90,8 +90,9 @@ function main {
     echo "export READ_ONLY_SERVICE_ACCOUNT_KEY=/home/app/webapp/config/$READ_ONLY_SERVICE_ACCOUNT_FILENAME" >> $CONFIG_FILENAME
     echo "### COMPLETED ###"
 
-    # init repo if this is the first deploy on this host
-    run_remote_command "if [ ! -d .git ]; then rm -rf ./* && git clone $SCP_REPO .; fi"
+    # init folder/repo if this is the first deploy on this host
+    $SSH_COMMAND "if [ ! -d $DESTINATION_BASE_DIR ]; then sudo mkdir -p $DESTINATION_BASE_DIR && sudo chown -R $SSH_USER: $DESTINATION_BASE_DIR; fi"
+    run_remote_command "if [ ! -d .git ]; then sudo rm -rf ./* && git clone $SCP_REPO .; fi"
 
     # move secrets to remote host
     echo "### migrating secrets to remote host ###"

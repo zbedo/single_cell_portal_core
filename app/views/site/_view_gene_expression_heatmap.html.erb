@@ -109,6 +109,12 @@
         });
     }
 
+    <%= render partial: 'annotation_warning.js' %>
+    // change the annotation dropdown if value was invalid as this is what gets passed to Morpheus
+    if (showAlert) {
+        $('#annotation').val(loadedAnnotation)
+    }
+
     $(document).ready(function() {
         $('#heatmap-plot').data('fit', '');
         $('#heatmap-plot').data('height', 500);
