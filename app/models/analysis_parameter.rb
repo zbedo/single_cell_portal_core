@@ -33,6 +33,8 @@ class AnalysisParameter
   ASSOCIATED_MODEL_ATTR_NAMES = [:ASSOCIATED_MODEL_METHOD, :ASSOCIATED_MODEL_DISPLAY_METHOD, :OUTPUT_ASSOCIATION_ATTRIBUTE]
 
   validates_presence_of :data_type, :call_name, :parameter_type, :parameter_name
+  validates_presence_of :associated_model_method, :associated_model_display_method, on: :update,
+                        if: proc {|attributes| attributes.associated_model.present?}
   validates_format_of :parameter_name, with: ValidationTools::ALPHANUMERIC_PERIOD,
                       message: ValidationTools::ALPHANUMERIC_PERIOD_ERROR
   validates_format_of :call_name, with: ValidationTools::FILENAME_CHARS, message: ValidationTools::FILENAME_CHARS_ERROR
@@ -42,6 +44,16 @@ class AnalysisParameter
   validate :validate_parameter_value_by_type, unless: proc {|attributes| attributes.parameter_value.blank?}
   validate :validate_output_file_type, on: :update, if: proc {|attributes| attributes.data_type == 'outputs'}
   validates_uniqueness_of :is_reference_bundle, scope: :analysis_configuration_id, if: proc {|attributes| attributes.is_reference_bundle}
+
+  # validations for filters as they live in the same form
+  validate do |analysis_parameter|
+    analysis_parameter.analysis_parameter_filters.each do |filter|
+      next if filter.valid?
+      filter.errors.full_messages.each do |msg|
+        errors.add(:base, "Filter Error - #{msg}")
+      end
+    end
+  end
 
   # get the call & parameter name together for use in Methods Repository configuration objects
   def config_param_name

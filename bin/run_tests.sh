@@ -98,6 +98,7 @@ else
                     test/models/cell_metadatum_test.rb
                     test/models/analysis_configuration_test.rb
                     test/models/analysis_parameter_test.rb
+                    test/models/analysis_parameter_filter_test.rb
                     test/models/search_facet_test.rb
                     test/models/preset_search_test.rb
                     test/models/user_test.rb
