@@ -60,7 +60,7 @@ class UserAnnotationsController < ApplicationController
       #if a successful update, update data arrays
       if @user_annotation.update(user_annotation_params)
         # first, invalidate matching caches
-        CacheRemovalJob.new(@user_annotation.cache_removal_key).delay.perform
+        CacheRemovalJob.new(@user_annotation.cache_removal_key).delay(queue: :cache).perform
         changes = []
         if @share_changes
           changes << 'Annotation shares'
@@ -116,7 +116,7 @@ class UserAnnotationsController < ApplicationController
     @user_annotation.update(queued_for_deletion: true)
 
     # queue jobs to delete annotation caches & annotation itself
-    CacheRemovalJob.new(@user_annotation.cache_removal_key).delay.perform
+    CacheRemovalJob.new(@user_annotation.cache_removal_key).delay(queue: :cache).perform
     DeleteQueueJob.new(@user_annotation).delay.perform
 
     # notify users of deletion before removing shares & owner

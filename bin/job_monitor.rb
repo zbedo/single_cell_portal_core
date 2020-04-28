@@ -4,7 +4,9 @@ Dir.chdir(WEB_DIR)
 
 # set up defaults
 @env = 'production'
-@num_workers = 6
+@num_workers = 8
+@default_workers = 6
+@cache_workers = 2
 @interactive = false
 
 # parse args
@@ -50,7 +52,7 @@ if @running == false
   File.rename("log/delayed_job.#{@env}.log", "log/delayed_job.#{@env}.crash.#{date_string}.log")
 
 	# restart delayed job workers
-	system(". /home/app/.cron_env ; cd /home/app/webapp ; bin/delayed_job restart #{@env} -n #{@num_workers}")
+	system(". /home/app/.cron_env ; cd /home/app/webapp ; bin/delayed_job restart #{@env} --pool=default:#{@default_workers} --pool=cache:#{@cache_workers}")
 
 	# unlock orphaned jobs
 	system(". /home/app/.cron_env ; /home/app/webapp/bin/rails runner -e #{@env} \"AdminConfiguration.restart_locked_jobs\"")
