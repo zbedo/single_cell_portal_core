@@ -44,7 +44,7 @@ module Api
           parameter do
             key :name, :annotation
             key :in, :query
-            key :description, 'Name of annotation to group expression data with ({annotation_name}--{annotation_type}--{annotation_scope})'
+            key :description, 'Name of annotation to group expression data with ({annotation_name}--{annotation_type}--{annotation_scope}) format'
             key :required, false
             key :type, :string
           end
@@ -61,6 +61,9 @@ module Api
           end
           response 400 do
             key :description, 'Bad request - study has no expression data, or unknown data type'
+          end
+          response 404 do
+            key :description, ApiBaseController.not_found(Study)
           end
         end
       end
@@ -109,6 +112,9 @@ module Api
           response 400 do
             key :description, 'Bad request - study has no expression data, or unknown data type'
           end
+          response 404 do
+            key :description, ApiBaseController.not_found(Study)
+          end
         end
       end
 
@@ -132,7 +138,7 @@ module Api
           parameter do
             key :name, :accession
             key :in, :path
-            key :description, 'Accession of study to query expression data from'
+            key :description, 'Accession of study to query annotation data from'
             key :required, true
             key :type, :string
           end
@@ -147,14 +153,14 @@ module Api
           parameter do
             key :name, :annotation
             key :in, :query
-            key :description, 'Name of annotation in ({annotation_name}--{annotation_type}--{annotation_scope})'
+            key :description, 'Name of annotation in ({annotation_name}--{annotation_type}--{annotation_scope}) format'
             key :required, false
             key :type, :string
           end
           parameter do
             key :name, :cluster
             key :in, :query
-            key :description, 'Name of cluster to show expression data overlaid on'
+            key :description, 'Name of cluster to source cluster-based annotation from'
             key :required, false
             key :type, :string
           end
@@ -163,6 +169,9 @@ module Api
           end
           response 400 do
             key :description, 'Bad request - study has no expression data, or unknown data type'
+          end
+          response 404 do
+            key :description, ApiBaseController.not_found(Study)
           end
         end
       end
