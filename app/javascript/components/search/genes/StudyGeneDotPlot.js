@@ -2,7 +2,7 @@ import React, { useState, useContext, useEffect } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDna } from '@fortawesome/free-solid-svg-icons'
 
-import { studyNameAsUrlParam, fetchAnnotationValues } from 'lib/scp-api'
+import { fetchAnnotationValues, fetchExpressionHeatmap } from 'lib/scp-api'
 import { UserContext } from 'providers/UserProvider'
 
 /** This does NOT yet fully work!  It renders something dotplot like, but isn't handling annotations
@@ -15,22 +15,23 @@ export default function StudyGeneDotPlot({ study, genes }) {
   async function loadData() {
     setIsLoading(true)
     const annotations = await fetchAnnotationValues(study.accession)
-    if (study.gene_matches.length > 1) {
-      const geneParam = genes.join('+')
-      window.renderMorpheusDotPlot(
-        `/single_cell/api/v1/site/studies/${study.accession}/expression_data/heatmap?genes=${geneParam}&cluster=`,
-        `/single_cell/api/v1/site/studies/${study.accession}/annotations/text?cluster=&annotation=`,
-        'CLUSTER',
-        'group',
-        `#expGraph${study.accession}`,
-        annotations,
-        '',
-        450,
-        `#expGraph${study.accession}-legend`
-      )
-      setIsLoaded(true)
-      setIsLoading(false)
-    }
+    const geneParam = encodeURIComponent(genes.join(','))
+    // const heatmapData = await fetchExpressionHeatmap(study.accession, genes)
+    // const annotationData = await fetchAnnotationValues(study.accession, 'text')
+    window.renderMorpheusDotPlot(
+      `/single_cell/api/v1/site/studies/${study.accession}/expression_data/heatmap?genes=${geneParam}&cluster=`,
+      `/single_cell/api/v1/site/studies/${study.accession}/annotations/text?cluster=&annotation=`,
+      'CLUSTER',
+      'group',
+      `#expGraph${study.accession}`,
+      annotations,
+      '',
+      450,
+      `#expGraph${study.accession}-legend`
+    )
+    setIsLoaded(true)
+    setIsLoading(false)
+
   }
   useEffect(() => {
     if (!isLoading && !isLoaded) {

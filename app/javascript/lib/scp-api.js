@@ -123,7 +123,7 @@ export async function fetchExpressionViolin(studyAccession, gene, cluster, annot
 
 export async function fetchAnnotationValues(studyAccession, type='json', mock=false) {
   const apiUrl = `/site/studies/${studyAccession}/annotations/${type}`
-  return await scpApi(apiUrl, defaultInit(), mock, false)
+  return await scpApi(apiUrl, defaultInit(), mock, false, type==='json')
 }
 
 /**
@@ -138,9 +138,9 @@ export async function fetchExpressionHeatmap(studyAccession, genes, cluster, ann
   const annotationParam = annotation ? `&annotation=${encodeURIComponent(annotation)}` : ''
   const subsampleParam = subsample ? `&annotation=${encodeURIComponent(subsample)}` : ''
   const genesParam = encodeURIComponent(genes.join(','))
-  const apiUrl = `/studies/${studyAccession}/expression_heatmaps?genes=${genesParam}${clusterParam}${annotationParam}${subsampleParam}`
+  const apiUrl = `/site/studies/${studyAccession}/expression_data/heatmap?genes=${genesParam}${clusterParam}${annotationParam}${subsampleParam}`
   // don't camelcase the keys since those can be cluster names, so send false for the 4th argument
-  return await scpApi(apiUrl, defaultInit(), mock, false)
+  return await scpApi(apiUrl, defaultInit(), mock, false, false)
 }
 
 export function studyNameAsUrlParam(studyName) {
@@ -316,7 +316,7 @@ export default async function scpApi(path, init, mock=false, camelCase=true, toJ
         return json
       }
     } else {
-      return response
+      return await response.text()
     }
   }
   return response
