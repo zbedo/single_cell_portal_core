@@ -1,7 +1,7 @@
 
 .terra-style {
   font-family: "Montserrat", sans-serif;
-
+  color: #333f52;
   h1 {
     font-size: 16px;
     font-weight: bold;
@@ -18,14 +18,15 @@
   }
 
   table.table {
-    tbody {
-      background: #fff;
-    }
+    background: #fff;
     td:first-of-type {
       padding-left: 1em;
     }
     .action-column {
       min-width: 220px;
+    }
+    .study-name a {
+      font-size: 16px;
     }
   }
 
