@@ -1475,7 +1475,6 @@ class SiteController < ApplicationController
 
   # make sure user has view permissions for selected study
   def check_view_permissions
-    Rails.logger.info "check_view_permissions"
     unless @study.public?
       if (!user_signed_in? && !@study.public?)
         authenticate_user!
@@ -1491,7 +1490,6 @@ class SiteController < ApplicationController
 
   # check compute permissions for study
   def check_compute_permissions
-    Rails.logger.info "check_compute_permissions"
     if Study.firecloud_client.services_available?(FireCloudClient::SAM_SERVICE, FireCloudClient::RAWLS_SERVICE)
       if !user_signed_in? || !@study.can_compute?(current_user)
         @alert ='You do not have permission to perform that action.'
