@@ -264,17 +264,8 @@ class SiteController < ApplicationController
     else
       if @study.can_edit?(current_user)
         if @study.update(study_params)
-          # invalidate caches as needed
-          if @study.previous_changes.keys.include?('default_options')
-            # invalidate all cluster & expression caches as points sizes/borders may have changed globally
-            # start with default cluster then do everything else
-            @study.default_cluster.study_file.invalidate_cache_by_file_type
-            other_clusters = @study.cluster_groups.keep_if {|cluster_group| cluster_group.name != @study.default_cluster}
-            other_clusters.map {|cluster_group| cluster_group.study_file.invalidate_cache_by_file_type}
-            @study.expression_matrix_files.map {|matrix_file| matrix_file.invalidate_cache_by_file_type}
-          elsif @study.previous_changes.keys.include?('name')
-            CacheRemovalJob.new(@study.accession).delay.perform
-          end
+          # invalidate caches as a precaution
+          CacheRemovalJob.new(@study.accession).delay(queue: :cache).perform
           set_study_default_options
           if @study.initialized?
             @cluster = @study.default_cluster
@@ -1475,7 +1466,6 @@ class SiteController < ApplicationController
 
   # make sure user has view permissions for selected study
   def check_view_permissions
-    Rails.logger.info "check_view_permissions"
     unless @study.public?
       if (!user_signed_in? && !@study.public?)
         authenticate_user!
@@ -1491,7 +1481,6 @@ class SiteController < ApplicationController
 
   # check compute permissions for study
   def check_compute_permissions
-    Rails.logger.info "check_compute_permissions"
     if Study.firecloud_client.services_available?(FireCloudClient::SAM_SERVICE, FireCloudClient::RAWLS_SERVICE)
       if !user_signed_in? || !@study.can_compute?(current_user)
         @alert ='You do not have permission to perform that action.'

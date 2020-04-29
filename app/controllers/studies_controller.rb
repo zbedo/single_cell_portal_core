@@ -365,7 +365,7 @@ class StudiesController < ApplicationController
         end
         if @study.previous_changes.keys.include?('name')
           # if user renames a study, invalidate all caches
-          CacheRemovalJob.new(@study.accession).delay.perform
+          CacheRemovalJob.new(@study.accession).delay(queue: :cache).perform
         end
         if @study.study_shares.any?
           SingleCellMailer.share_update_notification(@study, changes, current_user).deliver_now
@@ -411,7 +411,7 @@ class StudiesController < ApplicationController
       end
 
       # queue jobs to delete study caches & study itself
-      CacheRemovalJob.new(@study.accession).delay.perform
+      CacheRemovalJob.new(@study.accession).delay(queue: :cache).perform
       DeleteQueueJob.new(@study).delay.perform
 
       # notify users of deletion before removing shares & owner
