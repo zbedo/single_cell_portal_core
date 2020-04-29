@@ -1,5 +1,25 @@
 import React, { useState, useEffect, useRef, useContext } from 'react'
 
+/**
+ * Hook for a component that shows/hides a modal on click.  the modal will also close on
+ * any clicks outside the modal.
+ * @param show -  boolean - whether the modal is currently visible
+ * @param setShow - function - setter for show ( e.g. [show, setShow] = useState(false)  )
+ * @return an object with
+         node:  a ref to attach to the button/ui component that toggles the modal
+         clearNode: a ref to attach to any buttons that auto-close the modal
+         handleButtonClick: a handler function to attach to the modal toggler.
+
+  Example usage might be:
+
+  const [show, setShow] = useState(false)
+  const { node, clearNode, handleButtonClick } = useCloseableModal(show, setShow)
+  <span ref={node}>
+    <a onClick={handleButtonClick}>Toggle thingy</a>
+    <a ref={clearNode}>Close thingy</a>
+    { show && <thingy/> }
+  </span>
+ */
 export default function useCloseableModal(show, setShow) {
    const clearNode = useRef()
   /**

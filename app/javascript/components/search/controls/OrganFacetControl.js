@@ -25,7 +25,7 @@ export default function OrganFacetFilter() {
   const { node, clearNode, handleButtonClick } = useCloseableModal(showFilters, setShowFilters)
 
   return (
-    <span ref={node} className={`facet`}>
+    <span ref={node} className={`facet ${showFilters ? 'active' : ''}`}>
       <a onClick={handleButtonClick}>
         tissue
       </a>
