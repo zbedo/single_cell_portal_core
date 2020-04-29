@@ -472,7 +472,7 @@ class IngestJob
     case annotation_source.class
     when CellMetadatum
       message = "#{annotation_source.name}: #{annotation_source.annotation_type}"
-      if annotation_source.can_visualize?
+      if annotation_source.can_visualize? || annotation_source.values.size == 1
         values = annotation_source.values.any? ? ' (' + annotation_source.values.join(', ') + ')' : ''
       else
         values = ' (List too large for email)'
@@ -480,7 +480,7 @@ class IngestJob
       message + values
     when ClusterGroup
       message = "#{cell_annotation['name']}: #{cell_annotation['type']}"
-      if annotation_source.can_visualize_cell_annotation?(cell_annotation)
+      if annotation_source.can_visualize_cell_annotation?(cell_annotation) || cell_annotation['values'].size == 1
         values = cell_annotation['type'] == 'group' ? ' (' + cell_annotation['values'].join(',') + ')' : ''
       else
         values = ' (List too large for email)'
