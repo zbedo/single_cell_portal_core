@@ -1,12 +1,13 @@
-
 import React, { useState, useEffect, useRef, useContext } from 'react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faTimesCircle } from '@fortawesome/free-solid-svg-icons'
+
 import FiltersBoxSearchable from './FiltersBoxSearchable'
 import { StudySearchContext } from 'providers/StudySearchProvider'
 import { getDisplayNameForFacet } from 'providers/SearchFacetProvider'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faTimesCircle } from '@fortawesome/free-solid-svg-icons'
 import { SearchSelectionContext } from 'providers/SearchSelectionProvider'
 import { withErrorBoundary } from 'lib/ErrorBoundary'
+import useCloseableModal from 'hooks/closeableModal'
 
 /**
  * Converts string value to lowercase, hyphen-delimited version
@@ -48,18 +49,6 @@ function RawFacetControl(props) {
     }
   }
 
-  const clearNode = useRef()
-  /**
-    * Click on the facet control itself
-    */
-  function handleButtonClick(e) {
-    if (clearNode.current && clearNode.current.contains(e.target)) {
-      setShowFilters(false)
-    } else {
-      setShowFilters(!showFilters)
-    }
-  }
-
   /**
     * Clear the selection and update search results
     */
@@ -67,27 +56,7 @@ function RawFacetControl(props) {
     selectionContext.updateFacet(props.facet.id, [], true)
   }
 
-
-  const node = useRef()
-  const handleOtherClick = e => {
-    if (node.current.contains(e.target)) {
-      // click was inside the modal, do nothing
-      return
-    }
-    setShowFilters(false)
-  }
-
-  // add event listener to detect clicks outside the modal,
-  // so we know to close it
-  // see https://medium.com/@pitipatdop/little-neat-trick-to-capture-click-outside-with-react-hook-ba77c37c7e82
-  useEffect(() => {
-    // add when mounted
-    document.addEventListener('mousedown', handleOtherClick)
-    // return function to be called when unmounted
-    return () => {
-      document.removeEventListener('mousedown', handleOtherClick)
-    }
-  }, [])
+  const { node, clearNode, handleButtonClick } = useCloseableModal(showFilters, setShowFilters)
 
   let controlContent = getDisplayNameForFacet(props.facet.id)
   if (selectedFilterString) {

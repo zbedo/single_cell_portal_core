@@ -5,7 +5,7 @@ import FacetControl from './FacetControl'
 import { SearchFacetContext } from 'providers/SearchFacetProvider'
 import FiltersBoxSearchable from './FiltersBoxSearchable'
 import { SearchSelectionContext } from 'providers/SearchSelectionProvider'
-
+import useCloseableModal from 'hooks/closeableModal'
 /**
  * Component for filter search and filter lists
  */
@@ -22,35 +22,8 @@ export default function OrganFacetFilter() {
     return { facet, facetSelection }
   })
 
+  const { node, clearNode, handleButtonClick } = useCloseableModal(showFilters, setShowFilters)
 
-  const node = useRef()
-  const handleOtherClick = e => {
-    if (node.current.contains(e.target)) {
-      // click was inside the modal, do nothing
-      return
-    }
-    setShowFilters(false)
-  }
-  const clearNode = useRef()
-  function handleButtonClick(e) {
-    if (clearNode.current && clearNode.current.contains(e.target)) {
-      setShowFilters(false)
-    } else {
-      setShowFilters(!showFilters)
-    }
-  }
-
-  // add event listener to detect clicks outside the modal,
-  // so we know to close it
-  // see https://medium.com/@pitipatdop/little-neat-trick-to-capture-click-outside-with-react-hook-ba77c37c7e82
-  useEffect(() => {
-    // add when mounted
-    document.addEventListener('mousedown', handleOtherClick)
-    // return function to be called when unmounted
-    return () => {
-      document.removeEventListener('mousedown', handleOtherClick)
-    }
-  }, [])
   return (
     <span ref={node} className={`facet`}>
       <a onClick={handleButtonClick}>
