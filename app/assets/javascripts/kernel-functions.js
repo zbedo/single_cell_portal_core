@@ -48,12 +48,14 @@ function arrayMax(arr) {
 function createTracesAndLayout(arr, title, jitter='all', expressionLabel){
     // Iterate through the formatted array [[name_of_trace, expression_data]...]
     // and create the response plotly objects, returning [plotly data object, plotly layout object]
-    var data = Array();
+    var data = []
+    var names = [];
     for(x=0;x<arr.length;x++){
         // plotly violin trace creation, adding to master array
         // get inputs for plotly violin creation
         var dist = arr[x][1];
         var name = arr[x][0];
+        names.push(names)
         // if people want to change bandwidth eventually this is what we would change with a parameter
         var bandwidth = nrd0(dist);
 
@@ -109,15 +111,19 @@ function createTracesAndLayout(arr, title, jitter='all', expressionLabel){
                 boxmean: true,
             }])
         }
-
     }
+
+    var categoryArray = names.sort((a, b) => a.localeCompare(b))
+
     var layout = {
         title: title,
-
         // Force axis labels, including number strings, to be treated as
         // categories.  See Python docs (same generic API as JavaScript):
         // https://plotly.com/python/axes/#forcing-an-axis-to-be-categorical
-        xaxis: 'category',
+        // xaxis: {
+        //   categoryorder: 'array',
+        //   categoryarray: data.map()
+        // },
         yaxis: {
             zeroline: true,
             showline: true,
