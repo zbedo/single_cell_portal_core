@@ -44,6 +44,7 @@ group :development, :test do
   gem 'brakeman', :require => false
   gem 'listen'
   gem 'byebug'
+  gem 'thin'
 end
 
 gem 'devise'

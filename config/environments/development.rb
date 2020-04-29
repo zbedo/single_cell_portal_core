@@ -76,4 +76,9 @@ Rails.application.configure do
     SwaggerUiEngine::SwaggerDocsController.send(:include, Api::V1::Concerns::CspHeaderBypass)
     SwaggerUiEngine::SwaggerDocsController.send(:layout, 'swagger_ui_engine/layouts/swagger')
   end
+
+  if ENV['NOT_DOCKERIZED']
+    config.force_ssl = true
+  end
+
 end
