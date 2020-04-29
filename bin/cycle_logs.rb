@@ -24,7 +24,6 @@ all_logs = Dir.entries("log").keep_if {|l| !l.start_with?('.')}
       else
         basename = log_parts.first
       end
-      puts "basename: #{basename}"
       File.exists?("log/#{basename}.#{i}.log") ? File.rename("log/#{basename}.#{i}.log", "log/#{basename}.#{i + 1}.log") : next
     end
   end
