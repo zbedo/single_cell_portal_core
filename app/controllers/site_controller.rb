@@ -81,15 +81,16 @@ class SiteController < ApplicationController
       @cell_count = 0
     end
 
+    page_num = RequestUtils.sanitize_page_param(params[:page])
     # if search params are present, filter accordingly
     if !params[:search_terms].blank?
       search_terms = sanitize_search_values(params[:search_terms])
       # determine if search values contain possible study accessions
       possible_accessions = StudyAccession.sanitize_accessions(search_terms.split)
       @studies = @viewable.any_of({:$text => {:$search => search_terms}}, {:accession.in => possible_accessions}).
-          paginate(page: params[:page], per_page: Study.per_page)
+          paginate(page: page_num, per_page: Study.per_page)
     else
-      @studies = @viewable.paginate(page: params[:page], per_page: Study.per_page)
+      @studies = @viewable.paginate(page: page_num, per_page: Study.per_page)
     end
   end
 
@@ -195,9 +196,9 @@ class SiteController < ApplicationController
     if @selected_branding_group.present?
       @studies = @studies.where(branding_group_id: @selected_branding_group.id)
     end
-
+    page_num = RequestUtils.sanitize_page_param(params[:page])
     # restrict studies to initialized only
-    @studies = @studies.where(initialized: true).paginate(page: params[:page], per_page: Study.per_page)
+    @studies = @studies.where(initialized: true).paginate(page: page_num, per_page: Study.per_page)
   end
 
   # global gene search, will return a list of studies that contain the requested gene(s)
@@ -263,17 +264,8 @@ class SiteController < ApplicationController
     else
       if @study.can_edit?(current_user)
         if @study.update(study_params)
-          # invalidate caches as needed
-          if @study.previous_changes.keys.include?('default_options')
-            # invalidate all cluster & expression caches as points sizes/borders may have changed globally
-            # start with default cluster then do everything else
-            @study.default_cluster.study_file.invalidate_cache_by_file_type
-            other_clusters = @study.cluster_groups.keep_if {|cluster_group| cluster_group.name != @study.default_cluster}
-            other_clusters.map {|cluster_group| cluster_group.study_file.invalidate_cache_by_file_type}
-            @study.expression_matrix_files.map {|matrix_file| matrix_file.invalidate_cache_by_file_type}
-          elsif @study.previous_changes.keys.include?('name')
-            CacheRemovalJob.new(@study.accession).delay.perform
-          end
+          # invalidate caches as a precaution
+          CacheRemovalJob.new(@study.accession).delay(queue: :cache).perform
           set_study_default_options
           if @study.initialized?
             @cluster = @study.default_cluster
@@ -290,7 +282,7 @@ class SiteController < ApplicationController
 
           # double check on download availability: first, check if administrator has disabled downloads
           # then check if FireCloud is available and disable download links if either is true
-          @allow_downloads = Study.firecloud_client.services_available?('GoogleBuckets')
+          @allow_downloads = Study.firecloud_client.services_available?(FireCloudClient::BUCKETS_SERVICE)
         else
           set_study_default_options
         end
@@ -324,6 +316,7 @@ class SiteController < ApplicationController
     # then check individual statuses to see what to enable/disable
     # if the study is 'detached', then everything is set to false by default
     set_firecloud_permissions(@study.detached?)
+    set_study_permissions(@study.detached?)
     set_study_default_options
     # load options and annotations
     if @study.can_visualize_clusters?
@@ -349,13 +342,7 @@ class SiteController < ApplicationController
       end
     end
 
-    # set various permission variables to govern what tabs to show and decrease load times
-    @user_can_edit = @study.can_edit?(current_user)
-    @user_can_compute = false
-    @user_can_download = @study.can_download?(current_user)
-
-    if @allow_firecloud_access && @allow_computes && @study.can_compute?(current_user)
-      @user_can_compute = true
+    if @allow_firecloud_access && @user_can_compute
       # load list of previous submissions
       workspace = Study.firecloud_client.get_workspace(@study.firecloud_project, @study.firecloud_workspace)
       @submissions = Study.firecloud_client.get_workspace_submissions(@study.firecloud_project, @study.firecloud_workspace)
@@ -753,7 +740,7 @@ class SiteController < ApplicationController
     # next check if downloads have been disabled by administrator, this will abort the download
     # download links shouldn't be rendered in any case, this just catches someone doing a straight GET on a file
     # also check if workspace google buckets are available
-    if !AdminConfiguration.firecloud_access_enabled? || !Study.firecloud_client.services_available?('GoogleBuckets')
+    if !AdminConfiguration.firecloud_access_enabled? || !Study.firecloud_client.services_available?(FireCloudClient::BUCKETS_SERVICE)
       head 503 and return
     end
 
@@ -1397,37 +1384,11 @@ class SiteController < ApplicationController
   end
 
   def set_cluster_group
-    # determine which URL param to use for selection
-    selector = params[:cluster].nil? ? params[:gene_set_cluster] : params[:cluster]
-    if selector.nil? || selector.empty?
-      @cluster = @study.default_cluster
-    else
-      @cluster = @study.cluster_groups.by_name(selector)
-    end
+    @cluster = RequestUtils.get_cluster_group(params, @study)
   end
 
   def set_selected_annotation
-    # determine which URL param to use for selection and construct base object
-    selector = params[:annotation].nil? ? params[:gene_set_annotation] : params[:annotation]
-    annot_name, annot_type, annot_scope = selector.nil? ? @study.default_annotation.split('--') : selector.split('--')
-    # construct object based on name, type & scope
-    if annot_scope == 'cluster'
-      @selected_annotation = @cluster.cell_annotations.find {|ca| ca[:name] == annot_name && ca[:type] == annot_type}
-      @selected_annotation[:scope] = annot_scope
-    elsif annot_scope == 'user'
-      # in the case of user annotations, the 'name' value that gets passed is actually the ID
-      user_annotation = UserAnnotation.find(annot_name)
-      @selected_annotation = {name: user_annotation.name, type: annot_type, scope: annot_scope, id: annot_name}
-      @selected_annotation[:values] = user_annotation.values
-    else
-      @selected_annotation = {name: annot_name, type: annot_type, scope: annot_scope}
-      if annot_type == 'group'
-        @selected_annotation[:values] = @study.cell_metadata.by_name_and_type(annot_name, annot_type).values
-      else
-        @selected_annotation[:values] = []
-      end
-    end
-    @selected_annotation
+    @selected_annotation = RequestUtils.get_selected_annotation(params, @study, @cluster)
   end
 
   def set_workspace_samples
@@ -1443,10 +1404,54 @@ class SiteController < ApplicationController
 
   # check various firecloud statuses/permissions, but only if a study is not 'detached'
   def set_firecloud_permissions(study_detached)
-    @allow_firecloud_access = study_detached ? false : AdminConfiguration.firecloud_access_enabled?
-    @allow_downloads = study_detached ? false : Study.firecloud_client.services_available?('GoogleBuckets')
-    @allow_computes = study_detached ? false : Study.firecloud_client.services_available?('Sam', 'Agora', 'Rawls')
-    @allow_edits = study_detached ? false : Study.firecloud_client.services_available?('Sam', 'Rawls')
+    @allow_firecloud_access = false
+    @allow_downloads = false
+    @allow_edits = false
+    @allow_computes = false
+    return if study_detached
+    begin
+      @allow_firecloud_access = AdminConfiguration.firecloud_access_enabled?
+      api_status = Study.firecloud_client.api_status
+      # reuse status object because firecloud_client.services_available? each makes a separate status call
+      # calling Hash#dig will gracefully handle any key lookup errors in case of a larger outage
+      if api_status.is_a?(Hash)
+        system_status = api_status['systems']
+        sam_ok = system_status.dig(FireCloudClient::SAM_SERVICE, 'ok') == true # do equality check in case 'ok' node isn't present
+        agora_ok = system_status.dig(FireCloudClient::AGORA_SERVICE, 'ok')
+        rawls_ok = system_status.dig(FireCloudClient::RAWLS_SERVICE, 'ok') == true
+        buckets_ok = system_status.dig(FireCloudClient::BUCKETS_SERVICE, 'ok') == true
+        @allow_downloads = buckets_ok
+        @allow_edits = sam_ok && rawls_ok
+        @allow_computes = sam_ok && rawls_ok && agora_ok
+      end
+    rescue => e
+      logger.error "Error checking FireCloud API status: #{e.class.name} -- #{e.message}"
+      error_context = ErrorTracker.format_extra_context(@study, {firecloud_status: api_status})
+      ErrorTracker.report_exception(e, current_user, error_context)
+    end
+  end
+
+  # set various study permissions based on the results of the above FC permissions
+  def set_study_permissions(study_detached)
+    @user_can_edit = false
+    @user_can_compute = false
+    @user_can_download = false
+    @user_embargoed = false
+    return if study_detached || !@allow_firecloud_access
+    begin
+      @user_can_edit = @study.can_edit?(current_user)
+      if @allow_computes
+        @user_can_compute = @study.can_compute?(current_user)
+      end
+      if @allow_downloads
+        @user_can_download = @user_can_edit ? true : @study.can_download?(current_user)
+        @user_embargoed = @user_can_edit ? false : @study.embargoed?(current_user)
+      end
+    rescue => e
+      logger.error "Error setting study permissions: #{e.class.name} -- #{e.message}"
+      error_context = ErrorTracker.format_extra_context(@study)
+      ErrorTracker.report_exception(e, current_user, error_context)
+    end
   end
 
   # whitelist parameters for updating studies on study settings tab (smaller list than in studies controller)
@@ -1476,7 +1481,7 @@ class SiteController < ApplicationController
 
   # check compute permissions for study
   def check_compute_permissions
-    if Study.firecloud_client.services_available?('Sam', 'Rawls')
+    if Study.firecloud_client.services_available?(FireCloudClient::SAM_SERVICE, FireCloudClient::RAWLS_SERVICE)
       if !user_signed_in? || !@study.can_compute?(current_user)
         @alert ='You do not have permission to perform that action.'
         respond_to do |format|

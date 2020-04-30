@@ -1,132 +1,132 @@
-NAME	biosample_id	sample_type	disease	disease__ontology_label	organ	organ__ontology_label	library_preparation_protocol	library_preparation_protocol__ontology_label	donor_id	species	species__ontology_label	sex	is_living
+NAME	biosample_id	biosample_type	disease	disease__ontology_label	organ	organ__ontology_label	library_preparation_protocol	library_preparation_protocol__ontology_label	donor_id	species	species__ontology_label	sex	is_living
 TYPE	group	group	group	group	group	group	group	group	group	group	group	group	group
-AA_1	AA_D06_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D06	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_2	AA_D06_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D06	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_3	AA_D06_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D06	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_4	AA_D06_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D06	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_5	AA_D06_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D06	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_6	AA_D06_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D06	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_7	AA_D06_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D06	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_8	AA_D06_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D06	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_9	AA_D06_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D06	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_10	AA_D06_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D06	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_11	AA_D06_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D06	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_12	AA_D06_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D06	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_13	AA_D06_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D06	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_14	AA_D06_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D06	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_15	AA_D06_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D06	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_16	AA_D06_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D06	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_17	AA_D06_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D06	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_18	AA_D06_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D06	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_19	AA_D06_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D06	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_20	AA_D06_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D06	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_21	AA_D05_03	cell line	MONDO_0007186	gastroesophageal reflux disease	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_22	AA_D05_03	cell line	MONDO_0007186	gastroesophageal reflux disease	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_23	AA_D05_03	cell line	MONDO_0007186	gastroesophageal reflux disease	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_24	AA_D05_03	cell line	MONDO_0007186	gastroesophageal reflux disease	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_25	AA_D05_03	cell line	MONDO_0007186	gastroesophageal reflux disease	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_26	AA_D05_03	cell line	MONDO_0007186	gastroesophageal reflux disease	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_27	AA_D05_03	cell line	MONDO_0007186	gastroesophageal reflux disease	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_28	AA_D05_03	cell line	MONDO_0007186	gastroesophageal reflux disease	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_29	AA_D05_03	cell line	MONDO_0007186	gastroesophageal reflux disease	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_30	AA_D05_03	cell line	MONDO_0007186	gastroesophageal reflux disease	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_31	AA_D05_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_32	AA_D05_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_33	AA_D05_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_34	AA_D05_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_35	AA_D05_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_36	AA_D05_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_37	AA_D05_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_38	AA_D05_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_39	AA_D05_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_40	AA_D05_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_41	AA_D05_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_42	AA_D05_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_43	AA_D05_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_44	AA_D05_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_45	AA_D05_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_46	AA_D05_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_47	AA_D05_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_48	AA_D05_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_49	AA_D05_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_50	AA_D05_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_51	AA_D04_03	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_52	AA_D04_03	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_53	AA_D04_03	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_54	AA_D04_03	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_55	AA_D04_03	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_56	AA_D04_03	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_57	AA_D04_03	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_58	AA_D04_03	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_59	AA_D04_03	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_60	AA_D04_03	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_61	AA_D04_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_62	AA_D04_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_63	AA_D04_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_64	AA_D04_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_65	AA_D04_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_66	AA_D04_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_67	AA_D04_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_68	AA_D04_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_69	AA_D04_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_70	AA_D04_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_71	AA_D04_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_72	AA_D04_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_73	AA_D04_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_74	AA_D04_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_75	AA_D04_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_76	AA_D04_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_77	AA_D04_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_78	AA_D04_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_79	AA_D04_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_80	AA_D04_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_81	AA_D03_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D03	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_82	AA_D03_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D03	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_83	AA_D03_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D03	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_84	AA_D03_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D03	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_85	AA_D03_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D03	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_86	AA_D03_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D03	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_87	AA_D03_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D03	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_88	AA_D03_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D03	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_89	AA_D03_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D03	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_90	AA_D03_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D03	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_91	AA_D02_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D02	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_92	AA_D02_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D02	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_93	AA_D02_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D02	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_94	AA_D02_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D02	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_95	AA_D02_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D02	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_96	AA_D02_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D02	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_97	AA_D02_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D02	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_98	AA_D02_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D02	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_99	AA_D02_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D02	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_100	AA_D02_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D02	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_101	AA_D02_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D02	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_102	AA_D02_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D02	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_103	AA_D02_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D02	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_104	AA_D02_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D02	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_105	AA_D02_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D02	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_106	AA_D02_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D02	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_107	AA_D02_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D02	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_108	AA_D02_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D02	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_109	AA_D02_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D02	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_110	AA_D02_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D02	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_111	AA_D01_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D01	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_112	AA_D01_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D01	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_113	AA_D01_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D01	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_114	AA_D01_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D01	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_115	AA_D01_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D01	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_116	AA_D01_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D01	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_117	AA_D01_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D01	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_118	AA_D01_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D01	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_119	AA_D01_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D01	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_120	AA_D01_02	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D01	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_121	AA_D01_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D01	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_122	AA_D01_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D01	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_123	AA_D01_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D01	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_124	AA_D01_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D01	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_125	AA_D01_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D01	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_126	AA_D01_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D01	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_127	AA_D01_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D01	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_128	AA_D01_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D01	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_129	AA_D01_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D01	NCBITaxon_10090	Mus musculus	unknown	unknown
-AA_130	AA_D01_01	cell line	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D01	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_1	AA_D06_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D06	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_2	AA_D06_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D06	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_3	AA_D06_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D06	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_4	AA_D06_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D06	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_5	AA_D06_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D06	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_6	AA_D06_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D06	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_7	AA_D06_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D06	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_8	AA_D06_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D06	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_9	AA_D06_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D06	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_10	AA_D06_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D06	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_11	AA_D06_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D06	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_12	AA_D06_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D06	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_13	AA_D06_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D06	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_14	AA_D06_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D06	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_15	AA_D06_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D06	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_16	AA_D06_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D06	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_17	AA_D06_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D06	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_18	AA_D06_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D06	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_19	AA_D06_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D06	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_20	AA_D06_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D06	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_21	AA_D05_03	CellLine	MONDO_0007186	gastroesophageal reflux disease	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_22	AA_D05_03	CellLine	MONDO_0007186	gastroesophageal reflux disease	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_23	AA_D05_03	CellLine	MONDO_0007186	gastroesophageal reflux disease	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_24	AA_D05_03	CellLine	MONDO_0007186	gastroesophageal reflux disease	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_25	AA_D05_03	CellLine	MONDO_0007186	gastroesophageal reflux disease	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_26	AA_D05_03	CellLine	MONDO_0007186	gastroesophageal reflux disease	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_27	AA_D05_03	CellLine	MONDO_0007186	gastroesophageal reflux disease	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_28	AA_D05_03	CellLine	MONDO_0007186	gastroesophageal reflux disease	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_29	AA_D05_03	CellLine	MONDO_0007186	gastroesophageal reflux disease	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_30	AA_D05_03	CellLine	MONDO_0007186	gastroesophageal reflux disease	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_31	AA_D05_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_32	AA_D05_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_33	AA_D05_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_34	AA_D05_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_35	AA_D05_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_36	AA_D05_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_37	AA_D05_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_38	AA_D05_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_39	AA_D05_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_40	AA_D05_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_41	AA_D05_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_42	AA_D05_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_43	AA_D05_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_44	AA_D05_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_45	AA_D05_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_46	AA_D05_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_47	AA_D05_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_48	AA_D05_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_49	AA_D05_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_50	AA_D05_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D05	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_51	AA_D04_03	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_52	AA_D04_03	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_53	AA_D04_03	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_54	AA_D04_03	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_55	AA_D04_03	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_56	AA_D04_03	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_57	AA_D04_03	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_58	AA_D04_03	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_59	AA_D04_03	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_60	AA_D04_03	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_61	AA_D04_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_62	AA_D04_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_63	AA_D04_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_64	AA_D04_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_65	AA_D04_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_66	AA_D04_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_67	AA_D04_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_68	AA_D04_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_69	AA_D04_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_70	AA_D04_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_71	AA_D04_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_72	AA_D04_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_73	AA_D04_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_74	AA_D04_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_75	AA_D04_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_76	AA_D04_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_77	AA_D04_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_78	AA_D04_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_79	AA_D04_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_80	AA_D04_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D04	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_81	AA_D03_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D03	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_82	AA_D03_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D03	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_83	AA_D03_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D03	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_84	AA_D03_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D03	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_85	AA_D03_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D03	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_86	AA_D03_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D03	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_87	AA_D03_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D03	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_88	AA_D03_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D03	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_89	AA_D03_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D03	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_90	AA_D03_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D03	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_91	AA_D02_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D02	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_92	AA_D02_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D02	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_93	AA_D02_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D02	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_94	AA_D02_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D02	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_95	AA_D02_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D02	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_96	AA_D02_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D02	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_97	AA_D02_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D02	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_98	AA_D02_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D02	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_99	AA_D02_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D02	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_100	AA_D02_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D02	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_101	AA_D02_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D02	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_102	AA_D02_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D02	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_103	AA_D02_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D02	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_104	AA_D02_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D02	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_105	AA_D02_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D02	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_106	AA_D02_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D02	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_107	AA_D02_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D02	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_108	AA_D02_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D02	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_109	AA_D02_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D02	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_110	AA_D02_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D02	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_111	AA_D01_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D01	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_112	AA_D01_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D01	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_113	AA_D01_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D01	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_114	AA_D01_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D01	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_115	AA_D01_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D01	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_116	AA_D01_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D01	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_117	AA_D01_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D01	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_118	AA_D01_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D01	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_119	AA_D01_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D01	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_120	AA_D01_02	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D01	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_121	AA_D01_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D01	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_122	AA_D01_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D01	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_123	AA_D01_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D01	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_124	AA_D01_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D01	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_125	AA_D01_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D01	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_126	AA_D01_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D01	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_127	AA_D01_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D01	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_128	AA_D01_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D01	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_129	AA_D01_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D01	NCBITaxon_10090	Mus musculus	unknown	unknown
+AA_130	AA_D01_01	CellLine	MONDO_0018076	tuberculosis	UBERON_0001963	bronchial-associated lymphoid tissue	EFO_0008722	Drop-seq	AA_D01	NCBITaxon_10090	Mus musculus	unknown	unknown

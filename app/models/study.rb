@@ -728,7 +728,15 @@ class Study
 
   # check if a give use can edit study
   def can_edit?(user)
-    user.nil? ? false : self.admins.include?(user.email) || self.user_in_group_share?(user, 'Edit')
+    if user.nil?
+      false
+    else
+      if self.admins.include?(user.email)
+        return true
+      else
+        self.user_in_group_share?(user, 'Edit')
+      end
+    end
   end
 
   # check if a given user can view study by share (does not take public into account - use Study.viewable(user) instead)
@@ -736,8 +744,16 @@ class Study
     if user.nil?
       false
     else
-      self.can_edit?(user) || self.study_shares.can_view.include?(user.email) || self.user_in_group_share?(user, 'View', 'Reviewer')
+      # use if/elsif with explicit returns to ensure skipping downstream calls
+      if self.study_shares.can_view.include?(user.email)
+        return true
+      elsif self.can_edit?(user)
+        return true
+      else
+        self.user_in_group_share?(user, 'View', 'Reviewer')
+      end
     end
+    false
   end
 
   # check if a user has access to a study's GCS bucket.  will require View or Edit permission at the user or group level
@@ -745,13 +761,25 @@ class Study
     if user.nil?
       false
     else
-      self.user == user || self.study_shares.non_reviewers.include?(user.email) || self.user_in_group_share?(user, 'View', 'Edit')
+      if self.user == user
+        return true
+      elsif self.study_shares.non_reviewers.include?(user.email)
+        return true
+      else
+        self.user_in_group_share?(user, 'View', 'Edit')
+      end
     end
   end
 
   # check if a user has permission do download data from this study (either is public and user is signed in, user is an admin, or user has a direct share)
   def can_download?(user)
-    (self.public? && user.present?) || (user.present? && user.admin?) || self.has_bucket_access?(user)
+    if self.public? && user.present?
+      return true
+    elsif user.present? && user.admin?
+      return true
+    else
+      self.has_bucket_access?(user)
+    end
   end
 
   # check if user can delete a study - only owners can
@@ -764,20 +792,25 @@ class Study
     if user.nil? || !user.registered_for_firecloud?
       false
     else
-      begin
-        workspace_acl = Study.firecloud_client.get_workspace_acl(self.firecloud_project, self.firecloud_workspace)
-        if workspace_acl['acl'][user.email].nil?
-          # check if user has project-level permissions
-          user_client = FireCloudClient.new(user, self.firecloud_project)
-          projects = user_client.get_billing_projects
-          # billing project users can only create workspaces, so unless user is an owner, user cannot compute
-          projects.detect {|project| project['projectName'] == self.firecloud_project && project['role'] == 'Owner'}.present?
-        else
-          workspace_acl['acl'][user.email]['canCompute']
+      # don't check permissions if API is not 'ok'
+      if Study.firecloud_client.services_available?(FireCloudClient::SAM_SERVICE, FireCloudClient::RAWLS_SERVICE, FireCloudClient::AGORA_SERVICE)
+        begin
+          workspace_acl = Study.firecloud_client.get_workspace_acl(self.firecloud_project, self.firecloud_workspace)
+          if workspace_acl['acl'][user.email].nil?
+            # check if user has project-level permissions
+            user_client = FireCloudClient.new(user, self.firecloud_project)
+            projects = user_client.get_billing_projects
+            # billing project users can only create workspaces, so unless user is an owner, user cannot compute
+            projects.detect {|project| project['projectName'] == self.firecloud_project && project['role'] == 'Owner'}.present?
+          else
+            workspace_acl['acl'][user.email]['canCompute']
+          end
+        rescue => e
+          ErrorTracker.report_exception(e, user, {study: self.attributes.to_h})
+          Rails.logger.error "Unable to retrieve compute permissions for #{user.email}: #{e.message}"
+          false
         end
-      rescue => e
-        ErrorTracker.report_exception(e, user, {study: self.attributes.to_h})
-        Rails.logger.error "Unable to retrieve compute permissions for #{user.email}: #{e.message}"
+      else
         false
       end
     end
@@ -785,7 +818,8 @@ class Study
 
   # check if a user has access to a study via a user group
   def user_in_group_share?(user, *permissions)
-    if user.registered_for_firecloud
+    # check if api status is ok, otherwise exit without checking to prevent UI hanging on repeated calls
+    if user.registered_for_firecloud && Study.firecloud_client.services_available?(FireCloudClient::SAM_SERVICE, FireCloudClient::RAWLS_SERVICE, FireCloudClient::THURLOE_SERVICE)
       group_shares = self.study_shares.keep_if {|share| share.is_group_share?}.select {|share| permissions.include?(share.permission)}.map(&:email)
       # get user's FC groups
       if user.access_token.present?
@@ -796,9 +830,15 @@ class Study
       else
         false
       end
-      user_groups = client.get_user_groups.map {|g| g['groupEmail']}
-      # use native array intersection to determine if any of the user's groups have been shared with this study at the correct permission
-      (user_groups & group_shares).any?
+      begin
+        user_groups = client.get_user_groups.map {|g| g['groupEmail']}
+        # use native array intersection to determine if any of the user's groups have been shared with this study at the correct permission
+        (user_groups & group_shares).any?
+      rescue => e
+        ErrorTracker.report_exception(e, user, {user_groups: user_groups, study: self.attributes.to_h})
+        Rails.logger.error "Unable to retrieve user groups for #{user.email}: #{e.class.name} -- #{e.message}"
+        false
+      end
     else
       false # if user is not registered for firecloud, default to false
     end
@@ -2855,7 +2895,6 @@ class Study
       # store generation tag to know whether a file has been updated in GCP
       Rails.logger.info "#{Time.zone.now}: Updating #{file.bucket_location}:#{file.id} with generation tag: #{remote_file.generation} after successful upload"
       file.update(generation: remote_file.generation)
-      file.update(upload_file_size: remote_file.size)
       Rails.logger.info "#{Time.zone.now}: Upload of #{file.bucket_location}:#{file.id} complete, scheduling cleanup job"
       # schedule the upload cleanup job to run in two minutes
       run_at = 2.minutes.from_now

@@ -71,7 +71,8 @@ class FireCloudClientTest < ActiveSupport::TestCase
     assert status['ok'].present?, 'Did not find root status message'
     assert status['systems'].present?, 'Did not find system statuses'
     # look for presence of systems that SCP depends on
-    services = %w(Rawls Agora Sam Thurloe)
+    services = [FireCloudClient::RAWLS_SERVICE, FireCloudClient::SAM_SERVICE, FireCloudClient::AGORA_SERVICE,
+                FireCloudClient::THURLOE_SERVICE, FireCloudClient::BUCKETS_SERVICE]
     services.each do |service|
       assert status['systems'][service].present?, "Did not find required service: #{service}"
       assert [true, false].include?(status['systems'][service]['ok']), "Did not find expected 'ok' message of true/false; found: #{status['systems'][service]['ok']}"

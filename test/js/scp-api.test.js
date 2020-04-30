@@ -2,10 +2,7 @@
 /* eslint-disable*/
 
 const fetch = require('node-fetch')
-import scpApi, {
-  fetchAuthCode,
-  fetchFacetFilters
-} from 'lib/scp-api'
+import scpApi, { fetchAuthCode, fetchFacetFilters } from 'lib/scp-api'
 
 describe('JavaScript client for SCP REST API', () => {
   beforeAll(() => {
@@ -17,24 +14,15 @@ describe('JavaScript client for SCP REST API', () => {
     jest.restoreAllMocks()
   })
 
-  it('returns `authCode` and `timeInterval` from fetchAuthCode', async () => {
-    const { authCode, timeInterval } = await fetchAuthCode()
-    expect(authCode).toBe(123456)
-    expect(timeInterval).toBe(1800)
-  })
-
-  it('returns 10 filters from fetchFacetFilters', async () => {
-    const apiData = await fetchFacetFilters('disease', 'tuberculosis')
-    expect(apiData.filters).toHaveLength(10)
-  })
-
   it('includes `Authorization: Bearer` in requests when signed in', done => {
     // Spy on `fetch()` and its contingent methods like `json()`,
     // because we want to intercept the outgoing request
     const mockSuccessResponse = {}
     const mockJsonPromise = Promise.resolve(mockSuccessResponse)
     const mockFetchPromise = Promise.resolve({
-      json: () => {mockJsonPromise}
+      json: () => {
+        mockJsonPromise
+      }
     })
     jest.spyOn(global, 'fetch').mockImplementation(() => {
       mockFetchPromise
@@ -46,8 +34,8 @@ describe('JavaScript client for SCP REST API', () => {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': 'Bearer test'
+          Accept: 'application/json',
+          Authorization: 'Bearer test'
         }
       })
     )
@@ -65,7 +53,9 @@ describe('JavaScript client for SCP REST API', () => {
       ok: false,
       statusText: 'Internal Server Error'
     }
-    jest.spyOn(global, 'fetch').mockReturnValue(Promise.resolve(mockErrorResponse))
+    jest
+      .spyOn(global, 'fetch')
+      .mockReturnValue(Promise.resolve(mockErrorResponse))
     const actualResponse = await scpApi('/test/path', {}, false)
     expect(actualResponse.status).toEqual(500)
     expect(actualResponse.ok).toEqual(false)

@@ -17,7 +17,7 @@
         <%= render partial: 'study_download_data' %>
       </div>
     <% end %>
-    <% if @allow_firecloud_access && @allow_computes && @user_can_compute %>
+    <% if @allow_firecloud_access && @user_can_compute %>
       <div class="tab-pane" id="study-analysis" role="tabpanel">
         <%= render partial: 'study_analysis' %>
       </div>

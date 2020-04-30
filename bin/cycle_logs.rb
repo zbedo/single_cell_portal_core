@@ -13,31 +13,33 @@ all_logs = Dir.entries("log").keep_if {|l| !l.start_with?('.')}
 4.downto(1) do |i|
   if i == 4
     all_logs.select {|l| l =~ /#{i}/}.each do |log|
-			File.exists?("log/#{log}") ? File.delete("log/#{log}") : next
+      File.exists?("log/#{log}") ? File.delete("log/#{log}") : next
     end
   else
-		all_logs.select {|l| l =~ /#{i}/}.each do |log|
+    all_logs.select {|l| l =~ /#{i}/}.each do |log|
+      log_parts = log.split('.')
       # handling of delayed_job.log is different that delayed_job.[RAILS_ENV].log
-      if log.split('.').first == 'delayed_job' && log.split('.').size == 3
-        basename = log.split('.')[0..1].join('.')
+      if log_parts.first == 'delayed_job' && log_parts.size == 4
+        basename = log_parts[0..1].join('.')
       else
-        basename = log.split('.').first
+        basename = log_parts.first
       end
-			File.exists?("log/#{basename}.#{i}.log") ? File.rename("log/#{basename}.#{i}.log", "log/#{basename}.#{i + 1}.log") : next
-		end
+      File.exists?("log/#{basename}.#{i}.log") ? File.rename("log/#{basename}.#{i}.log", "log/#{basename}.#{i + 1}.log") : next
+    end
   end
 end
 
 # find all logs that haven't been rolled over yet and rename
 all_logs.select {|l| l.split('.').last == 'log'}.each do |log|
-  if log.split('.').first == 'delayed_job' && log.split('.').size == 3
-    basename = log.split('.')[0..1].join('.')
+  log_parts = log.split('.')
+  if log_parts.first == 'delayed_job' && log_parts.size == 4
+    basename = log_parts[0..1].join('.')
   else
-    basename = log.split('.').first
+    basename = log_parts.first
   end
   if File.exists?("log/#{basename}.log")
-		FileUtils.cp("log/#{basename}.log", "log/#{basename}.1.log")
-		File.delete("log/#{basename}.log")
+    FileUtils.cp("log/#{basename}.log", "log/#{basename}.1.log")
+    File.delete("log/#{basename}.log")
   end
 end
 
@@ -49,5 +51,3 @@ if Dir.exists?('log/nginx')
     File.delete log
   end
 end
-
-

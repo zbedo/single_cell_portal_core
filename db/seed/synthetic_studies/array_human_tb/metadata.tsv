@@ -1,132 +1,132 @@
-NAME	biosample_id	sample_type	disease	disease__ontology_label	organ	organ__ontology_label	library_preparation_protocol	library_preparation_protocol__ontology_label	donor_id	species	species__ontology_label	sex	is_living
+NAME	biosample_id	biosample_type	disease	disease__ontology_label	organ	organ__ontology_label	library_preparation_protocol	library_preparation_protocol__ontology_label	donor_id	species	species__ontology_label	sex	is_living
 TYPE	group	group	group	group	group	group	group	group	group	group	group	group	group
-BB_1	BB_D06_16dpp_r3	cultured primary cells	MONDO_0004189	esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D06	NCBITaxon_9606	Homo sapiens	male	yes
-BB_2	BB_D06_16dpp_r3	cultured primary cells	MONDO_0004189	esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D06	NCBITaxon_9606	Homo sapiens	male	yes
-BB_3	BB_D06_16dpp_r3	cultured primary cells	MONDO_0004189	esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D06	NCBITaxon_9606	Homo sapiens	male	yes
-BB_4	BB_D06_16dpp_r3	cultured primary cells	MONDO_0004189	esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D06	NCBITaxon_9606	Homo sapiens	male	yes
-BB_5	BB_D06_16dpp_r3	cultured primary cells	MONDO_0004189	esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D06	NCBITaxon_9606	Homo sapiens	male	yes
-BB_6	BB_D06_16dpp_r3	cultured primary cells	MONDO_0004189	esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D06	NCBITaxon_9606	Homo sapiens	male	yes
-BB_7	BB_D06_16dpp_r3	cultured primary cells	MONDO_0004189	esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D06	NCBITaxon_9606	Homo sapiens	male	yes
-BB_8	BB_D06_16dpp_r3	cultured primary cells	MONDO_0004189	esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D06	NCBITaxon_9606	Homo sapiens	male	yes
-BB_9	BB_D06_16dpp_r3	cultured primary cells	MONDO_0004189	esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D06	NCBITaxon_9606	Homo sapiens	male	yes
-BB_10	BB_D06_16dpp_r3	cultured primary cells	MONDO_0004189	esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D06	NCBITaxon_9606	Homo sapiens	male	yes
-BB_11	BB_D06_5dpp_r1	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D06	NCBITaxon_9606	Homo sapiens	male	yes
-BB_12	BB_D06_5dpp_r1	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D06	NCBITaxon_9606	Homo sapiens	male	yes
-BB_13	BB_D06_5dpp_r1	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D06	NCBITaxon_9606	Homo sapiens	male	yes
-BB_14	BB_D06_5dpp_r1	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D06	NCBITaxon_9606	Homo sapiens	male	yes
-BB_15	BB_D06_5dpp_r1	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D06	NCBITaxon_9606	Homo sapiens	male	yes
-BB_16	BB_D06_5dpp_r1	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D06	NCBITaxon_9606	Homo sapiens	male	yes
-BB_17	BB_D06_5dpp_r1	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D06	NCBITaxon_9606	Homo sapiens	male	yes
-BB_18	BB_D06_5dpp_r1	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D06	NCBITaxon_9606	Homo sapiens	male	yes
-BB_19	BB_D06_5dpp_r1	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D06	NCBITaxon_9606	Homo sapiens	male	yes
-BB_20	BB_D06_5dpp_r1	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D06	NCBITaxon_9606	Homo sapiens	male	yes
-BB_21	BB_D05_10dpp_r1	cultured primary cells	MONDO_0005887|MONDO_0005787	oral tuberculosis|hepatic tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
-BB_22	BB_D05_10dpp_r1	cultured primary cells	MONDO_0005887|MONDO_0005787	oral tuberculosis|hepatic tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
-BB_23	BB_D05_10dpp_r1	cultured primary cells	MONDO_0005887|MONDO_0005787	oral tuberculosis|hepatic tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
-BB_24	BB_D05_10dpp_r1	cultured primary cells	MONDO_0005887|MONDO_0005787	oral tuberculosis|hepatic tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
-BB_25	BB_D05_10dpp_r1	cultured primary cells	MONDO_0005887|MONDO_0005787	oral tuberculosis|hepatic tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
-BB_26	BB_D05_10dpp_r1	cultured primary cells	MONDO_0005887|MONDO_0005787	oral tuberculosis|hepatic tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
-BB_27	BB_D05_10dpp_r1	cultured primary cells	MONDO_0005887|MONDO_0005787	oral tuberculosis|hepatic tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
-BB_28	BB_D05_10dpp_r1	cultured primary cells	MONDO_0005887|MONDO_0005787	oral tuberculosis|hepatic tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
-BB_29	BB_D05_10dpp_r1	cultured primary cells	MONDO_0005887|MONDO_0005787	oral tuberculosis|hepatic tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
-BB_30	BB_D05_10dpp_r1	cultured primary cells	MONDO_0005887|MONDO_0005787	oral tuberculosis|hepatic tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
-BB_31	BB_D05_14dpp_r1	cultured primary cells	MONDO_0005887|MONDO_0005787	oral tuberculosis|hepatic tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
-BB_32	BB_D05_14dpp_r1	cultured primary cells	MONDO_0005887|MONDO_0005787	oral tuberculosis|hepatic tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
-BB_33	BB_D05_14dpp_r1	cultured primary cells	MONDO_0005887|MONDO_0005787	oral tuberculosis|hepatic tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
-BB_34	BB_D05_14dpp_r1	cultured primary cells	MONDO_0005887|MONDO_0005787	oral tuberculosis|hepatic tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
-BB_35	BB_D05_14dpp_r1	cultured primary cells	MONDO_0005887|MONDO_0005787	oral tuberculosis|hepatic tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
-BB_36	BB_D05_14dpp_r1	cultured primary cells	MONDO_0005887|MONDO_0005787	oral tuberculosis|hepatic tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
-BB_37	BB_D05_14dpp_r1	cultured primary cells	MONDO_0005887|MONDO_0005787	oral tuberculosis|hepatic tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
-BB_38	BB_D05_14dpp_r1	cultured primary cells	MONDO_0005887|MONDO_0005787	oral tuberculosis|hepatic tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
-BB_39	BB_D05_14dpp_r1	cultured primary cells	MONDO_0005887|MONDO_0005787	oral tuberculosis|hepatic tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
-BB_40	BB_D05_14dpp_r1	cultured primary cells	MONDO_0005887|MONDO_0005787	oral tuberculosis|hepatic tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
-BB_41	BB_D05_5dpp_r1	cultured primary cells	MONDO_0005887|MONDO_0005787|MONDO_0004189	oral tuberculosis|hepatic tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
-BB_42	BB_D05_5dpp_r1	cultured primary cells	MONDO_0005887|MONDO_0005787|MONDO_0004189	oral tuberculosis|hepatic tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
-BB_43	BB_D05_5dpp_r1	cultured primary cells	MONDO_0005887|MONDO_0005787|MONDO_0004189	oral tuberculosis|hepatic tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
-BB_44	BB_D05_5dpp_r1	cultured primary cells	MONDO_0005887|MONDO_0005787|MONDO_0004189	oral tuberculosis|hepatic tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
-BB_45	BB_D05_5dpp_r1	cultured primary cells	MONDO_0005887|MONDO_0005787|MONDO_0004189	oral tuberculosis|hepatic tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
-BB_46	BB_D05_5dpp_r1	cultured primary cells	MONDO_0005887|MONDO_0005787|MONDO_0004189	oral tuberculosis|hepatic tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
-BB_47	BB_D05_5dpp_r1	cultured primary cells	MONDO_0005887|MONDO_0005787|MONDO_0004189	oral tuberculosis|hepatic tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
-BB_48	BB_D05_5dpp_r1	cultured primary cells	MONDO_0005887|MONDO_0005787|MONDO_0004189	oral tuberculosis|hepatic tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
-BB_49	BB_D05_5dpp_r1	cultured primary cells	MONDO_0005887|MONDO_0005787|MONDO_0004189	oral tuberculosis|hepatic tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
-BB_50	BB_D05_5dpp_r1	cultured primary cells	MONDO_0005887|MONDO_0005787|MONDO_0004189	oral tuberculosis|hepatic tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
-BB_51	BB_D04_10dpp_r1	cultured primary cells	MONDO_0005787|MONDO_0004189	hepatic tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
-BB_52	BB_D04_10dpp_r1	cultured primary cells	MONDO_0005787|MONDO_0004189	hepatic tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
-BB_53	BB_D04_10dpp_r1	cultured primary cells	MONDO_0005787|MONDO_0004189	hepatic tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
-BB_54	BB_D04_10dpp_r1	cultured primary cells	MONDO_0005787|MONDO_0004189	hepatic tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
-BB_55	BB_D04_10dpp_r1	cultured primary cells	MONDO_0005787|MONDO_0004189	hepatic tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
-BB_56	BB_D04_10dpp_r1	cultured primary cells	MONDO_0005787|MONDO_0004189	hepatic tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
-BB_57	BB_D04_10dpp_r1	cultured primary cells	MONDO_0005787|MONDO_0004189	hepatic tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
-BB_58	BB_D04_10dpp_r1	cultured primary cells	MONDO_0005787|MONDO_0004189	hepatic tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
-BB_59	BB_D04_10dpp_r1	cultured primary cells	MONDO_0005787|MONDO_0004189	hepatic tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
-BB_60	BB_D04_10dpp_r1	cultured primary cells	MONDO_0005787|MONDO_0004189	hepatic tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
-BB_61	BB_D04_15dpp_r1	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
-BB_62	BB_D04_15dpp_r1	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
-BB_63	BB_D04_15dpp_r1	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
-BB_64	BB_D04_15dpp_r1	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
-BB_65	BB_D04_15dpp_r1	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
-BB_66	BB_D04_15dpp_r1	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
-BB_67	BB_D04_15dpp_r1	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
-BB_68	BB_D04_15dpp_r1	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
-BB_69	BB_D04_15dpp_r1	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
-BB_70	BB_D04_15dpp_r1	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
-BB_71	BB_D04_5dpp_r1	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
-BB_72	BB_D04_5dpp_r1	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
-BB_73	BB_D04_5dpp_r1	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
-BB_74	BB_D04_5dpp_r1	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
-BB_75	BB_D04_5dpp_r1	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
-BB_76	BB_D04_5dpp_r1	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
-BB_77	BB_D04_5dpp_r1	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
-BB_78	BB_D04_5dpp_r1	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
-BB_79	BB_D04_5dpp_r1	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
-BB_80	BB_D04_5dpp_r1	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
-BB_81	BB_D03_t1_r2	cultured primary cells	MONDO_0005887|MONDO_0004189	oral tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D03	NCBITaxon_9606	Homo sapiens	male	yes
-BB_82	BB_D03_t1_r2	cultured primary cells	MONDO_0005887|MONDO_0004189	oral tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D03	NCBITaxon_9606	Homo sapiens	male	yes
-BB_83	BB_D03_t1_r2	cultured primary cells	MONDO_0005887|MONDO_0004189	oral tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D03	NCBITaxon_9606	Homo sapiens	male	yes
-BB_84	BB_D03_t1_r2	cultured primary cells	MONDO_0005887|MONDO_0004189	oral tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D03	NCBITaxon_9606	Homo sapiens	male	yes
-BB_85	BB_D03_t1_r2	cultured primary cells	MONDO_0005887|MONDO_0004189	oral tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D03	NCBITaxon_9606	Homo sapiens	male	yes
-BB_86	BB_D03_t1_r2	cultured primary cells	MONDO_0005887|MONDO_0004189	oral tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D03	NCBITaxon_9606	Homo sapiens	male	yes
-BB_87	BB_D03_t1_r2	cultured primary cells	MONDO_0005887|MONDO_0004189	oral tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D03	NCBITaxon_9606	Homo sapiens	male	yes
-BB_88	BB_D03_t1_r2	cultured primary cells	MONDO_0005887|MONDO_0004189	oral tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D03	NCBITaxon_9606	Homo sapiens	male	yes
-BB_89	BB_D03_t1_r2	cultured primary cells	MONDO_0005887|MONDO_0004189	oral tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D03	NCBITaxon_9606	Homo sapiens	male	yes
-BB_90	BB_D03_t1_r2	cultured primary cells	MONDO_0005887|MONDO_0004189	oral tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D03	NCBITaxon_9606	Homo sapiens	male	yes
-BB_91	BB_D02_02	cultured primary cells	MONDO_0005887	oral tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D02	NCBITaxon_9606	Homo sapiens	male	yes
-BB_92	BB_D02_02	cultured primary cells	MONDO_0005887	oral tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D02	NCBITaxon_9606	Homo sapiens	male	yes
-BB_93	BB_D02_02	cultured primary cells	MONDO_0005887	oral tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D02	NCBITaxon_9606	Homo sapiens	male	yes
-BB_94	BB_D02_02	cultured primary cells	MONDO_0005887	oral tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D02	NCBITaxon_9606	Homo sapiens	male	yes
-BB_95	BB_D02_02	cultured primary cells	MONDO_0005887	oral tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D02	NCBITaxon_9606	Homo sapiens	male	yes
-BB_96	BB_D02_02	cultured primary cells	MONDO_0005887	oral tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D02	NCBITaxon_9606	Homo sapiens	male	yes
-BB_97	BB_D02_02	cultured primary cells	MONDO_0005887	oral tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D02	NCBITaxon_9606	Homo sapiens	male	yes
-BB_98	BB_D02_02	cultured primary cells	MONDO_0005887	oral tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D02	NCBITaxon_9606	Homo sapiens	male	yes
-BB_99	BB_D02_02	cultured primary cells	MONDO_0005887	oral tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D02	NCBITaxon_9606	Homo sapiens	male	yes
-BB_100	BB_D02_02	cultured primary cells	MONDO_0005887	oral tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D02	NCBITaxon_9606	Homo sapiens	male	yes
-BB_101	BB_D02_01	cultured primary cells	MONDO_0005887	oral tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D02	NCBITaxon_9606	Homo sapiens	male	yes
-BB_102	BB_D02_01	cultured primary cells	MONDO_0005887	oral tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D02	NCBITaxon_9606	Homo sapiens	male	yes
-BB_103	BB_D02_01	cultured primary cells	MONDO_0005887	oral tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D02	NCBITaxon_9606	Homo sapiens	male	yes
-BB_104	BB_D02_01	cultured primary cells	MONDO_0005887	oral tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D02	NCBITaxon_9606	Homo sapiens	male	yes
-BB_105	BB_D02_01	cultured primary cells	MONDO_0005887	oral tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D02	NCBITaxon_9606	Homo sapiens	male	yes
-BB_106	BB_D02_01	cultured primary cells	MONDO_0005887	oral tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D02	NCBITaxon_9606	Homo sapiens	male	yes
-BB_107	BB_D02_01	cultured primary cells	MONDO_0005887	oral tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D02	NCBITaxon_9606	Homo sapiens	male	yes
-BB_108	BB_D02_01	cultured primary cells	MONDO_0005887	oral tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D02	NCBITaxon_9606	Homo sapiens	male	yes
-BB_109	BB_D02_01	cultured primary cells	MONDO_0005887	oral tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D02	NCBITaxon_9606	Homo sapiens	male	yes
-BB_110	BB_D02_01	cultured primary cells	MONDO_0005887	oral tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D02	NCBITaxon_9606	Homo sapiens	male	yes
-BB_111	BB_D01_02	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D01	NCBITaxon_9606	Homo sapiens	male	yes
-BB_112	BB_D01_02	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D01	NCBITaxon_9606	Homo sapiens	male	yes
-BB_113	BB_D01_02	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D01	NCBITaxon_9606	Homo sapiens	male	yes
-BB_114	BB_D01_02	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D01	NCBITaxon_9606	Homo sapiens	male	yes
-BB_115	BB_D01_02	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D01	NCBITaxon_9606	Homo sapiens	male	yes
-BB_116	BB_D01_02	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D01	NCBITaxon_9606	Homo sapiens	male	yes
-BB_117	BB_D01_02	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D01	NCBITaxon_9606	Homo sapiens	male	yes
-BB_118	BB_D01_02	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D01	NCBITaxon_9606	Homo sapiens	male	yes
-BB_119	BB_D01_02	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D01	NCBITaxon_9606	Homo sapiens	male	yes
-BB_120	BB_D01_02	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D01	NCBITaxon_9606	Homo sapiens	male	yes
-BB_121	BB_D01_01	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D01	NCBITaxon_9606	Homo sapiens	male	yes
-BB_122	BB_D01_01	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D01	NCBITaxon_9606	Homo sapiens	male	yes
-BB_123	BB_D01_01	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D01	NCBITaxon_9606	Homo sapiens	male	yes
-BB_124	BB_D01_01	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D01	NCBITaxon_9606	Homo sapiens	male	yes
-BB_125	BB_D01_01	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D01	NCBITaxon_9606	Homo sapiens	male	yes
-BB_126	BB_D01_01	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D01	NCBITaxon_9606	Homo sapiens	male	yes
-BB_127	BB_D01_01	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D01	NCBITaxon_9606	Homo sapiens	male	yes
-BB_128	BB_D01_01	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D01	NCBITaxon_9606	Homo sapiens	male	yes
-BB_129	BB_D01_01	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D01	NCBITaxon_9606	Homo sapiens	male	yes
-BB_130	BB_D01_01	cultured primary cells	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D01	NCBITaxon_9606	Homo sapiens	male	yes
+BB_1	BB_D06_16dpp_r3	PrimaryBioSample_PrimaryCulture	MONDO_0004189	esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D06	NCBITaxon_9606	Homo sapiens	male	yes
+BB_2	BB_D06_16dpp_r3	PrimaryBioSample_PrimaryCulture	MONDO_0004189	esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D06	NCBITaxon_9606	Homo sapiens	male	yes
+BB_3	BB_D06_16dpp_r3	PrimaryBioSample_PrimaryCulture	MONDO_0004189	esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D06	NCBITaxon_9606	Homo sapiens	male	yes
+BB_4	BB_D06_16dpp_r3	PrimaryBioSample_PrimaryCulture	MONDO_0004189	esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D06	NCBITaxon_9606	Homo sapiens	male	yes
+BB_5	BB_D06_16dpp_r3	PrimaryBioSample_PrimaryCulture	MONDO_0004189	esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D06	NCBITaxon_9606	Homo sapiens	male	yes
+BB_6	BB_D06_16dpp_r3	PrimaryBioSample_PrimaryCulture	MONDO_0004189	esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D06	NCBITaxon_9606	Homo sapiens	male	yes
+BB_7	BB_D06_16dpp_r3	PrimaryBioSample_PrimaryCulture	MONDO_0004189	esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D06	NCBITaxon_9606	Homo sapiens	male	yes
+BB_8	BB_D06_16dpp_r3	PrimaryBioSample_PrimaryCulture	MONDO_0004189	esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D06	NCBITaxon_9606	Homo sapiens	male	yes
+BB_9	BB_D06_16dpp_r3	PrimaryBioSample_PrimaryCulture	MONDO_0004189	esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D06	NCBITaxon_9606	Homo sapiens	male	yes
+BB_10	BB_D06_16dpp_r3	PrimaryBioSample_PrimaryCulture	MONDO_0004189	esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D06	NCBITaxon_9606	Homo sapiens	male	yes
+BB_11	BB_D06_5dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D06	NCBITaxon_9606	Homo sapiens	male	yes
+BB_12	BB_D06_5dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D06	NCBITaxon_9606	Homo sapiens	male	yes
+BB_13	BB_D06_5dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D06	NCBITaxon_9606	Homo sapiens	male	yes
+BB_14	BB_D06_5dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D06	NCBITaxon_9606	Homo sapiens	male	yes
+BB_15	BB_D06_5dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D06	NCBITaxon_9606	Homo sapiens	male	yes
+BB_16	BB_D06_5dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D06	NCBITaxon_9606	Homo sapiens	male	yes
+BB_17	BB_D06_5dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D06	NCBITaxon_9606	Homo sapiens	male	yes
+BB_18	BB_D06_5dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D06	NCBITaxon_9606	Homo sapiens	male	yes
+BB_19	BB_D06_5dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D06	NCBITaxon_9606	Homo sapiens	male	yes
+BB_20	BB_D06_5dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D06	NCBITaxon_9606	Homo sapiens	male	yes
+BB_21	BB_D05_10dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0005887|MONDO_0005787	oral tuberculosis|hepatic tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
+BB_22	BB_D05_10dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0005887|MONDO_0005787	oral tuberculosis|hepatic tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
+BB_23	BB_D05_10dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0005887|MONDO_0005787	oral tuberculosis|hepatic tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
+BB_24	BB_D05_10dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0005887|MONDO_0005787	oral tuberculosis|hepatic tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
+BB_25	BB_D05_10dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0005887|MONDO_0005787	oral tuberculosis|hepatic tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
+BB_26	BB_D05_10dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0005887|MONDO_0005787	oral tuberculosis|hepatic tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
+BB_27	BB_D05_10dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0005887|MONDO_0005787	oral tuberculosis|hepatic tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
+BB_28	BB_D05_10dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0005887|MONDO_0005787	oral tuberculosis|hepatic tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
+BB_29	BB_D05_10dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0005887|MONDO_0005787	oral tuberculosis|hepatic tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
+BB_30	BB_D05_10dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0005887|MONDO_0005787	oral tuberculosis|hepatic tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
+BB_31	BB_D05_14dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0005887|MONDO_0005787	oral tuberculosis|hepatic tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
+BB_32	BB_D05_14dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0005887|MONDO_0005787	oral tuberculosis|hepatic tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
+BB_33	BB_D05_14dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0005887|MONDO_0005787	oral tuberculosis|hepatic tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
+BB_34	BB_D05_14dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0005887|MONDO_0005787	oral tuberculosis|hepatic tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
+BB_35	BB_D05_14dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0005887|MONDO_0005787	oral tuberculosis|hepatic tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
+BB_36	BB_D05_14dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0005887|MONDO_0005787	oral tuberculosis|hepatic tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
+BB_37	BB_D05_14dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0005887|MONDO_0005787	oral tuberculosis|hepatic tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
+BB_38	BB_D05_14dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0005887|MONDO_0005787	oral tuberculosis|hepatic tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
+BB_39	BB_D05_14dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0005887|MONDO_0005787	oral tuberculosis|hepatic tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
+BB_40	BB_D05_14dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0005887|MONDO_0005787	oral tuberculosis|hepatic tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
+BB_41	BB_D05_5dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0005887|MONDO_0005787|MONDO_0004189	oral tuberculosis|hepatic tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
+BB_42	BB_D05_5dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0005887|MONDO_0005787|MONDO_0004189	oral tuberculosis|hepatic tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
+BB_43	BB_D05_5dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0005887|MONDO_0005787|MONDO_0004189	oral tuberculosis|hepatic tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
+BB_44	BB_D05_5dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0005887|MONDO_0005787|MONDO_0004189	oral tuberculosis|hepatic tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
+BB_45	BB_D05_5dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0005887|MONDO_0005787|MONDO_0004189	oral tuberculosis|hepatic tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
+BB_46	BB_D05_5dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0005887|MONDO_0005787|MONDO_0004189	oral tuberculosis|hepatic tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
+BB_47	BB_D05_5dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0005887|MONDO_0005787|MONDO_0004189	oral tuberculosis|hepatic tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
+BB_48	BB_D05_5dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0005887|MONDO_0005787|MONDO_0004189	oral tuberculosis|hepatic tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
+BB_49	BB_D05_5dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0005887|MONDO_0005787|MONDO_0004189	oral tuberculosis|hepatic tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
+BB_50	BB_D05_5dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0005887|MONDO_0005787|MONDO_0004189	oral tuberculosis|hepatic tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D05	NCBITaxon_9606	Homo sapiens	male	yes
+BB_51	BB_D04_10dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0005787|MONDO_0004189	hepatic tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
+BB_52	BB_D04_10dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0005787|MONDO_0004189	hepatic tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
+BB_53	BB_D04_10dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0005787|MONDO_0004189	hepatic tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
+BB_54	BB_D04_10dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0005787|MONDO_0004189	hepatic tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
+BB_55	BB_D04_10dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0005787|MONDO_0004189	hepatic tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
+BB_56	BB_D04_10dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0005787|MONDO_0004189	hepatic tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
+BB_57	BB_D04_10dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0005787|MONDO_0004189	hepatic tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
+BB_58	BB_D04_10dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0005787|MONDO_0004189	hepatic tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
+BB_59	BB_D04_10dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0005787|MONDO_0004189	hepatic tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
+BB_60	BB_D04_10dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0005787|MONDO_0004189	hepatic tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
+BB_61	BB_D04_15dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
+BB_62	BB_D04_15dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
+BB_63	BB_D04_15dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
+BB_64	BB_D04_15dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
+BB_65	BB_D04_15dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
+BB_66	BB_D04_15dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
+BB_67	BB_D04_15dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
+BB_68	BB_D04_15dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
+BB_69	BB_D04_15dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
+BB_70	BB_D04_15dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
+BB_71	BB_D04_5dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
+BB_72	BB_D04_5dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
+BB_73	BB_D04_5dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
+BB_74	BB_D04_5dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
+BB_75	BB_D04_5dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
+BB_76	BB_D04_5dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
+BB_77	BB_D04_5dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
+BB_78	BB_D04_5dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
+BB_79	BB_D04_5dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
+BB_80	BB_D04_5dpp_r1	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D04	NCBITaxon_9606	Homo sapiens	male	yes
+BB_81	BB_D03_t1_r2	PrimaryBioSample_PrimaryCulture	MONDO_0005887|MONDO_0004189	oral tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D03	NCBITaxon_9606	Homo sapiens	male	yes
+BB_82	BB_D03_t1_r2	PrimaryBioSample_PrimaryCulture	MONDO_0005887|MONDO_0004189	oral tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D03	NCBITaxon_9606	Homo sapiens	male	yes
+BB_83	BB_D03_t1_r2	PrimaryBioSample_PrimaryCulture	MONDO_0005887|MONDO_0004189	oral tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D03	NCBITaxon_9606	Homo sapiens	male	yes
+BB_84	BB_D03_t1_r2	PrimaryBioSample_PrimaryCulture	MONDO_0005887|MONDO_0004189	oral tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D03	NCBITaxon_9606	Homo sapiens	male	yes
+BB_85	BB_D03_t1_r2	PrimaryBioSample_PrimaryCulture	MONDO_0005887|MONDO_0004189	oral tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D03	NCBITaxon_9606	Homo sapiens	male	yes
+BB_86	BB_D03_t1_r2	PrimaryBioSample_PrimaryCulture	MONDO_0005887|MONDO_0004189	oral tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D03	NCBITaxon_9606	Homo sapiens	male	yes
+BB_87	BB_D03_t1_r2	PrimaryBioSample_PrimaryCulture	MONDO_0005887|MONDO_0004189	oral tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D03	NCBITaxon_9606	Homo sapiens	male	yes
+BB_88	BB_D03_t1_r2	PrimaryBioSample_PrimaryCulture	MONDO_0005887|MONDO_0004189	oral tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D03	NCBITaxon_9606	Homo sapiens	male	yes
+BB_89	BB_D03_t1_r2	PrimaryBioSample_PrimaryCulture	MONDO_0005887|MONDO_0004189	oral tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D03	NCBITaxon_9606	Homo sapiens	male	yes
+BB_90	BB_D03_t1_r2	PrimaryBioSample_PrimaryCulture	MONDO_0005887|MONDO_0004189	oral tuberculosis|esophageal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D03	NCBITaxon_9606	Homo sapiens	male	yes
+BB_91	BB_D02_02	PrimaryBioSample_PrimaryCulture	MONDO_0005887	oral tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D02	NCBITaxon_9606	Homo sapiens	male	yes
+BB_92	BB_D02_02	PrimaryBioSample_PrimaryCulture	MONDO_0005887	oral tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D02	NCBITaxon_9606	Homo sapiens	male	yes
+BB_93	BB_D02_02	PrimaryBioSample_PrimaryCulture	MONDO_0005887	oral tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D02	NCBITaxon_9606	Homo sapiens	male	yes
+BB_94	BB_D02_02	PrimaryBioSample_PrimaryCulture	MONDO_0005887	oral tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D02	NCBITaxon_9606	Homo sapiens	male	yes
+BB_95	BB_D02_02	PrimaryBioSample_PrimaryCulture	MONDO_0005887	oral tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D02	NCBITaxon_9606	Homo sapiens	male	yes
+BB_96	BB_D02_02	PrimaryBioSample_PrimaryCulture	MONDO_0005887	oral tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D02	NCBITaxon_9606	Homo sapiens	male	yes
+BB_97	BB_D02_02	PrimaryBioSample_PrimaryCulture	MONDO_0005887	oral tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D02	NCBITaxon_9606	Homo sapiens	male	yes
+BB_98	BB_D02_02	PrimaryBioSample_PrimaryCulture	MONDO_0005887	oral tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D02	NCBITaxon_9606	Homo sapiens	male	yes
+BB_99	BB_D02_02	PrimaryBioSample_PrimaryCulture	MONDO_0005887	oral tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D02	NCBITaxon_9606	Homo sapiens	male	yes
+BB_100	BB_D02_02	PrimaryBioSample_PrimaryCulture	MONDO_0005887	oral tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D02	NCBITaxon_9606	Homo sapiens	male	yes
+BB_101	BB_D02_01	PrimaryBioSample_PrimaryCulture	MONDO_0005887	oral tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D02	NCBITaxon_9606	Homo sapiens	male	yes
+BB_102	BB_D02_01	PrimaryBioSample_PrimaryCulture	MONDO_0005887	oral tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D02	NCBITaxon_9606	Homo sapiens	male	yes
+BB_103	BB_D02_01	PrimaryBioSample_PrimaryCulture	MONDO_0005887	oral tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D02	NCBITaxon_9606	Homo sapiens	male	yes
+BB_104	BB_D02_01	PrimaryBioSample_PrimaryCulture	MONDO_0005887	oral tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D02	NCBITaxon_9606	Homo sapiens	male	yes
+BB_105	BB_D02_01	PrimaryBioSample_PrimaryCulture	MONDO_0005887	oral tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D02	NCBITaxon_9606	Homo sapiens	male	yes
+BB_106	BB_D02_01	PrimaryBioSample_PrimaryCulture	MONDO_0005887	oral tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D02	NCBITaxon_9606	Homo sapiens	male	yes
+BB_107	BB_D02_01	PrimaryBioSample_PrimaryCulture	MONDO_0005887	oral tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D02	NCBITaxon_9606	Homo sapiens	male	yes
+BB_108	BB_D02_01	PrimaryBioSample_PrimaryCulture	MONDO_0005887	oral tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D02	NCBITaxon_9606	Homo sapiens	male	yes
+BB_109	BB_D02_01	PrimaryBioSample_PrimaryCulture	MONDO_0005887	oral tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D02	NCBITaxon_9606	Homo sapiens	male	yes
+BB_110	BB_D02_01	PrimaryBioSample_PrimaryCulture	MONDO_0005887	oral tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D02	NCBITaxon_9606	Homo sapiens	male	yes
+BB_111	BB_D01_02	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D01	NCBITaxon_9606	Homo sapiens	male	yes
+BB_112	BB_D01_02	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D01	NCBITaxon_9606	Homo sapiens	male	yes
+BB_113	BB_D01_02	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D01	NCBITaxon_9606	Homo sapiens	male	yes
+BB_114	BB_D01_02	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D01	NCBITaxon_9606	Homo sapiens	male	yes
+BB_115	BB_D01_02	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D01	NCBITaxon_9606	Homo sapiens	male	yes
+BB_116	BB_D01_02	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D01	NCBITaxon_9606	Homo sapiens	male	yes
+BB_117	BB_D01_02	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D01	NCBITaxon_9606	Homo sapiens	male	yes
+BB_118	BB_D01_02	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D01	NCBITaxon_9606	Homo sapiens	male	yes
+BB_119	BB_D01_02	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D01	NCBITaxon_9606	Homo sapiens	male	yes
+BB_120	BB_D01_02	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D01	NCBITaxon_9606	Homo sapiens	male	yes
+BB_121	BB_D01_01	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D01	NCBITaxon_9606	Homo sapiens	male	yes
+BB_122	BB_D01_01	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D01	NCBITaxon_9606	Homo sapiens	male	yes
+BB_123	BB_D01_01	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D01	NCBITaxon_9606	Homo sapiens	male	yes
+BB_124	BB_D01_01	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D01	NCBITaxon_9606	Homo sapiens	male	yes
+BB_125	BB_D01_01	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D01	NCBITaxon_9606	Homo sapiens	male	yes
+BB_126	BB_D01_01	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D01	NCBITaxon_9606	Homo sapiens	male	yes
+BB_127	BB_D01_01	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D01	NCBITaxon_9606	Homo sapiens	male	yes
+BB_128	BB_D01_01	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D01	NCBITaxon_9606	Homo sapiens	male	yes
+BB_129	BB_D01_01	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D01	NCBITaxon_9606	Homo sapiens	male	yes
+BB_130	BB_D01_01	PrimaryBioSample_PrimaryCulture	MONDO_0001678	intestinal tuberculosis	UBERON_0000178	blood	EFO_0008931	Smart-seq2	BB_D01	NCBITaxon_9606	Homo sapiens	male	yes

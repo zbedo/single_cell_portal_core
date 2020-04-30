@@ -102,7 +102,7 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
 
     study = Study.find_by(name: "Test Study #{@random_seed}")
     facet = SearchFacet.find_by(identifier: 'organism_age')
-
+    facet.update_filter_values! # in case there is a race condition with parsing & facet updates
     # loop through 3 different units (days, months, years) to run a numeric-based facet query with conversion
     # days should return nothing, but months and years should match the testing study
     %w(days months years).each do |unit|
@@ -153,6 +153,20 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
                  "Did not return correct array of matching accessions, expected #{found_mixed_accessions} but found #{mixed_accessions}"
     assert_equal "testing", json['studies'].first['term_matches'].first
     assert_equal "API Test Study", json['studies'].last['term_matches'].first
+
+    puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
+  end
+
+  test 'should return search results using accessions' do
+    puts "#{File.basename(__FILE__)}: #{self.method_name}"
+
+    # test single accession
+    term = Study.where(public: true).first.accession
+    execute_http_request(:get, api_v1_search_path(type: 'study', terms: term))
+    assert_response :success
+    expected_accessions = [term]
+    assert_equal expected_accessions, json['matching_accessions'],
+                 "Did not return correct array of matching accessions, expected #{expected_accessions} but found #{json['matching_accessions']}"
 
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end

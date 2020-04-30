@@ -13,7 +13,7 @@ class Generate100KSubsamples < Mongoid::Migration
         cell_metadata.each do |metadata|
           cluster.delay.generate_subsample_arrays(100000, metadata.name, metadata.annotation_type, 'study')
         end
-        CacheRemovalJob.new(cluster.study.accession).delay.perform
+        CacheRemovalJob.new(cluster.study.accession).delay(queue: :cache).perform
       end
     end
   end
@@ -23,7 +23,7 @@ class Generate100KSubsamples < Mongoid::Migration
       if cluster.points > 100000
         DataArray.where(study_id: cluster.study.id, study_file_id: cluster.study_file.id, linear_data_id: cluster.id,
                         linear_data_type: 'ClusterGroup', subsample_threshold: 100000).delete_all
-        CacheRemovalJob.new(cluster.study.accession).delay.perform
+        CacheRemovalJob.new(cluster.study.accession).delay(queue: :cache).perform
       end
     end
   end

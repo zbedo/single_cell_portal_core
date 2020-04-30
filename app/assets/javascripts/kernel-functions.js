@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 /* Advanced Rule of thumb bandwidth selector from :
     https://en.wikipedia.org/wiki/Kernel_density_estimation#Bandwidth_selection
     and https://stat.ethz.ch/R-manual/R-devel/library/stats/html/bandwidth.html
@@ -111,6 +113,11 @@ function createTracesAndLayout(arr, title, jitter='all', expressionLabel){
     }
     var layout = {
         title: title,
+
+        // Force axis labels, including number strings, to be treated as
+        // categories.  See Python docs (same generic API as JavaScript):
+        // https://plotly.com/python/axes/#forcing-an-axis-to-be-categorical
+        xaxis: 'category',
         yaxis: {
             zeroline: true,
             showline: true,
