@@ -1,132 +1,132 @@
-NAME	biosample_id	sample_type	disease	disease__ontology_label	organ	organ__ontology_label	library_preparation_protocol	library_preparation_protocol__ontology_label	donor_id	species	species__ontology_label	sex	is_living
+NAME	biosample_id	biosample_type	disease	disease__ontology_label	organ	organ__ontology_label	library_preparation_protocol	library_preparation_protocol__ontology_label	donor_id	species	species__ontology_label	sex	is_living
 TYPE	group	group	group	group	group	group	group	group	group	group	group	group	group
-AB_1	AB_D06_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D06	NCBITaxon_9913	Bos taurus	male	no
-AB_2	AB_D06_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D06	NCBITaxon_9913	Bos taurus	male	no
-AB_3	AB_D06_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D06	NCBITaxon_9913	Bos taurus	male	no
-AB_4	AB_D06_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D06	NCBITaxon_9913	Bos taurus	male	no
-AB_5	AB_D06_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D06	NCBITaxon_9913	Bos taurus	male	no
-AB_6	AB_D06_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D06	NCBITaxon_9913	Bos taurus	male	no
-AB_7	AB_D06_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D06	NCBITaxon_9913	Bos taurus	male	no
-AB_8	AB_D06_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D06	NCBITaxon_9913	Bos taurus	male	no
-AB_9	AB_D06_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D06	NCBITaxon_9913	Bos taurus	male	no
-AB_10	AB_D06_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D06	NCBITaxon_9913	Bos taurus	male	no
-AB_11	AB_D06_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D06	NCBITaxon_9913	Bos taurus	male	no
-AB_12	AB_D06_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D06	NCBITaxon_9913	Bos taurus	male	no
-AB_13	AB_D06_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D06	NCBITaxon_9913	Bos taurus	male	no
-AB_14	AB_D06_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D06	NCBITaxon_9913	Bos taurus	male	no
-AB_15	AB_D06_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D06	NCBITaxon_9913	Bos taurus	male	no
-AB_16	AB_D06_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D06	NCBITaxon_9913	Bos taurus	male	no
-AB_17	AB_D06_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D06	NCBITaxon_9913	Bos taurus	male	no
-AB_18	AB_D06_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D06	NCBITaxon_9913	Bos taurus	male	no
-AB_19	AB_D06_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D06	NCBITaxon_9913	Bos taurus	male	no
-AB_20	AB_D06_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D06	NCBITaxon_9913	Bos taurus	male	no
-AB_21	AB_D05_03	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
-AB_22	AB_D05_03	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
-AB_23	AB_D05_03	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
-AB_24	AB_D05_03	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
-AB_25	AB_D05_03	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
-AB_26	AB_D05_03	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
-AB_27	AB_D05_03	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
-AB_28	AB_D05_03	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
-AB_29	AB_D05_03	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
-AB_30	AB_D05_03	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
-AB_31	AB_D05_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
-AB_32	AB_D05_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
-AB_33	AB_D05_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
-AB_34	AB_D05_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
-AB_35	AB_D05_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
-AB_36	AB_D05_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
-AB_37	AB_D05_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
-AB_38	AB_D05_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
-AB_39	AB_D05_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
-AB_40	AB_D05_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
-AB_41	AB_D05_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
-AB_42	AB_D05_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
-AB_43	AB_D05_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
-AB_44	AB_D05_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
-AB_45	AB_D05_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
-AB_46	AB_D05_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
-AB_47	AB_D05_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
-AB_48	AB_D05_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
-AB_49	AB_D05_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
-AB_50	AB_D05_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
-AB_51	AB_D04_03	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
-AB_52	AB_D04_03	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
-AB_53	AB_D04_03	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
-AB_54	AB_D04_03	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
-AB_55	AB_D04_03	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
-AB_56	AB_D04_03	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
-AB_57	AB_D04_03	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
-AB_58	AB_D04_03	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
-AB_59	AB_D04_03	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
-AB_60	AB_D04_03	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
-AB_61	AB_D04_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
-AB_62	AB_D04_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
-AB_63	AB_D04_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
-AB_64	AB_D04_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
-AB_65	AB_D04_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
-AB_66	AB_D04_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
-AB_67	AB_D04_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
-AB_68	AB_D04_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
-AB_69	AB_D04_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
-AB_70	AB_D04_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
-AB_71	AB_D04_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
-AB_72	AB_D04_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
-AB_73	AB_D04_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
-AB_74	AB_D04_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
-AB_75	AB_D04_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
-AB_76	AB_D04_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
-AB_77	AB_D04_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
-AB_78	AB_D04_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
-AB_79	AB_D04_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
-AB_80	AB_D04_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
-AB_81	AB_D03_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D03	NCBITaxon_9913	Bos taurus	male	no
-AB_82	AB_D03_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D03	NCBITaxon_9913	Bos taurus	male	no
-AB_83	AB_D03_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D03	NCBITaxon_9913	Bos taurus	male	no
-AB_84	AB_D03_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D03	NCBITaxon_9913	Bos taurus	male	no
-AB_85	AB_D03_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D03	NCBITaxon_9913	Bos taurus	male	no
-AB_86	AB_D03_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D03	NCBITaxon_9913	Bos taurus	male	no
-AB_87	AB_D03_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D03	NCBITaxon_9913	Bos taurus	male	no
-AB_88	AB_D03_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D03	NCBITaxon_9913	Bos taurus	male	no
-AB_89	AB_D03_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D03	NCBITaxon_9913	Bos taurus	male	no
-AB_90	AB_D03_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D03	NCBITaxon_9913	Bos taurus	male	no
-AB_91	AB_D02_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D02	NCBITaxon_9913	Bos taurus	male	no
-AB_92	AB_D02_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D02	NCBITaxon_9913	Bos taurus	male	no
-AB_93	AB_D02_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D02	NCBITaxon_9913	Bos taurus	male	no
-AB_94	AB_D02_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D02	NCBITaxon_9913	Bos taurus	male	no
-AB_95	AB_D02_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D02	NCBITaxon_9913	Bos taurus	male	no
-AB_96	AB_D02_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D02	NCBITaxon_9913	Bos taurus	male	no
-AB_97	AB_D02_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D02	NCBITaxon_9913	Bos taurus	male	no
-AB_98	AB_D02_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D02	NCBITaxon_9913	Bos taurus	male	no
-AB_99	AB_D02_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D02	NCBITaxon_9913	Bos taurus	male	no
-AB_100	AB_D02_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D02	NCBITaxon_9913	Bos taurus	male	no
-AB_101	AB_D02_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D02	NCBITaxon_9913	Bos taurus	male	no
-AB_102	AB_D02_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D02	NCBITaxon_9913	Bos taurus	male	no
-AB_103	AB_D02_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D02	NCBITaxon_9913	Bos taurus	male	no
-AB_104	AB_D02_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D02	NCBITaxon_9913	Bos taurus	male	no
-AB_105	AB_D02_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D02	NCBITaxon_9913	Bos taurus	male	no
-AB_106	AB_D02_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D02	NCBITaxon_9913	Bos taurus	male	no
-AB_107	AB_D02_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D02	NCBITaxon_9913	Bos taurus	male	no
-AB_108	AB_D02_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D02	NCBITaxon_9913	Bos taurus	male	no
-AB_109	AB_D02_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D02	NCBITaxon_9913	Bos taurus	male	no
-AB_110	AB_D02_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D02	NCBITaxon_9913	Bos taurus	male	no
-AB_111	AB_D01_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D01	NCBITaxon_9913	Bos taurus	male	no
-AB_112	AB_D01_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D01	NCBITaxon_9913	Bos taurus	male	no
-AB_113	AB_D01_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D01	NCBITaxon_9913	Bos taurus	male	no
-AB_114	AB_D01_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D01	NCBITaxon_9913	Bos taurus	male	no
-AB_115	AB_D01_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D01	NCBITaxon_9913	Bos taurus	male	no
-AB_116	AB_D01_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D01	NCBITaxon_9913	Bos taurus	male	no
-AB_117	AB_D01_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D01	NCBITaxon_9913	Bos taurus	male	no
-AB_118	AB_D01_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D01	NCBITaxon_9913	Bos taurus	male	no
-AB_119	AB_D01_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D01	NCBITaxon_9913	Bos taurus	male	no
-AB_120	AB_D01_02	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D01	NCBITaxon_9913	Bos taurus	male	no
-AB_121	AB_D01_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D01	NCBITaxon_9913	Bos taurus	male	no
-AB_122	AB_D01_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D01	NCBITaxon_9913	Bos taurus	male	no
-AB_123	AB_D01_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D01	NCBITaxon_9913	Bos taurus	male	no
-AB_124	AB_D01_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D01	NCBITaxon_9913	Bos taurus	male	no
-AB_125	AB_D01_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D01	NCBITaxon_9913	Bos taurus	male	no
-AB_126	AB_D01_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D01	NCBITaxon_9913	Bos taurus	male	no
-AB_127	AB_D01_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D01	NCBITaxon_9913	Bos taurus	male	no
-AB_128	AB_D01_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D01	NCBITaxon_9913	Bos taurus	male	no
-AB_129	AB_D01_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D01	NCBITaxon_9913	Bos taurus	male	no
-AB_130	AB_D01_01	cultured primary cells	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D01	NCBITaxon_9913	Bos taurus	male	no
+AB_1	AB_D06_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D06	NCBITaxon_9913	Bos taurus	male	no
+AB_2	AB_D06_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D06	NCBITaxon_9913	Bos taurus	male	no
+AB_3	AB_D06_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D06	NCBITaxon_9913	Bos taurus	male	no
+AB_4	AB_D06_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D06	NCBITaxon_9913	Bos taurus	male	no
+AB_5	AB_D06_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D06	NCBITaxon_9913	Bos taurus	male	no
+AB_6	AB_D06_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D06	NCBITaxon_9913	Bos taurus	male	no
+AB_7	AB_D06_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D06	NCBITaxon_9913	Bos taurus	male	no
+AB_8	AB_D06_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D06	NCBITaxon_9913	Bos taurus	male	no
+AB_9	AB_D06_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D06	NCBITaxon_9913	Bos taurus	male	no
+AB_10	AB_D06_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D06	NCBITaxon_9913	Bos taurus	male	no
+AB_11	AB_D06_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D06	NCBITaxon_9913	Bos taurus	male	no
+AB_12	AB_D06_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D06	NCBITaxon_9913	Bos taurus	male	no
+AB_13	AB_D06_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D06	NCBITaxon_9913	Bos taurus	male	no
+AB_14	AB_D06_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D06	NCBITaxon_9913	Bos taurus	male	no
+AB_15	AB_D06_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D06	NCBITaxon_9913	Bos taurus	male	no
+AB_16	AB_D06_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D06	NCBITaxon_9913	Bos taurus	male	no
+AB_17	AB_D06_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D06	NCBITaxon_9913	Bos taurus	male	no
+AB_18	AB_D06_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D06	NCBITaxon_9913	Bos taurus	male	no
+AB_19	AB_D06_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D06	NCBITaxon_9913	Bos taurus	male	no
+AB_20	AB_D06_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D06	NCBITaxon_9913	Bos taurus	male	no
+AB_21	AB_D05_03	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
+AB_22	AB_D05_03	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
+AB_23	AB_D05_03	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
+AB_24	AB_D05_03	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
+AB_25	AB_D05_03	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
+AB_26	AB_D05_03	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
+AB_27	AB_D05_03	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
+AB_28	AB_D05_03	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
+AB_29	AB_D05_03	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
+AB_30	AB_D05_03	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
+AB_31	AB_D05_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
+AB_32	AB_D05_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
+AB_33	AB_D05_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
+AB_34	AB_D05_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
+AB_35	AB_D05_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
+AB_36	AB_D05_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
+AB_37	AB_D05_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
+AB_38	AB_D05_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
+AB_39	AB_D05_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
+AB_40	AB_D05_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
+AB_41	AB_D05_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
+AB_42	AB_D05_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
+AB_43	AB_D05_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
+AB_44	AB_D05_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
+AB_45	AB_D05_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
+AB_46	AB_D05_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
+AB_47	AB_D05_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
+AB_48	AB_D05_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
+AB_49	AB_D05_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
+AB_50	AB_D05_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D05	NCBITaxon_9913	Bos taurus	male	no
+AB_51	AB_D04_03	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
+AB_52	AB_D04_03	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
+AB_53	AB_D04_03	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
+AB_54	AB_D04_03	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
+AB_55	AB_D04_03	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
+AB_56	AB_D04_03	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
+AB_57	AB_D04_03	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
+AB_58	AB_D04_03	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
+AB_59	AB_D04_03	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
+AB_60	AB_D04_03	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
+AB_61	AB_D04_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
+AB_62	AB_D04_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
+AB_63	AB_D04_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
+AB_64	AB_D04_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
+AB_65	AB_D04_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
+AB_66	AB_D04_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
+AB_67	AB_D04_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
+AB_68	AB_D04_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
+AB_69	AB_D04_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
+AB_70	AB_D04_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
+AB_71	AB_D04_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
+AB_72	AB_D04_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
+AB_73	AB_D04_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
+AB_74	AB_D04_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
+AB_75	AB_D04_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
+AB_76	AB_D04_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
+AB_77	AB_D04_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
+AB_78	AB_D04_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
+AB_79	AB_D04_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
+AB_80	AB_D04_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D04	NCBITaxon_9913	Bos taurus	male	no
+AB_81	AB_D03_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D03	NCBITaxon_9913	Bos taurus	male	no
+AB_82	AB_D03_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D03	NCBITaxon_9913	Bos taurus	male	no
+AB_83	AB_D03_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D03	NCBITaxon_9913	Bos taurus	male	no
+AB_84	AB_D03_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D03	NCBITaxon_9913	Bos taurus	male	no
+AB_85	AB_D03_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D03	NCBITaxon_9913	Bos taurus	male	no
+AB_86	AB_D03_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D03	NCBITaxon_9913	Bos taurus	male	no
+AB_87	AB_D03_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D03	NCBITaxon_9913	Bos taurus	male	no
+AB_88	AB_D03_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D03	NCBITaxon_9913	Bos taurus	male	no
+AB_89	AB_D03_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D03	NCBITaxon_9913	Bos taurus	male	no
+AB_90	AB_D03_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D03	NCBITaxon_9913	Bos taurus	male	no
+AB_91	AB_D02_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D02	NCBITaxon_9913	Bos taurus	male	no
+AB_92	AB_D02_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D02	NCBITaxon_9913	Bos taurus	male	no
+AB_93	AB_D02_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D02	NCBITaxon_9913	Bos taurus	male	no
+AB_94	AB_D02_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D02	NCBITaxon_9913	Bos taurus	male	no
+AB_95	AB_D02_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D02	NCBITaxon_9913	Bos taurus	male	no
+AB_96	AB_D02_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D02	NCBITaxon_9913	Bos taurus	male	no
+AB_97	AB_D02_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D02	NCBITaxon_9913	Bos taurus	male	no
+AB_98	AB_D02_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D02	NCBITaxon_9913	Bos taurus	male	no
+AB_99	AB_D02_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D02	NCBITaxon_9913	Bos taurus	male	no
+AB_100	AB_D02_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D02	NCBITaxon_9913	Bos taurus	male	no
+AB_101	AB_D02_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D02	NCBITaxon_9913	Bos taurus	male	no
+AB_102	AB_D02_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D02	NCBITaxon_9913	Bos taurus	male	no
+AB_103	AB_D02_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D02	NCBITaxon_9913	Bos taurus	male	no
+AB_104	AB_D02_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D02	NCBITaxon_9913	Bos taurus	male	no
+AB_105	AB_D02_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D02	NCBITaxon_9913	Bos taurus	male	no
+AB_106	AB_D02_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D02	NCBITaxon_9913	Bos taurus	male	no
+AB_107	AB_D02_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D02	NCBITaxon_9913	Bos taurus	male	no
+AB_108	AB_D02_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D02	NCBITaxon_9913	Bos taurus	male	no
+AB_109	AB_D02_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D02	NCBITaxon_9913	Bos taurus	male	no
+AB_110	AB_D02_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D02	NCBITaxon_9913	Bos taurus	male	no
+AB_111	AB_D01_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D01	NCBITaxon_9913	Bos taurus	male	no
+AB_112	AB_D01_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D01	NCBITaxon_9913	Bos taurus	male	no
+AB_113	AB_D01_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D01	NCBITaxon_9913	Bos taurus	male	no
+AB_114	AB_D01_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D01	NCBITaxon_9913	Bos taurus	male	no
+AB_115	AB_D01_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D01	NCBITaxon_9913	Bos taurus	male	no
+AB_116	AB_D01_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D01	NCBITaxon_9913	Bos taurus	male	no
+AB_117	AB_D01_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D01	NCBITaxon_9913	Bos taurus	male	no
+AB_118	AB_D01_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D01	NCBITaxon_9913	Bos taurus	male	no
+AB_119	AB_D01_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D01	NCBITaxon_9913	Bos taurus	male	no
+AB_120	AB_D01_02	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D01	NCBITaxon_9913	Bos taurus	male	no
+AB_121	AB_D01_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D01	NCBITaxon_9913	Bos taurus	male	no
+AB_122	AB_D01_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D01	NCBITaxon_9913	Bos taurus	male	no
+AB_123	AB_D01_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D01	NCBITaxon_9913	Bos taurus	male	no
+AB_124	AB_D01_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D01	NCBITaxon_9913	Bos taurus	male	no
+AB_125	AB_D01_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D01	NCBITaxon_9913	Bos taurus	male	no
+AB_126	AB_D01_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D01	NCBITaxon_9913	Bos taurus	male	no
+AB_127	AB_D01_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D01	NCBITaxon_9913	Bos taurus	male	no
+AB_128	AB_D01_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D01	NCBITaxon_9913	Bos taurus	male	no
+AB_129	AB_D01_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D01	NCBITaxon_9913	Bos taurus	male	no
+AB_130	AB_D01_01	PrimaryBioSample_PrimaryCulture	MONDO_0005109	HIV infectious disease	UBERON_0000178	blood	EFO_0008931	Smart-seq2	AB_D01	NCBITaxon_9913	Bos taurus	male	no

@@ -1,132 +1,132 @@
-NAME	biosample_id	sample_type	disease	disease__ontology_label	organ	organ__ontology_label	library_preparation_protocol	library_preparation_protocol__ontology_label	donor_id	species	species__ontology_label	sex	is_living	cell_type	cell_type__ontology_label
-TYPE	group	group	group	group	group	group	group	group	group	group	group	group	group	group	group
-AF_1	AF_D06_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D06	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_2	AF_D06_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D06	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_3	AF_D06_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D06	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_4	AF_D06_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D06	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_5	AF_D06_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D06	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_6	AF_D06_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D06	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_7	AF_D06_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D06	NCBITaxon_10090	Mus musculus	male	no	CL_0000748	retinal bipolar neuron
-AF_8	AF_D06_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D06	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_9	AF_D06_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D06	NCBITaxon_10090	Mus musculus	male	no	CL_0000748	retinal bipolar neuron
-AF_10	AF_D06_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D06	NCBITaxon_10090	Mus musculus	male	no	CL_0000748	retinal bipolar neuron
-AF_11	AF_D06_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D06	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_12	AF_D06_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D06	NCBITaxon_10090	Mus musculus	male	no	CL_0000573	retinal cone cell
-AF_13	AF_D06_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D06	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_14	AF_D06_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D06	NCBITaxon_10090	Mus musculus	male	no	CL_0000748	retinal bipolar neuron
-AF_15	AF_D06_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D06	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_16	AF_D06_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D06	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_17	AF_D06_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D06	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_18	AF_D06_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D06	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_19	AF_D06_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D06	NCBITaxon_10090	Mus musculus	male	no	CL_0000748	retinal bipolar neuron
-AF_20	AF_D06_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D06	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_21	AF_D05_03	direct from donor - frozen	MONDO_0001678	intestinal tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000236	B cell
-AF_22	AF_D05_03	direct from donor - frozen	MONDO_0001678	intestinal tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_23	AF_D05_03	direct from donor - frozen	MONDO_0001678	intestinal tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_24	AF_D05_03	direct from donor - frozen	MONDO_0001678	intestinal tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_25	AF_D05_03	direct from donor - frozen	MONDO_0001678	intestinal tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_26	AF_D05_03	direct from donor - frozen	MONDO_0001678	intestinal tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_27	AF_D05_03	direct from donor - frozen	MONDO_0001678	intestinal tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_28	AF_D05_03	direct from donor - frozen	MONDO_0001678	intestinal tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_29	AF_D05_03	direct from donor - frozen	MONDO_0001678	intestinal tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000748	retinal bipolar neuron
-AF_30	AF_D05_03	direct from donor - frozen	MONDO_0001678	intestinal tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000236	B cell
-AF_31	AF_D05_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_32	AF_D05_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_33	AF_D05_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000748	retinal bipolar neuron
-AF_34	AF_D05_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000748	retinal bipolar neuron
-AF_35	AF_D05_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000748	retinal bipolar neuron
-AF_36	AF_D05_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000748	retinal bipolar neuron
-AF_37	AF_D05_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_38	AF_D05_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_39	AF_D05_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_40	AF_D05_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_41	AF_D05_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000236	B cell
-AF_42	AF_D05_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_43	AF_D05_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_44	AF_D05_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_45	AF_D05_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_46	AF_D05_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_47	AF_D05_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_48	AF_D05_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_49	AF_D05_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_50	AF_D05_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000236	B cell
-AF_51	AF_D04_03	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_52	AF_D04_03	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_53	AF_D04_03	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_54	AF_D04_03	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000748	retinal bipolar neuron
-AF_55	AF_D04_03	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_56	AF_D04_03	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_57	AF_D04_03	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000748	retinal bipolar neuron
-AF_58	AF_D04_03	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_59	AF_D04_03	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_60	AF_D04_03	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_61	AF_D04_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000748	retinal bipolar neuron
-AF_62	AF_D04_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_63	AF_D04_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_64	AF_D04_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_65	AF_D04_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_66	AF_D04_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_67	AF_D04_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_68	AF_D04_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000748	retinal bipolar neuron
-AF_69	AF_D04_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_70	AF_D04_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_71	AF_D04_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_72	AF_D04_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_73	AF_D04_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_74	AF_D04_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_75	AF_D04_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_76	AF_D04_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_77	AF_D04_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_78	AF_D04_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_79	AF_D04_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000236	B cell
-AF_80	AF_D04_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_81	AF_D03_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D03	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_82	AF_D03_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D03	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_83	AF_D03_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D03	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_84	AF_D03_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D03	NCBITaxon_10090	Mus musculus	male	no	CL_0000748	retinal bipolar neuron
-AF_85	AF_D03_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D03	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_86	AF_D03_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D03	NCBITaxon_10090	Mus musculus	male	no	CL_0000748	retinal bipolar neuron
-AF_87	AF_D03_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D03	NCBITaxon_10090	Mus musculus	male	no	CL_0000748	retinal bipolar neuron
-AF_88	AF_D03_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D03	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_89	AF_D03_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D03	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_90	AF_D03_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D03	NCBITaxon_10090	Mus musculus	male	no	CL_0000236	B cell
-AF_91	AF_D02_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D02	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_92	AF_D02_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D02	NCBITaxon_10090	Mus musculus	male	no	CL_0000561	amacrine cell
-AF_93	AF_D02_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D02	NCBITaxon_10090	Mus musculus	male	no	CL_0000561	amacrine cell
-AF_94	AF_D02_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D02	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_95	AF_D02_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D02	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_96	AF_D02_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D02	NCBITaxon_10090	Mus musculus	male	no	CL_0000561	amacrine cell
-AF_97	AF_D02_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D02	NCBITaxon_10090	Mus musculus	male	no	CL_0000561	amacrine cell
-AF_98	AF_D02_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D02	NCBITaxon_10090	Mus musculus	male	no	CL_0000561	amacrine cell
-AF_99	AF_D02_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D02	NCBITaxon_10090	Mus musculus	male	no	CL_0000561	amacrine cell
-AF_100	AF_D02_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D02	NCBITaxon_10090	Mus musculus	male	no	CL_0000748	retinal bipolar neuron
-AF_101	AF_D02_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D02	NCBITaxon_10090	Mus musculus	male	no	CL_0000236	B cell
-AF_102	AF_D02_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D02	NCBITaxon_10090	Mus musculus	male	no	CL_0000236	B cell
-AF_103	AF_D02_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D02	NCBITaxon_10090	Mus musculus	male	no	CL_0000236	B cell
-AF_104	AF_D02_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D02	NCBITaxon_10090	Mus musculus	male	no	CL_0000236	B cell
-AF_105	AF_D02_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D02	NCBITaxon_10090	Mus musculus	male	no	CL_0000236	B cell
-AF_106	AF_D02_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D02	NCBITaxon_10090	Mus musculus	male	no	CL_0000236	B cell
-AF_107	AF_D02_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D02	NCBITaxon_10090	Mus musculus	male	no	CL_0000236	B cell
-AF_108	AF_D02_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D02	NCBITaxon_10090	Mus musculus	male	no	CL_0000236	B cell
-AF_109	AF_D02_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D02	NCBITaxon_10090	Mus musculus	male	no	CL_0000236	B cell
-AF_110	AF_D02_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D02	NCBITaxon_10090	Mus musculus	male	no	CL_0000236	B cell
-AF_111	AF_D01_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D01	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_112	AF_D01_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D01	NCBITaxon_10090	Mus musculus	male	no	CL_0000748	retinal bipolar neuron
-AF_113	AF_D01_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D01	NCBITaxon_10090	Mus musculus	male	no	CL_0000561	amacrine cell
-AF_114	AF_D01_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D01	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_115	AF_D01_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D01	NCBITaxon_10090	Mus musculus	male	no	CL_0000561	amacrine cell
-AF_116	AF_D01_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D01	NCBITaxon_10090	Mus musculus	male	no	CL_0000561	amacrine cell
-AF_117	AF_D01_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D01	NCBITaxon_10090	Mus musculus	male	no	CL_0000561	amacrine cell
-AF_118	AF_D01_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D01	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_119	AF_D01_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D01	NCBITaxon_10090	Mus musculus	male	no	CL_0000561	amacrine cell
-AF_120	AF_D01_02	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D01	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron
-AF_121	AF_D01_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D01	NCBITaxon_10090	Mus musculus	male	no	CL_0000561	amacrine cell
-AF_122	AF_D01_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D01	NCBITaxon_10090	Mus musculus	male	no	CL_0000748	retinal bipolar neuron
-AF_123	AF_D01_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D01	NCBITaxon_10090	Mus musculus	male	no	CL_0000561	amacrine cell
-AF_124	AF_D01_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D01	NCBITaxon_10090	Mus musculus	male	no	CL_0000561	amacrine cell
-AF_125	AF_D01_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D01	NCBITaxon_10090	Mus musculus	male	no	CL_0000561	amacrine cell
-AF_126	AF_D01_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D01	NCBITaxon_10090	Mus musculus	male	no	CL_0000561	amacrine cell
-AF_127	AF_D01_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D01	NCBITaxon_10090	Mus musculus	male	no	CL_0000561	amacrine cell
-AF_128	AF_D01_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D01	NCBITaxon_10090	Mus musculus	male	no	CL_0000561	amacrine cell
-AF_129	AF_D01_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D01	NCBITaxon_10090	Mus musculus	male	no	CL_0000561	amacrine cell
-AF_130	AF_D01_01	direct from donor - frozen	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D01	NCBITaxon_10090	Mus musculus	male	no	CL_0000561	amacrine cell
+NAME	biosample_id	biosample_type	disease	disease__ontology_label	organ	organ__ontology_label	library_preparation_protocol	library_preparation_protocol__ontology_label	donor_id	species	species__ontology_label	sex	is_living	cell_type	cell_type__ontology_label	preservation_method
+TYPE	group	group	group	group	group	group	group	group	group	group	group	group	group	group	group	group
+AF_1	AF_D06_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D06	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_2	AF_D06_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D06	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_3	AF_D06_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D06	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_4	AF_D06_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D06	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_5	AF_D06_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D06	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_6	AF_D06_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D06	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_7	AF_D06_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D06	NCBITaxon_10090	Mus musculus	male	no	CL_0000748	retinal bipolar neuron	Frozen
+AF_8	AF_D06_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D06	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_9	AF_D06_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D06	NCBITaxon_10090	Mus musculus	male	no	CL_0000748	retinal bipolar neuron	Frozen
+AF_10	AF_D06_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D06	NCBITaxon_10090	Mus musculus	male	no	CL_0000748	retinal bipolar neuron	Frozen
+AF_11	AF_D06_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D06	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_12	AF_D06_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D06	NCBITaxon_10090	Mus musculus	male	no	CL_0000573	retinal cone cell	Frozen
+AF_13	AF_D06_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D06	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_14	AF_D06_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D06	NCBITaxon_10090	Mus musculus	male	no	CL_0000748	retinal bipolar neuron	Frozen
+AF_15	AF_D06_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D06	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_16	AF_D06_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D06	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_17	AF_D06_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D06	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_18	AF_D06_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D06	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_19	AF_D06_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D06	NCBITaxon_10090	Mus musculus	male	no	CL_0000748	retinal bipolar neuron	Frozen
+AF_20	AF_D06_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D06	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_21	AF_D05_03	PrimaryBioSample	MONDO_0001678	intestinal tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000236	B cell	Frozen
+AF_22	AF_D05_03	PrimaryBioSample	MONDO_0001678	intestinal tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_23	AF_D05_03	PrimaryBioSample	MONDO_0001678	intestinal tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_24	AF_D05_03	PrimaryBioSample	MONDO_0001678	intestinal tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_25	AF_D05_03	PrimaryBioSample	MONDO_0001678	intestinal tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_26	AF_D05_03	PrimaryBioSample	MONDO_0001678	intestinal tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_27	AF_D05_03	PrimaryBioSample	MONDO_0001678	intestinal tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_28	AF_D05_03	PrimaryBioSample	MONDO_0001678	intestinal tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_29	AF_D05_03	PrimaryBioSample	MONDO_0001678	intestinal tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000748	retinal bipolar neuron	Frozen
+AF_30	AF_D05_03	PrimaryBioSample	MONDO_0001678	intestinal tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000236	B cell	Frozen
+AF_31	AF_D05_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_32	AF_D05_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_33	AF_D05_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000748	retinal bipolar neuron	Frozen
+AF_34	AF_D05_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000748	retinal bipolar neuron	Frozen
+AF_35	AF_D05_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000748	retinal bipolar neuron	Frozen
+AF_36	AF_D05_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000748	retinal bipolar neuron	Frozen
+AF_37	AF_D05_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_38	AF_D05_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_39	AF_D05_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_40	AF_D05_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_41	AF_D05_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000236	B cell	Frozen
+AF_42	AF_D05_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_43	AF_D05_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_44	AF_D05_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_45	AF_D05_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_46	AF_D05_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_47	AF_D05_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_48	AF_D05_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_49	AF_D05_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_50	AF_D05_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D05	NCBITaxon_10090	Mus musculus	male	no	CL_0000236	B cell	Frozen
+AF_51	AF_D04_03	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_52	AF_D04_03	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_53	AF_D04_03	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_54	AF_D04_03	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000748	retinal bipolar neuron	Frozen
+AF_55	AF_D04_03	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_56	AF_D04_03	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_57	AF_D04_03	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000748	retinal bipolar neuron	Frozen
+AF_58	AF_D04_03	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_59	AF_D04_03	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_60	AF_D04_03	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_61	AF_D04_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000748	retinal bipolar neuron	Frozen
+AF_62	AF_D04_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_63	AF_D04_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_64	AF_D04_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_65	AF_D04_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_66	AF_D04_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_67	AF_D04_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_68	AF_D04_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000748	retinal bipolar neuron	Frozen
+AF_69	AF_D04_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_70	AF_D04_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_71	AF_D04_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_72	AF_D04_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_73	AF_D04_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_74	AF_D04_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_75	AF_D04_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_76	AF_D04_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_77	AF_D04_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_78	AF_D04_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_79	AF_D04_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000236	B cell	Frozen
+AF_80	AF_D04_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D04	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_81	AF_D03_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D03	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_82	AF_D03_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D03	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_83	AF_D03_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D03	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_84	AF_D03_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D03	NCBITaxon_10090	Mus musculus	male	no	CL_0000748	retinal bipolar neuron	Frozen
+AF_85	AF_D03_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D03	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_86	AF_D03_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D03	NCBITaxon_10090	Mus musculus	male	no	CL_0000748	retinal bipolar neuron	Frozen
+AF_87	AF_D03_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D03	NCBITaxon_10090	Mus musculus	male	no	CL_0000748	retinal bipolar neuron	Frozen
+AF_88	AF_D03_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D03	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_89	AF_D03_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D03	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_90	AF_D03_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D03	NCBITaxon_10090	Mus musculus	male	no	CL_0000236	B cell	Frozen
+AF_91	AF_D02_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D02	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_92	AF_D02_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D02	NCBITaxon_10090	Mus musculus	male	no	CL_0000561	amacrine cell	Frozen
+AF_93	AF_D02_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D02	NCBITaxon_10090	Mus musculus	male	no	CL_0000561	amacrine cell	Frozen
+AF_94	AF_D02_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D02	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_95	AF_D02_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D02	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_96	AF_D02_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D02	NCBITaxon_10090	Mus musculus	male	no	CL_0000561	amacrine cell	Frozen
+AF_97	AF_D02_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D02	NCBITaxon_10090	Mus musculus	male	no	CL_0000561	amacrine cell	Frozen
+AF_98	AF_D02_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D02	NCBITaxon_10090	Mus musculus	male	no	CL_0000561	amacrine cell	Frozen
+AF_99	AF_D02_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D02	NCBITaxon_10090	Mus musculus	male	no	CL_0000561	amacrine cell	Frozen
+AF_100	AF_D02_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D02	NCBITaxon_10090	Mus musculus	male	no	CL_0000748	retinal bipolar neuron	Frozen
+AF_101	AF_D02_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D02	NCBITaxon_10090	Mus musculus	male	no	CL_0000236	B cell	Frozen
+AF_102	AF_D02_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D02	NCBITaxon_10090	Mus musculus	male	no	CL_0000236	B cell	Frozen
+AF_103	AF_D02_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D02	NCBITaxon_10090	Mus musculus	male	no	CL_0000236	B cell	Frozen
+AF_104	AF_D02_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D02	NCBITaxon_10090	Mus musculus	male	no	CL_0000236	B cell	Frozen
+AF_105	AF_D02_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D02	NCBITaxon_10090	Mus musculus	male	no	CL_0000236	B cell	Frozen
+AF_106	AF_D02_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D02	NCBITaxon_10090	Mus musculus	male	no	CL_0000236	B cell	Frozen
+AF_107	AF_D02_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D02	NCBITaxon_10090	Mus musculus	male	no	CL_0000236	B cell	Frozen
+AF_108	AF_D02_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D02	NCBITaxon_10090	Mus musculus	male	no	CL_0000236	B cell	Frozen
+AF_109	AF_D02_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D02	NCBITaxon_10090	Mus musculus	male	no	CL_0000236	B cell	Frozen
+AF_110	AF_D02_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D02	NCBITaxon_10090	Mus musculus	male	no	CL_0000236	B cell	Frozen
+AF_111	AF_D01_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D01	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_112	AF_D01_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D01	NCBITaxon_10090	Mus musculus	male	no	CL_0000748	retinal bipolar neuron	Frozen
+AF_113	AF_D01_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D01	NCBITaxon_10090	Mus musculus	male	no	CL_0000561	amacrine cell	Frozen
+AF_114	AF_D01_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D01	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_115	AF_D01_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D01	NCBITaxon_10090	Mus musculus	male	no	CL_0000561	amacrine cell	Frozen
+AF_116	AF_D01_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D01	NCBITaxon_10090	Mus musculus	male	no	CL_0000561	amacrine cell	Frozen
+AF_117	AF_D01_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D01	NCBITaxon_10090	Mus musculus	male	no	CL_0000561	amacrine cell	Frozen
+AF_118	AF_D01_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D01	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_119	AF_D01_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D01	NCBITaxon_10090	Mus musculus	male	no	CL_0000561	amacrine cell	Frozen
+AF_120	AF_D01_02	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D01	NCBITaxon_10090	Mus musculus	male	no	CL_0000103	bipolar neuron	Frozen
+AF_121	AF_D01_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D01	NCBITaxon_10090	Mus musculus	male	no	CL_0000561	amacrine cell	Frozen
+AF_122	AF_D01_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D01	NCBITaxon_10090	Mus musculus	male	no	CL_0000748	retinal bipolar neuron	Frozen
+AF_123	AF_D01_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D01	NCBITaxon_10090	Mus musculus	male	no	CL_0000561	amacrine cell	Frozen
+AF_124	AF_D01_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D01	NCBITaxon_10090	Mus musculus	male	no	CL_0000561	amacrine cell	Frozen
+AF_125	AF_D01_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D01	NCBITaxon_10090	Mus musculus	male	no	CL_0000561	amacrine cell	Frozen
+AF_126	AF_D01_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D01	NCBITaxon_10090	Mus musculus	male	no	CL_0000561	amacrine cell	Frozen
+AF_127	AF_D01_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D01	NCBITaxon_10090	Mus musculus	male	no	CL_0000561	amacrine cell	Frozen
+AF_128	AF_D01_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D01	NCBITaxon_10090	Mus musculus	male	no	CL_0000561	amacrine cell	Frozen
+AF_129	AF_D01_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D01	NCBITaxon_10090	Mus musculus	male	no	CL_0000561	amacrine cell	Frozen
+AF_130	AF_D01_01	PrimaryBioSample	MONDO_0005887	oral tuberculosis	UBERON_0000955	brain	EFO_0008722	Drop-seq	AF_D01	NCBITaxon_10090	Mus musculus	male	no	CL_0000561	amacrine cell	Frozen

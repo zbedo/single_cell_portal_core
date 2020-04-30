@@ -1,132 +1,132 @@
-NAME	biosample_id	sample_type	disease	disease__ontology_label	organ	organ__ontology_label	library_preparation_protocol	library_preparation_protocol__ontology_label	donor_id	species	species__ontology_label	sex	is_living
-TYPE	group	group	group	group	group	group	group	group	group	group	group	group	group
-AC_1	AC_D06_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D06	NCBITaxon_10090	Mus musculus	male	yes
-AC_2	AC_D06_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D06	NCBITaxon_10090	Mus musculus	male	yes
-AC_3	AC_D06_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D06	NCBITaxon_10090	Mus musculus	male	yes
-AC_4	AC_D06_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D06	NCBITaxon_10090	Mus musculus	male	yes
-AC_5	AC_D06_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D06	NCBITaxon_10090	Mus musculus	male	yes
-AC_6	AC_D06_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D06	NCBITaxon_10090	Mus musculus	male	yes
-AC_7	AC_D06_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D06	NCBITaxon_10090	Mus musculus	male	yes
-AC_8	AC_D06_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D06	NCBITaxon_10090	Mus musculus	male	yes
-AC_9	AC_D06_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D06	NCBITaxon_10090	Mus musculus	male	yes
-AC_10	AC_D06_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D06	NCBITaxon_10090	Mus musculus	male	yes
-AC_11	AC_D06_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D06	NCBITaxon_10090	Mus musculus	male	yes
-AC_12	AC_D06_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D06	NCBITaxon_10090	Mus musculus	male	yes
-AC_13	AC_D06_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D06	NCBITaxon_10090	Mus musculus	male	yes
-AC_14	AC_D06_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D06	NCBITaxon_10090	Mus musculus	male	yes
-AC_15	AC_D06_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D06	NCBITaxon_10090	Mus musculus	male	yes
-AC_16	AC_D06_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D06	NCBITaxon_10090	Mus musculus	male	yes
-AC_17	AC_D06_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D06	NCBITaxon_10090	Mus musculus	male	yes
-AC_18	AC_D06_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D06	NCBITaxon_10090	Mus musculus	male	yes
-AC_19	AC_D06_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D06	NCBITaxon_10090	Mus musculus	male	yes
-AC_20	AC_D06_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D06	NCBITaxon_10090	Mus musculus	male	yes
-AC_21	AC_D05_03	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes
-AC_22	AC_D05_03	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes
-AC_23	AC_D05_03	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes
-AC_24	AC_D05_03	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes
-AC_25	AC_D05_03	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes
-AC_26	AC_D05_03	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes
-AC_27	AC_D05_03	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes
-AC_28	AC_D05_03	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes
-AC_29	AC_D05_03	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes
-AC_30	AC_D05_03	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes
-AC_31	AC_D05_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes
-AC_32	AC_D05_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes
-AC_33	AC_D05_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes
-AC_34	AC_D05_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes
-AC_35	AC_D05_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes
-AC_36	AC_D05_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes
-AC_37	AC_D05_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes
-AC_38	AC_D05_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes
-AC_39	AC_D05_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes
-AC_40	AC_D05_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes
-AC_41	AC_D05_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes
-AC_42	AC_D05_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes
-AC_43	AC_D05_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes
-AC_44	AC_D05_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes
-AC_45	AC_D05_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes
-AC_46	AC_D05_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes
-AC_47	AC_D05_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes
-AC_48	AC_D05_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes
-AC_49	AC_D05_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes
-AC_50	AC_D05_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes
-AC_51	AC_D04_03	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes
-AC_52	AC_D04_03	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes
-AC_53	AC_D04_03	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes
-AC_54	AC_D04_03	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes
-AC_55	AC_D04_03	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes
-AC_56	AC_D04_03	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes
-AC_57	AC_D04_03	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes
-AC_58	AC_D04_03	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes
-AC_59	AC_D04_03	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes
-AC_60	AC_D04_03	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes
-AC_61	AC_D04_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes
-AC_62	AC_D04_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes
-AC_63	AC_D04_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes
-AC_64	AC_D04_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes
-AC_65	AC_D04_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes
-AC_66	AC_D04_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes
-AC_67	AC_D04_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes
-AC_68	AC_D04_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes
-AC_69	AC_D04_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes
-AC_70	AC_D04_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes
-AC_71	AC_D04_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes
-AC_72	AC_D04_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes
-AC_73	AC_D04_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes
-AC_74	AC_D04_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes
-AC_75	AC_D04_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes
-AC_76	AC_D04_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes
-AC_77	AC_D04_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes
-AC_78	AC_D04_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes
-AC_79	AC_D04_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes
-AC_80	AC_D04_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes
-AC_81	AC_D03_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D03	NCBITaxon_10090	Mus musculus	male	yes
-AC_82	AC_D03_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D03	NCBITaxon_10090	Mus musculus	male	yes
-AC_83	AC_D03_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D03	NCBITaxon_10090	Mus musculus	male	yes
-AC_84	AC_D03_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D03	NCBITaxon_10090	Mus musculus	male	yes
-AC_85	AC_D03_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D03	NCBITaxon_10090	Mus musculus	male	yes
-AC_86	AC_D03_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D03	NCBITaxon_10090	Mus musculus	male	yes
-AC_87	AC_D03_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D03	NCBITaxon_10090	Mus musculus	male	yes
-AC_88	AC_D03_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D03	NCBITaxon_10090	Mus musculus	male	yes
-AC_89	AC_D03_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D03	NCBITaxon_10090	Mus musculus	male	yes
-AC_90	AC_D03_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D03	NCBITaxon_10090	Mus musculus	male	yes
-AC_91	AC_D02_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D02	NCBITaxon_10090	Mus musculus	male	yes
-AC_92	AC_D02_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D02	NCBITaxon_10090	Mus musculus	male	yes
-AC_93	AC_D02_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D02	NCBITaxon_10090	Mus musculus	male	yes
-AC_94	AC_D02_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D02	NCBITaxon_10090	Mus musculus	male	yes
-AC_95	AC_D02_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D02	NCBITaxon_10090	Mus musculus	male	yes
-AC_96	AC_D02_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D02	NCBITaxon_10090	Mus musculus	male	yes
-AC_97	AC_D02_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D02	NCBITaxon_10090	Mus musculus	male	yes
-AC_98	AC_D02_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D02	NCBITaxon_10090	Mus musculus	male	yes
-AC_99	AC_D02_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D02	NCBITaxon_10090	Mus musculus	male	yes
-AC_100	AC_D02_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D02	NCBITaxon_10090	Mus musculus	male	yes
-AC_101	AC_D02_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D02	NCBITaxon_10090	Mus musculus	male	yes
-AC_102	AC_D02_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D02	NCBITaxon_10090	Mus musculus	male	yes
-AC_103	AC_D02_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D02	NCBITaxon_10090	Mus musculus	male	yes
-AC_104	AC_D02_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D02	NCBITaxon_10090	Mus musculus	male	yes
-AC_105	AC_D02_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D02	NCBITaxon_10090	Mus musculus	male	yes
-AC_106	AC_D02_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D02	NCBITaxon_10090	Mus musculus	male	yes
-AC_107	AC_D02_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D02	NCBITaxon_10090	Mus musculus	male	yes
-AC_108	AC_D02_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D02	NCBITaxon_10090	Mus musculus	male	yes
-AC_109	AC_D02_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D02	NCBITaxon_10090	Mus musculus	male	yes
-AC_110	AC_D02_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D02	NCBITaxon_10090	Mus musculus	male	yes
-AC_111	AC_D01_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D01	NCBITaxon_10090	Mus musculus	male	yes
-AC_112	AC_D01_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D01	NCBITaxon_10090	Mus musculus	male	yes
-AC_113	AC_D01_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D01	NCBITaxon_10090	Mus musculus	male	yes
-AC_114	AC_D01_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D01	NCBITaxon_10090	Mus musculus	male	yes
-AC_115	AC_D01_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D01	NCBITaxon_10090	Mus musculus	male	yes
-AC_116	AC_D01_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D01	NCBITaxon_10090	Mus musculus	male	yes
-AC_117	AC_D01_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D01	NCBITaxon_10090	Mus musculus	male	yes
-AC_118	AC_D01_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D01	NCBITaxon_10090	Mus musculus	male	yes
-AC_119	AC_D01_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D01	NCBITaxon_10090	Mus musculus	male	yes
-AC_120	AC_D01_02	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D01	NCBITaxon_10090	Mus musculus	male	yes
-AC_121	AC_D01_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D01	NCBITaxon_10090	Mus musculus	male	yes
-AC_122	AC_D01_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D01	NCBITaxon_10090	Mus musculus	male	yes
-AC_123	AC_D01_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D01	NCBITaxon_10090	Mus musculus	male	yes
-AC_124	AC_D01_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D01	NCBITaxon_10090	Mus musculus	male	yes
-AC_125	AC_D01_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D01	NCBITaxon_10090	Mus musculus	male	yes
-AC_126	AC_D01_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D01	NCBITaxon_10090	Mus musculus	male	yes
-AC_127	AC_D01_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D01	NCBITaxon_10090	Mus musculus	male	yes
-AC_128	AC_D01_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D01	NCBITaxon_10090	Mus musculus	male	yes
-AC_129	AC_D01_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D01	NCBITaxon_10090	Mus musculus	male	yes
-AC_130	AC_D01_01	direct from donor - frozen	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D01	NCBITaxon_10090	Mus musculus	male	yes
+NAME	biosample_id	biosample_type	disease	disease__ontology_label	organ	organ__ontology_label	library_preparation_protocol	library_preparation_protocol__ontology_label	donor_id	species	species__ontology_label	sex	is_living	preservation_method
+TYPE	group	group	group	group	group	group	group	group	group	group	group	group	group	group
+AC_1	AC_D06_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D06	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_2	AC_D06_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D06	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_3	AC_D06_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D06	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_4	AC_D06_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D06	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_5	AC_D06_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D06	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_6	AC_D06_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D06	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_7	AC_D06_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D06	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_8	AC_D06_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D06	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_9	AC_D06_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D06	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_10	AC_D06_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D06	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_11	AC_D06_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D06	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_12	AC_D06_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D06	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_13	AC_D06_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D06	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_14	AC_D06_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D06	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_15	AC_D06_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D06	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_16	AC_D06_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D06	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_17	AC_D06_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D06	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_18	AC_D06_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D06	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_19	AC_D06_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D06	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_20	AC_D06_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D06	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_21	AC_D05_03	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_22	AC_D05_03	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_23	AC_D05_03	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_24	AC_D05_03	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_25	AC_D05_03	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_26	AC_D05_03	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_27	AC_D05_03	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_28	AC_D05_03	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_29	AC_D05_03	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_30	AC_D05_03	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_31	AC_D05_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_32	AC_D05_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_33	AC_D05_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_34	AC_D05_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_35	AC_D05_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_36	AC_D05_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_37	AC_D05_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_38	AC_D05_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_39	AC_D05_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_40	AC_D05_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_41	AC_D05_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_42	AC_D05_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_43	AC_D05_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_44	AC_D05_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_45	AC_D05_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_46	AC_D05_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_47	AC_D05_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_48	AC_D05_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_49	AC_D05_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_50	AC_D05_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D05	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_51	AC_D04_03	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_52	AC_D04_03	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_53	AC_D04_03	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_54	AC_D04_03	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_55	AC_D04_03	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_56	AC_D04_03	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_57	AC_D04_03	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_58	AC_D04_03	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_59	AC_D04_03	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_60	AC_D04_03	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_61	AC_D04_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_62	AC_D04_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_63	AC_D04_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_64	AC_D04_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_65	AC_D04_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_66	AC_D04_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_67	AC_D04_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_68	AC_D04_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_69	AC_D04_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_70	AC_D04_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_71	AC_D04_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_72	AC_D04_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_73	AC_D04_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_74	AC_D04_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_75	AC_D04_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_76	AC_D04_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_77	AC_D04_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_78	AC_D04_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_79	AC_D04_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_80	AC_D04_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D04	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_81	AC_D03_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D03	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_82	AC_D03_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D03	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_83	AC_D03_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D03	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_84	AC_D03_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D03	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_85	AC_D03_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D03	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_86	AC_D03_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D03	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_87	AC_D03_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D03	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_88	AC_D03_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D03	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_89	AC_D03_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D03	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_90	AC_D03_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D03	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_91	AC_D02_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D02	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_92	AC_D02_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D02	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_93	AC_D02_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D02	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_94	AC_D02_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D02	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_95	AC_D02_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D02	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_96	AC_D02_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D02	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_97	AC_D02_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D02	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_98	AC_D02_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D02	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_99	AC_D02_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D02	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_100	AC_D02_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D02	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_101	AC_D02_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D02	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_102	AC_D02_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D02	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_103	AC_D02_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D02	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_104	AC_D02_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D02	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_105	AC_D02_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D02	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_106	AC_D02_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D02	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_107	AC_D02_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D02	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_108	AC_D02_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D02	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_109	AC_D02_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D02	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_110	AC_D02_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D02	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_111	AC_D01_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D01	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_112	AC_D01_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D01	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_113	AC_D01_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D01	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_114	AC_D01_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D01	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_115	AC_D01_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D01	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_116	AC_D01_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D01	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_117	AC_D01_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D01	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_118	AC_D01_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D01	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_119	AC_D01_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D01	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_120	AC_D01_02	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D01	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_121	AC_D01_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D01	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_122	AC_D01_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D01	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_123	AC_D01_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D01	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_124	AC_D01_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D01	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_125	AC_D01_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D01	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_126	AC_D01_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D01	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_127	AC_D01_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D01	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_128	AC_D01_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D01	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_129	AC_D01_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D01	NCBITaxon_10090	Mus musculus	male	yes	Frozen
+AC_130	AC_D01_01	PrimaryBioSample	MONDO_0007186	gastroesophageal reflux disease	UBERON_0000945	stomach	EFO_0008780	inDrop	AC_D01	NCBITaxon_10090	Mus musculus	male	yes	Frozen
