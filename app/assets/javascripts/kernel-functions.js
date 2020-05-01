@@ -113,6 +113,14 @@ function createTracesAndLayout(arr, title, jitter='all', expressionLabel){
     }
     var layout = {
         title: title,
+        // Force axis labels, including number strings, to be treated as
+        // categories.  See Python docs (same generic API as JavaScript):
+        // https://plotly.com/python/axes/#forcing-an-axis-to-be-categorical
+        // Relevant Plotly JS example:
+        // https://plotly.com/javascript/axes/#categorical-axes
+        xaxis: {
+          type: 'category'
+        },
         yaxis: {
             zeroline: true,
             showline: true,
