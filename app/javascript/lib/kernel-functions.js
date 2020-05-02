@@ -1,3 +1,5 @@
+import { std, quantileSeq } from 'mathjs'
+
 /**
  * Returns a normal reference distribution (nrd)
  *
@@ -6,12 +8,30 @@
  *  and https://stat.ethz.ch/R-manual/R-devel/library/stats/html/bandwidth.html
 */
 function nrd0(X) {
-  const iqr = jStat.percentile(X, 0.75) - jStat.percentile(X, 0.25)
-  const iqrM = iqr /1.34
-  const std = jStat.stdev(X, true)
-  let min = std < iqrM ? std : iqrM
+  // Docs: https://jstat.github.io/all.html#percentile
+  // const iqr = jStat.percentile(X, 0.75) - jStat.percentile(X, 0.25)
+
+  // Docs: https://mathjs.org/docs/reference/functions/quantileSeq.html
+  const iqr = quantileSeq(X, 0.75) - quantileSeq(X, 0.25)
+  const iqrM = iqr / 1.34
+
+  // From https://jstat.github.io/all.html#stdev
+  //    "Passing true to flag returns the sample standard deviation.
+  //    The 'sample' standard deviation is also called the 'corrected
+  //    standard deviation', and is an unbiased estimator of the population
+  //    standard deviation.
+  // const std = jStat.stdev(X, true)
+
+  // From https://mathjs.org/docs/reference/functions/std.html
+  //    "Optionally, the type of normalization can be specified as the final
+  //    parameter. The parameter normalization can be one of the following
+  //    values:
+  //      ‘unbiased’ (default) The sum of squared errors is divided by (n - 1)
+  const standardDeviation = std(X)
+
+  let min = standardDeviation < iqrM ? standardDeviation : iqrM
   if (min === 0) {
-    min = std
+    min = standardDeviation
   }
   if (min === 0) {
     min = Math.abs(X[1])
@@ -51,7 +71,8 @@ function arrayMax(arr) {
 }
 
 /**
- * Creates Plotly traces
+ * Creates Plotly traces and layout for violin plots and box plots
+ *
  * Takes an array of arrays and returns the data array of traces and the
  * layout variable.  More specifically, this will:
  *
@@ -60,7 +81,7 @@ function arrayMax(arr) {
  * and create the response plotly objects,
  * returning [plotly data object, plotly layout object]
 */
-function createTracesAndLayout(
+export function createTracesAndLayout(
   arr, title, jitter='all', expressionLabel
 ) {
   let data = []
