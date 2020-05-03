@@ -29,6 +29,7 @@
     "jstat": "^1.9.3",
     "mathjs": "^6.6.4",
     "morpheus-app": "1.0.18",
+    "plotly.js-dist": "1.54.0",
     "pluralize": "^8.0.0",
     "pnp-webpack-plugin": "^1.6.4",
     "postcss-cssnext": "3.1.0",

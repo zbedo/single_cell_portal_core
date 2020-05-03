@@ -3,6 +3,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDna } from '@fortawesome/free-solid-svg-icons'
 
 import { fetchExpressionViolin } from 'lib/scp-api'
+import { createTracesAndLayout } from 'lib/kernel-functions'
+import { Plotly } from 'plotly.js-dist'
 
 /** gets a unique id for a study gene graph to be rendered at */
 function getGraphElementId(study, gene) {
@@ -14,7 +16,8 @@ export default function StudyViolinPlot({ study, gene }) {
   const [isLoaded, setIsLoaded] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [clusterOptions, setClusterOptions] = useState([])
-  const [annotationOptions, setAnnotationOptions] = useState({ 'Study Wide': [], 'Cluster-Based': [] })
+  const [annotationOptions, setAnnotationOptions] =
+    useState({ 'Study Wide': [], 'Cluster-Based': [] })
   const [subsamplingOptions, setSubsamplingOptions] = useState([])
   const [renderParams, setRenderParams] = useState({
     userUpdated: false,
@@ -22,6 +25,7 @@ export default function StudyViolinPlot({ study, gene }) {
     annotation: '',
     subsample: ''
   })
+
   /** copied from legacy application.js */
   function parseResultsToArray(results) {
     const keys = Object.keys(results.values)
@@ -30,7 +34,7 @@ export default function StudyViolinPlot({ study, gene }) {
     })
   }
 
-  /** handles changes in select controls.  merges newParams into the old params */
+  /** handles changes in select controls.  merges newParams into old params */
   function updateRenderParams(newParams) {
     const mergedParams = Object.assign({}, renderParams, newParams)
     mergedParams.userUpdated = true
@@ -48,7 +52,9 @@ export default function StudyViolinPlot({ study, gene }) {
     // The code below is heavily borrowed from legacy application.js
     const dataArray = parseResultsToArray(results)
     const jitter = results.values_jitter ? results.values_jitter : ''
-    const traceData = window.createTracesAndLayout(dataArray, results.rendered_cluster, jitter, results.y_axis_title)
+    const traceData = createTracesAndLayout(
+      dataArray, results.rendered_cluster, jitter, results.y_axis_title
+    )
     const expressionData = [].concat.apply([], traceData[0])
     const expressionLayout = traceData[1]
 
@@ -63,13 +69,18 @@ export default function StudyViolinPlot({ study, gene }) {
       annotation: results.rendered_annotation,
       subsample: results.rendered_subsample
     })
-    window.Plotly.newPlot(getGraphElementId(study, gene), expressionData, expressionLayout)
+    Plotly.newPlot(
+      getGraphElementId(study, gene),
+      expressionData,
+      expressionLayout
+    )
   }
 
   useEffect(() => {
-    // do a load from the server if this is the initial load or if parameters have been updated by the user
-    // note we need the extra check because the renderParams will actually change after the first server load
-    // as the server sends back the option lists and selected defaults
+    // do a load from the server if this is the initial load or if parameters
+    // have been updated by the user note we need the extra check because the
+    // renderParams will actually change after the first server load as the
+    // server sends back the option lists and selected defaults
     if (!isLoading && !isLoaded || renderParams.userUpdated) {
       loadData(renderParams)
     }
@@ -78,8 +89,14 @@ export default function StudyViolinPlot({ study, gene }) {
   return (
     <div className="row">
       <div className="col-md-10">
-        <div className="expression-graph" id={ getGraphElementId(study, gene) }></div>
-        { isLoading && <FontAwesomeIcon icon={faDna} className="gene-load-spinner"/> }
+        <div
+          className="expression-graph"
+          id={ getGraphElementId(study, gene) }>
+        </div>
+        {
+          isLoading &&
+          <FontAwesomeIcon icon={faDna} className="gene-load-spinner"/>
+        }
         <span className="gene-title">{gene}</span>
       </div>
       <div className="col-md-2 graph-controls">
@@ -87,7 +104,10 @@ export default function StudyViolinPlot({ study, gene }) {
           <label>Load cluster</label>
           <select className="form-control cluster-select global-gene-cluster"
             value={renderParams.cluster}
-            onChange={event => {updateRenderParams({ cluster: event.target.value })}}>
+            onChange={event => {
+              updateRenderParams({ cluster: event.target.value })
+            }
+            }>
             { clusterOptions.map((opt, index) => {
               return <option key={index} value={opt}>{opt}</option>
             })}
@@ -95,9 +115,12 @@ export default function StudyViolinPlot({ study, gene }) {
         </div>
         <div className="form-group">
           <label>Select annotation</label>
-          <select className="form-control annotation-select global-gene-annotation"
+          <select
+            className="form-control annotation-select global-gene-annotation"
             value={renderParams.annotation}
-            onChange={event => {updateRenderParams({ annotation: event.target.value })}}>
+            onChange={event => {
+              updateRenderParams({ annotation: event.target.value })
+            }}>
             <optgroup label="Study Wide">
               { annotationOptions['Study Wide'].map((opt, index) => {
                 return <option key={index} value={opt[1]}>{opt[0]}</option>
@@ -115,7 +138,10 @@ export default function StudyViolinPlot({ study, gene }) {
           <label>Subsampling threshold</label>
           <select
             className="form-control subsample-select global-gene-subsample"
-            onChange={event => {updateRenderParams({ subsample: event.target.value })}}>
+            onChange={event => {
+              updateRenderParams({ subsample: event.target.value })
+            }
+            }>
             <option key={999} value=''>All cells</option>
             { subsamplingOptions.map((opt, index) => {
               return <option key={index} value={opt}>{opt}</option>
