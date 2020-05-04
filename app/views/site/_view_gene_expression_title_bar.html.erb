@@ -8,10 +8,7 @@
 </div>
 
 <script>
-  alert('hi')
-  <%= feature_flags = User.feature_flags_for_user(current_user) %>
-  alert('<%= feature_flags %>')
-  <% if feature_flags.key?('ideogram_related_genes') && feature_flags['ideogram_related_genes'] == true %>
+  <% if User.feature_flags_for_user(current_user).key?('ideogram_related_genes') && User.feature_flags_for_user(current_user)['ideogram_related_genes'] == true %>
     document.querySelector('.study-lead').parentElement.innerHTML +=
       '<div id="ideogramSearchResultsContainer"></div>';
     window.SCP.taxid = '<%= @taxid %>';
