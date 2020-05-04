@@ -124,7 +124,7 @@ function main {
         echo "### determining requested release rollback tag on $GIT_BRANCH ###"
         run_remote_command "ROLLBACK_TAG=$(extract_release_attribute $TAG_OFFSET)" || exit_with_error_message "could not get rollback tag in $GIT_BRANCH"
         echo "### rolling back release to tag: $ROLLBACK_TAG on $GIT_BRANCH ###"
-        run_remote_command "git checkout tags/$ROLLBACK_TAG" || exit_with_error_message "could not checkout $GIT_BRANCH"
+        run_remote_command "git checkout tags/$ROLLBACK_TAG" || exit_with_error_message "could not checkout tags/$ROLLBACK_TAG on $GIT_BRANCH"
         echo "### COMPLETED ###"
     fi
 
