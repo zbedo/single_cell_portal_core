@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDna } from '@fortawesome/free-solid-svg-icons'
+import Plotly from 'plotly.js-dist'
 
 import { fetchExpressionViolin } from 'lib/scp-api'
-import { createTracesAndLayout } from 'lib/kernel-functions'
-import { Plotly } from 'plotly.js-dist'
+import createTracesAndLayout from 'lib/kernel-functions'
 
 /** gets a unique id for a study gene graph to be rendered at */
 function getGraphElementId(study, gene) {

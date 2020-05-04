@@ -81,7 +81,7 @@ function arrayMax(arr) {
  * and create the response plotly objects,
  * returning [plotly data object, plotly layout object]
 */
-export function createTracesAndLayout(
+export default function createTracesAndLayout(
   arr, title, jitter='all', expressionLabel
 ) {
   let data = []
