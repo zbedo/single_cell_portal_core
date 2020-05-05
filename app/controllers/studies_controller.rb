@@ -459,7 +459,7 @@ class StudiesController < ApplicationController
         existing_file = StudyFile.find(study_file.id)
         if existing_file
           ErrorTracker.report_exception(e, current_user, params)
-          logger.error("DoUpload Failed: Existing file for #{study_file.id} -- type:#{existing_file.type} name:#{existing_file.name}")
+          logger.error("do_upload Failed: Existing file for #{study_file.id} -- type:#{existing_file.type} name:#{existing_file.name}")
         end
         render json: { file: { name: study_file.upload_file_name, errors: study_file.errors.full_messages.join(", ") } }, status: 422 and return
       end
