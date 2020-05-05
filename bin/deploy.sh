@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 # extract secrets from vault, copy to remote host, and launch boot script for deployment
-# can also roll back a broken deployment by calling with -R (
+# can also roll back a broken deployment by calling with -R, and optionally -t OFFSET
+# to increase the amount of releases to roll back to
 
 THIS_DIR="$(cd "$(dirname "$0")"; pwd)"
 
