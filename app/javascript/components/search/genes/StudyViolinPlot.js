@@ -41,14 +41,9 @@ export default function StudyViolinPlot({ study, gene }) {
     setRenderParams(mergedParams)
   }
 
-  /** gets expression data from the server */
-  async function loadData(paramsToRender) {
-    setIsLoading(true)
-    const results = await fetchExpressionViolin(study.accession,
-      gene,
-      paramsToRender.cluster,
-      paramsToRender.annotation,
-      paramsToRender.subsample)
+  /** Formats expression data for Plotly, renders chart */
+  function parseAndPlot(results) {
+    console.log('in parseAndPlot')
     // The code below is heavily borrowed from legacy application.js
     const dataArray = parseResultsToArray(results)
     const jitter = results.values_jitter ? results.values_jitter : ''
@@ -57,23 +52,41 @@ export default function StudyViolinPlot({ study, gene }) {
     )
     const expressionData = [].concat.apply([], traceData[0])
     const expressionLayout = traceData[1]
+    Plotly.newPlot(
+      getGraphElementId(study, gene),
+      expressionData,
+      expressionLayout
+    )
+  }
 
+  /** gets expression data from the server */
+  async function loadData(paramsToRender) {
+    console.log('in loadData, paramsToRender:')
+    console.log(paramsToRender)
+    setIsLoading(true)
+    const results = await fetchExpressionViolin(study.accession,
+      gene,
+      paramsToRender.cluster,
+      paramsToRender.annotation,
+      paramsToRender.subsample)
+    console.log('after results in loadData')
     setIsLoaded(true)
     setIsLoading(false)
+    console.log('after setIsLoading in loadData')
+    console.log('results')
+    console.log(results)
     setClusterOptions(results.options)
     setAnnotationOptions(results.cluster_annotations)
     setSubsamplingOptions(results.subsampling_options)
+    console.log('after setSubsamplingOptions in loadData')
     setRenderParams({
       userUpdated: false,
       cluster: results.rendered_cluster,
       annotation: results.rendered_annotation,
       subsample: results.rendered_subsample
     })
-    Plotly.newPlot(
-      getGraphElementId(study, gene),
-      expressionData,
-      expressionLayout
-    )
+    console.log('before parseAndPlot')
+    parseAndPlot(results)
   }
 
   useEffect(() => {

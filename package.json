@@ -60,6 +60,7 @@
     "jest-cli": "^25.1.0",
     "jest-environment-enzyme": "^7.1.2",
     "jest-enzyme": "^7.1.2",
+    "jest-fetch-mock": "^3.0.3",
     "node-fetch": "^2.6.0",
     "node-sass": "^4.13.1",
     "prettier": "^1.19.1",
