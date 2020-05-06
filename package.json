@@ -22,7 +22,7 @@
     "babel-plugin-transform-react-remove-prop-types": "^0.4.24",
     "camelcase-keys": "^6.1.2",
     "core-js": "^3.6.4",
-    "ideogram": "git://github.com/eweitz/ideogram.git#19fe9f16cd65e0c272ae37e1129998d2095eaf07",
+    "ideogram": "git://github.com/eweitz/ideogram.git#0d79d9381a37c382acadb6cecdc3861f97b18c00",
     "igv": "2.1.0",
     "jquery": "3.4.0",
     "jquery-ui": "1.12.1",
