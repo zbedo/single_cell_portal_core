@@ -297,7 +297,9 @@ function getBrandingGroup(path) {
  * @param {Object} init | Object for settings, just like standard fetch `init`
  * @param {Boolean} mock | Whether to use mock data.  Helps development, tests.
  */
-export default async function scpApi(path, init, mock=false, camelCase=true, toJson=true) {
+export default async function scpApi(
+  path, init, mock=false, camelCase=true, toJson=true
+) {
   if (globalMock) mock = true
   const basePath =
     (mock || globalMock) ? `${mockOrigin}/mock_data` : defaultBasePath

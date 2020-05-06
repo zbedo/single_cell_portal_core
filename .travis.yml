@@ -7,6 +7,7 @@ branches:
   only:
     - master
     - development
+    - ew-violin-ci
 services:
   - docker
 before_install:
