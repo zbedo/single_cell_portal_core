@@ -31,7 +31,7 @@ import ClassicEditor from '@ckeditor/ckeditor5-build-classic'
 import HomePageContent from 'components/HomePageContent'
 import Covid19PageContent from 'components/covid19/Covid19PageContent'
 import { logPageView, logClick } from 'lib/metrics-api'
-import { createTracesAndLayout } from 'lib/kernel-functions'
+import createTracesAndLayout from 'lib/kernel-functions'
 
 document.addEventListener('DOMContentLoaded', () => {
   if (document.getElementById('home-page-content')) {
