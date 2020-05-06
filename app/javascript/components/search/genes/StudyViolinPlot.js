@@ -43,7 +43,6 @@ export default function StudyViolinPlot({ study, gene }) {
 
   /** Formats expression data for Plotly, renders chart */
   function parseAndPlot(results) {
-    console.log('in parseAndPlot')
     // The code below is heavily borrowed from legacy application.js
     const dataArray = parseResultsToArray(results)
     const jitter = results.values_jitter ? results.values_jitter : ''
@@ -104,11 +103,17 @@ export default function StudyViolinPlot({ study, gene }) {
       <div className="col-md-10">
         <div
           className="expression-graph"
-          id={ getGraphElementId(study, gene) }>
+          id={ getGraphElementId(study, gene) }
+          data-testid={ getGraphElementId(study, gene) }
+        >
         </div>
         {
           isLoading &&
-          <FontAwesomeIcon icon={faDna} className="gene-load-spinner"/>
+          <FontAwesomeIcon
+            icon={faDna}
+            data-testid={ `${getGraphElementId(study, gene)}-loading-icon` }
+            className="gene-load-spinner"
+          />
         }
         <span className="gene-title">{gene}</span>
       </div>

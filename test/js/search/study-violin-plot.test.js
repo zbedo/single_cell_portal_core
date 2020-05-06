@@ -2,7 +2,7 @@
 /* eslint-disable*/
 
 import React from 'react'
-import { mount } from 'enzyme'
+import { render, fireEvent, waitFor, waitForElementToBeRemoved, screen } from '@testing-library/react'
 import { act } from 'react-dom/test-utils';
 import camelcaseKeys from 'camelcase-keys'
 
@@ -48,25 +48,10 @@ describe('Violin plot in global gene search', () => {
   it('shows studies when empty', async() => {
     fetch.mockResponseOnce(violins)
 
-    jest.useFakeTimers()
-    const spy = jest.spyOn(console, 'error')
-    spy.mockImplementation(() => {})
+    render(<StudyViolinPlot study={study} gene={study.gene_matches[0]}/>)
 
-    var wrapper;
+    await waitForElementToBeRemoved(() => screen.getByTestId('expGraph-SCP25-gad2-loading-icon'))
 
-    act(() => {
-      wrapper = mount((
-        <StudyViolinPlot study={study} gene={study.gene_matches[0]}/>
-      ))
-    });
-
-    // act(() => { jest.runAllTimers() })
-    // wrapper.update();
-    // console.log(wrapper.find('.row').debug())
-
-    // act(() => { jest.runAllTimers() })
-    // wrapper.update();
-    // console.log(wrapper.find('.row').debug())
     expect(fetch).toBeCalled()
 
     // return promise.then(() => {
@@ -77,7 +62,10 @@ describe('Violin plot in global gene search', () => {
     //   expect(wrapper.text()).to.contain('data is ready');
     // });
 
-    expect(wrapper.find(StudyViolinPlot)).toHaveLength(1)
-    done()
+    // console.log("screen.getByTestId('expGraph-SCP25-gad2')")
+    // console.log(screen.getByTestId('expGraph-SCP25-gad2'))
+
+    expect(screen.getAllByTestId('expGraph-SCP25-gad2')).toHaveLength(1)
+
   })
 })

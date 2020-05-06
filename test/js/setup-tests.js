@@ -15,6 +15,11 @@ global.scrollTo = jest.fn()
 window.URL.createObjectURL = function() {}
 window.HTMLCanvasElement.prototype.getContext = () => {}
 
+// Needed for violin plot tests per
+// https://github.com/testing-library/dom-testing-library/releases/tag/v7.0.0
+import MutationObserver from '@sheerun/mutationobserver-shim'
+window.MutationObserver = MutationObserver
+
 // Google Analytics fallback: remove once Bard and Mixpanel are ready for SCP
 // This enables tests for SCP
 global.ga = function(mock1, mock2, mock3, mock4) {
