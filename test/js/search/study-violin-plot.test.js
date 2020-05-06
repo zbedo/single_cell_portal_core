@@ -45,22 +45,38 @@ describe('Violin plot in global gene search', () => {
     fetch.resetMocks()
   })
 
-  it('shows studies when empty', done => {
+  it('shows studies when empty', async() => {
     fetch.mockResponseOnce(violins)
 
     jest.useFakeTimers()
     const spy = jest.spyOn(console, 'error')
     spy.mockImplementation(() => {})
 
-    const wrapper = mount((
-      <StudyViolinPlot study={study} gene={study.gene_matches[0]}/>
-    ))
+    var wrapper;
 
     act(() => {
-      jest.runAllImmediates()
-    })
-    wrapper.update();
-    console.log(wrapper.debug())
+      wrapper = mount((
+        <StudyViolinPlot study={study} gene={study.gene_matches[0]}/>
+      ))
+    });
+
+    // act(() => { jest.runAllTimers() })
+    // wrapper.update();
+    // console.log(wrapper.find('.row').debug())
+
+    // act(() => { jest.runAllTimers() })
+    // wrapper.update();
+    // console.log(wrapper.find('.row').debug())
+    expect(fetch).toBeCalled()
+
+    // return promise.then(() => {
+    //   expect(wrapper.state()).to.have.property('dataReady', true);
+
+    //   wrapper.update();
+    // }).then(() => {
+    //   expect(wrapper.text()).to.contain('data is ready');
+    // });
+
     expect(wrapper.find(StudyViolinPlot)).toHaveLength(1)
     done()
   })
