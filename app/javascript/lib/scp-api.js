@@ -113,12 +113,10 @@ export function setMockOrigin(origin) {
  *
  */
 export async function fetchExpressionViolin(studyAccession, gene, cluster, annotation, subsample, mock=false) {
-  console.log('in fetchExpressionViolin start')
   const clusterParam = cluster ? `&cluster=${encodeURIComponent(cluster)}` : ''
   const annotationParam = annotation ? `&annotation=${encodeURIComponent(annotation)}` : ''
   const subsampleParam = subsample ? `&subsample=${encodeURIComponent(subsample)}` : ''
   const apiUrl = `/studies/${studyAccession}/expression_data/violin?gene=${gene}${clusterParam}${annotationParam}${subsampleParam}`
-  console.log('in fetchExpressionViolin before scpApi')
   // don't camelcase the keys since those can be cluster names, so send false for the 4th argument
   return await scpApi(apiUrl, defaultInit(), mock, false)
 }
@@ -306,20 +304,10 @@ export default async function scpApi(
   let fullPath = basePath + path
   if (mock) fullPath += '.json' // e.g. /mock_data/search/auth_code.json
 
-  console.log('going to fetch')
-  console.log('fullPath:')
-  console.log(fullPath)
-  console.log('init:')
-  console.log(init)
   const response = await fetch(fullPath, init).catch(error => error)
 
-  console.log('got response')
-  // console.log('response:')
-  // console.log(response)
   if (response.ok) {
-    console.log('response.ok')
     if (toJson) {
-      console.log('toJson')
       const json = await response.json()
       // Converts API's snake_case to JS-preferrable camelCase,
       // for easy destructuring assignment.

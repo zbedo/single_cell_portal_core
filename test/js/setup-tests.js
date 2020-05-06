@@ -6,7 +6,7 @@ configure({ adapter: new Adapter() })
 import { setGlobalMockFlag, setMockOrigin } from 'lib/scp-api'
 
 setGlobalMockFlag(true)
-setMockOrigin('http://localhost:3000')
+setMockOrigin('https://localhost:3000')
 
 // convert scrolls to no-ops as otherwise they will error
 global.scrollTo = jest.fn()

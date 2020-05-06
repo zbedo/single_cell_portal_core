@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "test": "jest --coverage",
+    "test": "export NODE_TLS_REJECT_UNAUTHORIZED=0; jest --coverage ",
     "ui-test": "jest test/js --testPathIgnorePatterns=fetch/*",
     "testDebug": "node --inspect-brk node_modules/.bin/jest --runInBand",
     "lint": "eslint app/javascript",

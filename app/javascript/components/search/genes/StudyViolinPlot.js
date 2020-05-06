@@ -60,31 +60,27 @@ export default function StudyViolinPlot({ study, gene }) {
 
   /** gets expression data from the server */
   async function loadData(paramsToRender) {
-    console.log('in loadData, paramsToRender:')
-    console.log(paramsToRender)
     setIsLoading(true)
+
     const results = await fetchExpressionViolin(study.accession,
       gene,
       paramsToRender.cluster,
       paramsToRender.annotation,
       paramsToRender.subsample)
-    console.log('after results in loadData')
+
     setIsLoaded(true)
     setIsLoading(false)
-    console.log('after setIsLoading in loadData')
-    console.log('results')
-    console.log(results)
     setClusterOptions(results.options)
     setAnnotationOptions(results.cluster_annotations)
     setSubsamplingOptions(results.subsampling_options)
-    console.log('after setSubsamplingOptions in loadData')
+
     setRenderParams({
       userUpdated: false,
       cluster: results.rendered_cluster,
       annotation: results.rendered_annotation,
       subsample: results.rendered_subsample
     })
-    console.log('before parseAndPlot')
+
     parseAndPlot(results)
   }
 
