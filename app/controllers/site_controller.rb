@@ -545,8 +545,7 @@ class SiteController < ApplicationController
     end
     # load expression scatter using main gene expression values
     @expression = load_gene_set_expression_data_arrays(@selected_annotation, params[:consensus], subsample)
-    color_minmax =  @expression[:all][:marker][:color].minmax
-    @expression[:all][:marker][:cmin], @expression[:all][:marker][:cmax] = color_minmax
+    @expression[:all][:marker][:cmin], @expression[:all][:marker][:cmax] = RequestUtils.get_minmax(@expression[:all][:marker][:color])
 
     # load static cluster reference plot
     @coordinates = load_cluster_group_data_array_points(@selected_annotation, subsample)
@@ -1583,6 +1582,8 @@ class SiteController < ApplicationController
       end
       # if we didn't assign anything to the color array, we know the annotation_array is good to use
       color_array.empty? ? color_array = annotation_array : nil
+      # account for NaN when computing min/max
+      min, max = RequestUtils.get_minmax(annotation_array)
       coordinates[:all] = {
           x: x_array,
           y: y_array,
@@ -1591,8 +1592,8 @@ class SiteController < ApplicationController
           cells: cells,
           name: annotation[:name],
           marker: {
-              cmax: annotation_array.max,
-              cmin: annotation_array.min,
+              cmax: max,
+              cmin: min,
               color: color_array,
               size: @study.default_cluster_point_size,
               line: { color: 'rgb(40,40,40)', width: @study.show_cluster_point_borders? ? 0.5 : 0},
@@ -1841,8 +1842,7 @@ class SiteController < ApplicationController
       expression[:all][:marker][:color] << expression_score
     end
     expression[:all][:marker][:line] = { color: 'rgb(255,255,255)', width: @study.show_cluster_point_borders? ? 0.5 : 0}
-    color_minmax =  expression[:all][:marker][:color].minmax
-    expression[:all][:marker][:cmin], expression[:all][:marker][:cmax] = color_minmax
+    expression[:all][:marker][:cmin], expression[:all][:marker][:cmax] = RequestUtils.get_minmax(expression[:all][:marker][:color])
     expression[:all][:marker][:colorscale] = params[:colorscale].blank? ? 'Reds' : params[:colorscale]
     expression
   end
@@ -1972,8 +1972,7 @@ class SiteController < ApplicationController
 
     end
     expression[:all][:marker][:line] = { color: 'rgb(40,40,40)', width: @study.show_cluster_point_borders? ? 0.5 : 0}
-    color_minmax =  expression[:all][:marker][:color].minmax
-    expression[:all][:marker][:cmin], expression[:all][:marker][:cmax] = color_minmax
+    expression[:all][:marker][:cmin], expression[:all][:marker][:cmax] = RequestUtils.get_minmax(expression[:all][:marker][:color])
     expression[:all][:marker][:colorscale] = params[:colorscale].blank? ? 'Reds' : params[:colorscale]
     expression
   end
@@ -2036,7 +2035,7 @@ class SiteController < ApplicationController
       range = @cluster.domain_ranges
     else
       # take the minmax of each domain across all groups, then the global minmax
-      @vals = inputs.map {|v| domain_keys.map {|k| v[k].minmax}}.flatten.minmax
+      @vals = inputs.map {|v| domain_keys.map {|k| RequestUtils.get_minmax(v[k])}}.flatten.minmax
       # add 2% padding to range
       scope = (@vals.first - @vals.last) * 0.02
       raw_range = [@vals.first + scope, @vals.last - scope]
@@ -2063,7 +2062,7 @@ class SiteController < ApplicationController
     end
     aspect
   end
-
+  
   ###
   #
   # SEARCH SUB METHODS

@@ -42,12 +42,7 @@ module StudiesHelper
     when :group
       values.size
     when :numeric
-      # we need to check for NaN as minmax throws an ArgumentError
-      begin
-        values.minmax.join(', ')
-      rescue ArgumentError
-        values.keep_if {|value| !value.to_f.nan?}.minmax.join(', ') + ' (excluding NaN)'
-      end
+      RequestUtils.get_minmax(values).join(', ')
     end
   end
 
