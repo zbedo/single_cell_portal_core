@@ -1,6 +1,6 @@
 /* eslint-disable */
 
-fetchEnsembl = Ideogram.fetchEnsembl;
+// fetchEnsembl = Ideogram.fetchEnsembl;
 
 annotDescriptions = {}
 
@@ -241,7 +241,7 @@ var chrHeight = 90;
 var shape = 'triangle';
 var left = 0;
 
-// var ensemblBase = 'https://rest.ensembl.org';
+var ensemblBase = 'https://rest.ensembl.org';
 
 var searchResultsLegend = [{
   name: 'Click gene to search',
@@ -252,16 +252,16 @@ var searchResultsLegend = [{
   ]
 }];
 
-// async function fetchEnsembl(path, body=null, method='GET') {
-//   let init = {
-//     method: method,
-//     headers: {'Content-Type': 'application/json'}
-//   }
-//   if (body !== null) init.body = JSON.stringify(body);
-//   var response = await fetch(ensemblBase + path, init);
-//   var json = await response.json();
-//   return json;
-// }
+async function fetchEnsembl(path, body=null, method='GET') {
+  let init = {
+    method: method,
+    headers: {'Content-Type': 'application/json'}
+  }
+  if (body !== null) init.body = JSON.stringify(body);
+  var response = await fetch(ensemblBase + path, init);
+  var json = await response.json();
+  return json;
+}
 
 // /**
 //  * Fetch paralogs of searched gene
