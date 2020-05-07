@@ -32,9 +32,6 @@ describe('Violin plot in global gene search', () => {
 
     await waitForElementToBeRemoved(() => screen.getByTestId('expGraph-SCP25-gad2-loading-icon'))
 
-    // console.log("screen.getByTestId('expGraph-SCP25-gad2').data[0].y.length")
-    // console.log(screen.getByTestId('expGraph-SCP25-gad2').data[0].y.length)
-
     expect(screen.getAllByTestId('expGraph-SCP25-gad2')).toHaveLength(1)
 
     expect(screen.getByTestId('expGraph-SCP25-gad2').data[0].y).toHaveLength(4548)
