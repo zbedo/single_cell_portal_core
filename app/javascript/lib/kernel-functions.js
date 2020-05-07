@@ -1,5 +1,3 @@
-import { std, quantileSeq } from 'mathjs'
-
 // default scatter plot colors, a combination of colorbrewer sets 1-3 with
 // tweaks to the yellow members
 //
@@ -14,48 +12,6 @@ const colorBrewerSet = [
 
 // To consider: dedup this copy with the one that exists in application.js.
 const plotlyDefaultLineColor = 'rgb(40, 40, 40)'
-
-/**
- * Returns a normal reference distribution (nrd)
- *
- * Advanced Rule of thumb bandwidth selector from:
- *  https://en.wikipedia.org/wiki/Kernel_density_estimation#Bandwidth_selection
- *  and https://stat.ethz.ch/R-manual/R-devel/library/stats/html/bandwidth.html
-*/
-function nrd0(X) {
-  // Docs: https://jstat.github.io/all.html#percentile
-  // const iqr = jStat.percentile(X, 0.75) - jStat.percentile(X, 0.25)
-
-  // Docs: https://mathjs.org/docs/reference/functions/quantileSeq.html
-  const iqr = quantileSeq(X, 0.75) - quantileSeq(X, 0.25)
-  const iqrM = iqr / 1.34
-
-  // From https://jstat.github.io/all.html#stdev
-  //    "Passing true to flag returns the sample standard deviation.
-  //    The 'sample' standard deviation is also called the 'corrected
-  //    standard deviation', and is an unbiased estimator of the population
-  //    standard deviation.
-  // const std = jStat.stdev(X, true)
-
-  // From https://mathjs.org/docs/reference/functions/std.html
-  //    "Optionally, the type of normalization can be specified as the final
-  //    parameter. The parameter normalization can be one of the following
-  //    values:
-  //      ‘unbiased’ (default) The sum of squared errors is divided by (n - 1)
-  const standardDeviation = std(X)
-
-  let min = standardDeviation < iqrM ? standardDeviation : iqrM
-  if (min === 0) {
-    min = standardDeviation
-  }
-  if (min === 0) {
-    min = Math.abs(X[1])
-  }
-  if (min === 0) {
-    min = 1.0
-  }
-  return 0.9 * min * Math.pow(X.length, -0.2)
-}
 
 /**
  * More memory- and time-efficient analog of Math.min
@@ -106,9 +62,6 @@ export default function createTracesAndLayout(
     const dist = arr[x][1]
     const name = arr[x][0]
 
-    // If users want to change bandwidth, we would parameterize this.
-    const bandwidth = nrd0(dist)
-
     // Replace the none selection with bool false for plotly
     if (jitter === '') {
       jitter = false
@@ -130,7 +83,6 @@ export default function createTracesAndLayout(
           fillcolor: '#ffffff',
           width: .1
         },
-        bandwidth,
         'marker': {
           size: 2,
           color: '#000000',

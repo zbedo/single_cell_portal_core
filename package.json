@@ -26,8 +26,6 @@
     "igv": "2.1.0",
     "jquery": "3.4.0",
     "jquery-ui": "1.12.1",
-    "jstat": "^1.9.3",
-    "mathjs": "^6.6.4",
     "morpheus-app": "1.0.18",
     "plotly.js-dist": "1.54.0",
     "pluralize": "^8.0.0",
