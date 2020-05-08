@@ -17,6 +17,7 @@ import { FeatureFlagContext } from 'providers/FeatureFlagProvider'
 function GeneKeyword({placeholder}) {
   const featureFlagState = useContext(FeatureFlagContext)
   const geneSearchState = useContext(GeneSearchContext)
+  const studySearchState = useContext(StudySearchContext)
   const [genes, setGenes] = useState(_clone(geneSearchState.params.genes))
   const [showEmptySearchModal, setShowEmptySearchModal] = useState(false)
 
