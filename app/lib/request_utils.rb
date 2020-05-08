@@ -55,4 +55,13 @@ class RequestUtils
     end
     page_num
   end
+
+  # safely determine min/max bounds of an array, accounting for NaN value
+  def self.get_minmax(values_array)
+    begin
+      values_array.minmax
+    rescue TypeError, ArgumentError
+      values_array.dup.reject!(&:nan?).minmax
+    end
+  end
 end
