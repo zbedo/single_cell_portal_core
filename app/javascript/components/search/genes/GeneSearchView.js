@@ -13,17 +13,16 @@ import SearchQueryDisplay from 'components/search/results/SearchQueryDisplay'
 import GeneResultsPanel from './GeneResultsPanel'
 import { FeatureFlagContext } from 'providers/FeatureFlagProvider'
 
-/**
-  * Renders a gene search control panel and the associated results
-  * can also show study filter controls if the feature flag gene_study_filter is true
-  */
-export default function GeneSearchView() {
+
+function GeneKeyword({placeholder}) {
   const featureFlagState = useContext(FeatureFlagContext)
   const geneSearchState = useContext(GeneSearchContext)
   const studySearchState = useContext(StudySearchContext)
   const [genes, setGenes] = useState(_clone(geneSearchState.params.genes))
   const [showEmptySearchModal, setShowEmptySearchModal] = useState(false)
-  const [showStudyControls, setShowStudyControls] = useState(hasSearchParams(studySearchState.params))
+
+  const showClear = genes && genes.length
+
 
   /** handles a user submitting a gene search */
   function handleSubmit(event) {
@@ -35,7 +34,53 @@ export default function GeneSearchView() {
     }
   }
 
-  const showClear = genes && genes.length
+  return  (
+    <form className="gene-keyword-search form-horizontal" onSubmit={ handleSubmit }>
+      <div className="input-group">
+        <input type="text"
+          className="form-control"
+          value={genes}
+          size="50"
+          onChange={ e => setGenes(e.target.value) }
+          placeholder={ placeholder }
+          name="genesText"/>
+        <div className="input-group-append">
+          <Button type="submit">
+            <FontAwesomeIcon icon={ faSearch } />
+          </Button>
+        </div>
+        { showClear &&
+          <Button className="keyword-clear"
+                  type='button'
+                  onClick={ e => setGenes('') } >
+            <FontAwesomeIcon icon={ faTimes } />
+          </Button> }
+      </div>
+      <Modal
+        show={showEmptySearchModal}
+        onHide={() => {setShowEmptySearchModal(false)}}
+        animation={false}
+        bsSize='small'>
+        <Modal.Body className="text-center">
+          You must enter at least one gene to search
+        </Modal.Body>
+      </Modal>
+    </form>
+  )
+}
+
+/**
+  * Renders a gene search control panel and the associated results
+  * can also show study filter controls if the feature flag gene_study_filter is true
+  */
+export default function GeneSearchView() {
+  const featureFlagState = useContext(FeatureFlagContext)
+  const geneSearchState = useContext(GeneSearchContext)
+  const studySearchState = useContext(StudySearchContext)
+
+  const [showStudyControls, setShowStudyControls] = useState(hasSearchParams(studySearchState.params))
+
+
   let resultsContent
   const showStudySearchResults = !geneSearchState.isLoaded &&
                                  !geneSearchState.isLoading &&
@@ -65,28 +110,7 @@ export default function GeneSearchView() {
     <div>
       <div className="row">
         <div className="col-md-12 col-sm-12 col-xs-12">
-          <form className="gene-keyword-search form-horizontal" onSubmit={ handleSubmit }>
-            <div className="input-group">
-              <input type="text"
-                className="form-control"
-                value={genes}
-                size="50"
-                onChange={ e => setGenes(e.target.value) }
-                placeholder={ geneSearchPlaceholder }
-                name="genesText"/>
-              <div className="input-group-append">
-                <Button type="submit">
-                  <FontAwesomeIcon icon={ faSearch } />
-                </Button>
-              </div>
-              { showClear &&
-                <Button className="keyword-clear"
-                        type='button'
-                        onClick={ e => setGenes('') } >
-                  <FontAwesomeIcon icon={ faTimes } />
-                </Button> }
-            </div>
-          </form>
+           <GeneKeyword placeholder={geneSearchPlaceholder}/>
         </div>
       </div>
       { featureFlagState.gene_study_filter &&
@@ -113,15 +137,6 @@ export default function GeneSearchView() {
           <div id="load-more-genes-target"></div>
         </div>
       </div>
-      <Modal
-        show={showEmptySearchModal}
-        onHide={() => {setShowEmptySearchModal(false)}}
-        animation={false}
-        bsSize='small'>
-        <Modal.Body className="text-center">
-          You must enter at least one gene to search
-        </Modal.Body>
-      </Modal>
     </div>
   )
 }
