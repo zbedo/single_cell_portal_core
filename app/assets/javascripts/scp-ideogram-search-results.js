@@ -4,10 +4,15 @@
 
 annotDescriptions = {}
 
+var chrHeight = 90;
+var shape = 'triangle';
+var left = 0;
+
+var ensemblBase = 'https://rest.ensembl.org';
+
 function onClickAnnot(annot) {
   document.querySelector('#search_genes').value = annot.name;
   document.querySelector('#perform-gene-search').click();
-  // plotGeneAndParalogs([annot.name]);
   plotRelatedGenes([annot.name]);
 }
 
@@ -22,12 +27,6 @@ function handleSearch(event) {
   let geneSymbols = searchInput.split(/[, ]/).filter(d => d !== '')
   plotRelatedGenes(geneSymbols);
 }
-
-var chrHeight = 90;
-var shape = 'triangle';
-var left = 0;
-
-var ensemblBase = 'https://rest.ensembl.org';
 
 /**
  * Retrieve interacting genes from WikiPathways API

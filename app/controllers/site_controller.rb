@@ -420,6 +420,14 @@ class SiteController < ApplicationController
     matrix = @study.expression_matrix_files.first
     @taxid = matrix.taxon.ncbi_taxid
     @organism = matrix.taxon.scientific_name
+
+    # Scratch code to get taxon data, given gene record
+    # study.genes.first
+    # study_file_id = gene.study_file_id
+    # study.study_files.first
+    # study_file = study.study_files.find_by(_id: BSON::ObjectId('5eb47a74625618ece6904eb0'))
+    # taxon_obj = study_file.taxon
+
     if request.format == 'text/html'
       # only set this check on full page loads (happens if user was not signed in but then clicked the 'genome' tab)
       set_firecloud_permissions(@study.detached?)
