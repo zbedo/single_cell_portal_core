@@ -71,15 +71,16 @@ class ClusterGroup
       data_arrays.each do |array|
         all_values += array.values
       end
-      return all_values
+      all_values
     else
       data_array = DataArray.find_by(name: array_name, array_type: array_type, linear_data_type: 'ClusterGroup',
                                      cluster_name: self.name, linear_data_id: self.id, subsample_threshold: subsample_threshold,
                                      subsample_annotation: subsample_annotation)
       if data_array.nil?
-        return []
+        # rather than returning [], default to the full resolution array
+        self.concatenate_data_arrays(array_name, array_type)
       else
-        return data_array.values
+        data_array.values
       end
     end
   end
