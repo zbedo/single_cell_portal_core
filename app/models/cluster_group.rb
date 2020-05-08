@@ -12,7 +12,11 @@ class ClusterGroup
   field :cluster_type, type: String
   field :cell_annotations, type: Array
   field :domain_ranges, type: Hash
+  # subsampling flags
+  # :subsampled => whether subsampling has completed
+  # :is_subsampling => whether subsampling has been initiated
   field :subsampled, type: Boolean, default: false
+  field :is_subsampling, type: Boolean, default: false
 
   validates_uniqueness_of :name, scope: :study_id
   validates_presence_of :name, :cluster_type

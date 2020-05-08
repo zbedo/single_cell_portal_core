@@ -89,8 +89,8 @@
           $('#study-tabs a[href="#' + tab + '"]').tab('show');
       }
       $('#cluster-plot').data('camera', baseCamera);
-      // set default subsample option of 10K or all cells
-      if (<%= @cluster.points > 10000 %>) {
+      // set default subsample option of 10K (if subsampled) or all cells
+      if (<%= @cluster.points > 10000 && @cluster.subsampled? %>) {
           $('#subsample').val(10000);
           $('#search_subsample').val(10000);
       }
