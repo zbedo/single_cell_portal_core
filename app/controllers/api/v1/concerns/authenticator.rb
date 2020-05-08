@@ -52,8 +52,10 @@ module Api
                 Rails.logger.error "Error retrieving user api credentials: #{e.class.name}: #{e.message}"
               end
             end
-            # check for token expiry and unset user if expired/timed out
+            # check for token expiry and unset user && api_access_token if expired/timed out
+            # unsetting token prevents downstream FireCloud API calls from using an expired/invalid token
             if user.api_access_token_expired? || user.api_access_token_timed_out?
+              user.update(api_access_token: nil)
               nil
             else
               # update last_access_at

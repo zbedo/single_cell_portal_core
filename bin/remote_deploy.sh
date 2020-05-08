@@ -62,7 +62,7 @@ function main {
     PORTAL_HOMEPAGE="https://$PROD_HOSTNAME/single_cell"
     echo "### ENSURING PORTAL IS AVAILABLE AT $PORTAL_HOMEPAGE ###"
     HOMEPAGE_COUNTER=0
-    while [[ $HOMEPAGE_COUNTER -lt 12 ]]; do
+    while [[ $HOMEPAGE_COUNTER -lt 24 ]]; do
 		    HOMEPAGE_COUNTER=$[$HOMEPAGE_COUNTER + 1]
 		    echo "home page not available on attempt $HOMEPAGE_COUNTER, waiting 15 seconds..."
 		    sleep 15
