@@ -4,13 +4,30 @@
 
 annotDescriptions = {}
 
-function maybeGeneSymbol(ixn, gene) {
-  return (
-    ixn !== '' &&
-    !ixn.includes(' ') &&
-    ixn.toLowerCase() !== gene.name.toLowerCase()
-  );
+function onClickAnnot(annot) {
+  document.querySelector('#search_genes').value = annot.name;
+  document.querySelector('#perform-gene-search').click();
+  // plotGeneAndParalogs([annot.name]);
+  plotRelatedGenes([annot.name]);
 }
+
+// Process text input for the "Search" field.
+function handleSearch(event) {
+  // Ignore non-"Enter" keyups
+  if (event.type === 'keyup' && event.keyCode !== 13) return;
+
+  var searchInput = event.target.value.trim();
+
+  // Handles "BRCA1,BRCA2", "BRCA1 BRCA2", and "BRCA1, BRCA2"
+  let geneSymbols = searchInput.split(/[, ]/).filter(d => d !== '')
+  plotRelatedGenes(geneSymbols);
+}
+
+var chrHeight = 90;
+var shape = 'triangle';
+var left = 0;
+
+var ensemblBase = 'https://rest.ensembl.org';
 
 /**
  * Retrieve interacting genes from WikiPathways API
@@ -68,6 +85,14 @@ async function fetchMyGeneInfo(queryString) {
   return data;
 }
 
+function maybeGeneSymbol(ixn, gene) {
+  return (
+    ixn !== '' &&
+    !ixn.includes(' ') &&
+    ixn.toLowerCase() !== gene.name.toLowerCase()
+  );
+}
+
 /**
  * Retrieves positions of interacting genes from MyGene.info
  *
@@ -81,6 +106,7 @@ async function fetchInteractingGeneAnnots(interactions) {
 
   let annots = [];
   let geneList = Object.keys(interactions);
+  const pathwaysBase = 'https://www.wikipathways.org/index.php/Pathway:';
 
   if (geneList.length === 0) return annots
 
@@ -101,7 +127,20 @@ async function fetchInteractingGeneAnnots(interactions) {
       color: 'purple'
     }
     annots.push(annot)
-    annotDescriptions[hit.symbol] = hit.name;
+
+    const ixns = interactions[hit.symbol];
+
+    const links = ixns.map(ixn => {
+      const url = `${pathwaysBase}${ixn.pathwayId}`
+      return `<a href="${url}" target="_blank">${ixn.name}</a>`;
+    }).join('<br/>')
+
+    const description = `
+      ${hit.name}<br/><br/>
+      Interacts in pathways:<br/>
+      ${links}`;
+
+    annotDescriptions[hit.symbol] = description;
   })
 
   return annots;
@@ -195,18 +234,6 @@ async function plotRelatedGenes(geneSymbols) {
   document.querySelector('#_ideogramLegend').style = style;
 }
 
-// Process text input for the "Search" field.
-function handleSearch(event) {
-  // Ignore non-"Enter" keyups
-  if (event.type === 'keyup' && event.keyCode !== 13) return;
-
-  var searchInput = event.target.value.trim();
-
-  // Handles "BRCA1,BRCA2", "BRCA1 BRCA2", and "BRCA1, BRCA2"
-  let geneSymbols = searchInput.split(/[, ]/).filter(d => d !== '')
-  plotRelatedGenes(geneSymbols);
-}
-
 function decorateGene(annot) {
   var org = ideogram.getScientificName(ideogram.config.taxid);
   var term = `(${annot.name}[gene])+AND+(${org}[orgn])`;
@@ -219,29 +246,6 @@ function decorateGene(annot) {
     <br/>`;
   return annot
 }
-
-
-
-// config = {
-//   organism: organism,
-//   chrWidth: 8,
-//   chrHeight: 90,
-//   chrLabelSize: 10,
-//   annotationHeight: 5,
-//   showFullyBanded: false,
-//   rotatable: false,
-//   legend: legend,
-//   onClickAnnot: onClickAnnot,
-//   onWillShowAnnotTooltip: decorateGene
-// }
-// var ideogram = new Ideogram(config);
-
-
-var chrHeight = 90;
-var shape = 'triangle';
-var left = 0;
-
-var ensemblBase = 'https://rest.ensembl.org';
 
 var searchResultsLegend = [{
   name: 'Click gene to search',
@@ -261,106 +265,6 @@ async function fetchEnsembl(path, body=null, method='GET') {
   var response = await fetch(ensemblBase + path, init);
   var json = await response.json();
   return json;
-}
-
-// /**
-//  * Fetch paralogs of searched gene
-//  */
-// async function fetchParalogPositions(annot, annots) {
-//   var taxid = window.SCP.taxid;
-//   var organism = window.SCP.organism;
-
-//   var orgUnderscored = organism.replace(/-/g, '_');
-
-//   var params = '&format=condensed&type=paralogues&target_taxon=' + taxid;
-//   let path = `/homology/id/${annot.id}?${params}`
-//   var ensemblHomologs = await fetchEnsembl(path);
-//   var homologs = ensemblHomologs.data[0].homologies;
-
-//   // Fetch positions of paralogs
-//   homologIds = homologs.map(homolog => homolog.id)
-//   path = '/lookup/id/' + orgUnderscored;
-//   let body = {'ids': homologIds, 'species': orgUnderscored, 'object_type': 'gene'}
-//   var ensemblHomologGenes = await fetchEnsembl(path, body, 'POST');
-
-//   Object.entries(ensemblHomologGenes).map((idGene, i) => {
-//     let gene = idGene[1]
-//     annot = {
-//       name: gene.display_name,
-//       chr: gene.seq_region_name,
-//       start: gene.start,
-//       stop: gene.end,
-//       id: gene.id,
-//       shape: 'triangle',
-//       color: 'pink',
-//       height: 3
-//     };
-//     // Add to start of array, so searched gene gets top z-index
-//     annots.unshift(annot);
-//   })
-
-//   return annots;
-// }
-
-// async function plotGeneAndParalogs(geneSymbols) {
-//   var organism = window.SCP.organism;
-
-//   // Refine style
-//   document.querySelectorAll('.chromosome').forEach(chromosome => {
-//     chromosome.style.cursor = '';
-//   })
-//   var legendLeft = left - 90 - 40;
-//   var topPx = chrHeight + 20;
-//   var style =
-//     `float: left; position: relative; top: -${topPx}px; left: ${legendLeft}px;`;
-
-//   // Fetch position of searched gene
-//   var orgUnderscored = organism.replace(/-/g, '_');
-//   let path = '/lookup/symbol/' + orgUnderscored;
-//   let body = {'symbols': geneSymbols}
-//   var ensemblGenes = await fetchEnsembl(path, body, 'POST');
-
-//   let annots = []
-//   geneSymbols.forEach(async geneSymbol => {
-//     let gene = ensemblGenes[geneSymbol]
-//     let annot = {
-//       name: gene.display_name,
-//       chr: gene.seq_region_name,
-//       start: gene.start,
-//       stop: gene.end,
-//       id: gene.id,
-//       shape: 'triangle',
-//       color: 'red'
-//     };
-//     annots.push(annot)
-
-//     annots = await fetchParalogPositions(annot, annots)
-//     ideogram.drawAnnots(annots);
-//     document.querySelector('#_ideogramLegend').style = style;
-//   });
-
-//   ideogram.drawAnnots(annots);
-
-//   document.querySelector('#_ideogramLegend').style = 'display: none;';
-// }
-
-// // Process text input for the "Search" field.
-// function handleSearch(event) {
-//   // Ignore non-"Enter" keyups
-//   if (event.type === 'keyup' && event.keyCode !== 13) return;
-
-//   var searchInput = event.target.value.trim();
-
-//   // Handles "BRCA1,BRCA2", "BRCA1 BRCA2", and "BRCA1, BRCA2"
-//   let geneSymbols = searchInput.split(/[, ]/).filter(d => d !== '')
-//   plotGeneAndParalogs(geneSymbols);
-// }
-
-function onClickAnnot(annot) {
-  document.querySelector('#search_genes').value = annot.name;
-  document.querySelector('#perform-gene-search').click();
-  // plotGeneAndParalogs([annot.name]);
-  plotRelatedGenes([annot.name]);
 }
 
 function createSearchResultsIdeogram() {
