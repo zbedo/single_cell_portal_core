@@ -13,7 +13,10 @@ import SearchQueryDisplay from 'components/search/results/SearchQueryDisplay'
 import GeneResultsPanel from './GeneResultsPanel'
 import { FeatureFlagContext } from 'providers/FeatureFlagProvider'
 
-
+/** renders the gene text input
+  * This is split into its own component both for modularity, and also because
+  * having it inlined in GeneSearchView led to a mysterious infinite-repaint bug in StudyResults
+  */
 function GeneKeyword({placeholder}) {
   const featureFlagState = useContext(FeatureFlagContext)
   const geneSearchState = useContext(GeneSearchContext)
