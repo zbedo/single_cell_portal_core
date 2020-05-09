@@ -77,8 +77,12 @@ Rails.application.configure do
     SwaggerUiEngine::SwaggerDocsController.send(:layout, 'swagger_ui_engine/layouts/swagger')
   end
 
+
   if ENV['NOT_DOCKERIZED']
     config.force_ssl = true
+    config.ssl_options = {
+      hsts: false # tell the browser NOT to cache this site a a mandatory https, for easier switching
+    }
   end
 
 end
