@@ -40,7 +40,7 @@ Rails.application.configure do
   # config.action_view.raise_on_missing_translations = true
 
   # Mitigate X-Forwarded-Host injection attacks
-  config.action_controller.default_url_options = { :host => 'localhost', protocol: ENV['NOT_DOCKERIZED'] ? 'http' : 'https'}
+  config.action_controller.default_url_options = { :host => 'localhost', protocol: 'https'}
   config.action_controller.asset_host = ENV['NOT_DOCKERIZED'] ? 'localhost:3000' : 'localhost'
 
   # Use an evented file watcher to asynchronously detect changes in source code,
