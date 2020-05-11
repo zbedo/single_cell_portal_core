@@ -9,6 +9,7 @@ import StudyViolinPlot from './StudyViolinPlot'
   */
 export default function StudyGeneExpressions({ study }) {
   let studyRenderComponent
+
   if (!study.can_visualize_clusters) {
     studyRenderComponent = (
       <div className="text-center">
