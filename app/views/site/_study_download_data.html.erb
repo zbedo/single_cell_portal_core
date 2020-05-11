@@ -29,28 +29,31 @@
                   </thead>
                 </table>
               <% end %>
-            <% elsif @study.public? && !@user_embargoed %>
-                <p class="lead">To download all files using <code>curl</code>, click the button below to get the download command:</p>
-                <p class="lead command-container" id="command-container-all"><%= link_to "<i class='fas fa-download'></i> Get download command for all study data".html_safe, '#/', class: 'btn btn-default get-download-command', id: 'get-download-command_all' %></p>
-                <% if @directories.any? %>
-                    <p class="lead">To download all data files in a specific folder, use the following commands:</p>
-                    <table class="table table-condensed table-striped">
-                      <thead>
+            <% elsif @study.public? && !@user_embargoed || current_user.admin? %>
+              <p class="lead">To download all files using <code>curl</code>, click the button below to get the download command:</p>
+              <p class="lead command-container" id="command-container-all"><%= link_to "<i class='fas fa-download'></i> Get download command for all study data".html_safe, '#/', class: 'btn btn-default get-download-command', id: 'get-download-command_all' %></p>
+              <% if @directories.any? %>
+                <p class="lead">To download all data files in a specific folder, use the following commands:</p>
+                <table class="table table-condensed table-striped">
+                  <thead>
+                    <tr>
+                      <th>Folder</th>
+                      <th>Download command</th>
+                    </tr>
+                    <% @directories.each do |directory| %>
                       <tr>
-                        <th>Folder</th>
-                        <th>Download command</th>
+                        <td><%= directory.name %></td>
+                        <td class="command-container" id="command-container-<%= directory.name %>">
+                          <%= link_to "<i class='fas fa-download'></i> Get download command".html_safe, '#/', class: 'btn btn-default get-download-command', id: "get-download-command_#{directory.name}" %>
+                        </td>
                       </tr>
-                      <% @directories.each do |directory| %>
-                          <tr>
-                            <td><%= directory.name %></td>
-                            <td class="command-container" id="command-container-<%= directory.name %>">
-                              <%= link_to "<i class='fas fa-download'></i> Get download command".html_safe, '#/', class: 'btn btn-default get-download-command', id: "get-download-command_#{directory.name}" %>
-                            </td>
-                          </tr>
-                      <% end %>
-                    </thead>
-                    </table>
-                <% end %>
+                    <% end %>
+                  </thead>
+                </table>
+              <% else %>
+                <%# The user is trying to download a public study that is currently embargoed. %>
+                <p class="lead">No downloads are available to you for this study yet</p>
+              <% end %>
             <% end %>
           </div>
           <div class="modal-footer">
