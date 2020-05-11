@@ -83,7 +83,7 @@ export default function StudyViolinPlot({ study, gene }) {
 
   useEffect(() => {
     // do a load from the server if this is the initial load or if parameters
-    // have been updated by the user note we need the extra check because the
+    // have been updated by the user.  Note we need the extra check because the
     // renderParams will actually change after the first server load as the
     // server sends back the option lists and selected defaults
     if (!isLoading && !isLoaded || renderParams.userUpdated) {
