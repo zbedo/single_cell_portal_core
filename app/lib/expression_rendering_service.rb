@@ -119,8 +119,8 @@ class ExpressionRenderingService
         cell_name = cells[index]
         expression_value = gene['scores'][cell_name].to_f.round(4)
 
-        values[:all][:text] << "<b>#{cell_name}</b><br>#{annotation[:name]}: #{annotation_value}<br>#{y_axis_title}: #{expression_value}"
-        values[:all][:annotations] << "#{annotation[:name]}: #{annotation_value}"
+        values[:all][:text] << "<b>#{cell_name}</b><br>#{annotation_value}<br>#{y_axis_title}: #{expression_value}"
+        values[:all][:annotations] << annotation_value
         values[:all][:x] << annotation_value
         values[:all][:y] << expression_value
         values[:all][:cells] << cell_name
@@ -130,8 +130,8 @@ class ExpressionRenderingService
         if annotation_hash.has_key?(cell)
           annotation_value = annotation_hash[cell]
           expression_value = gene['scores'][cell].to_f.round(4)
-          values[:all][:text] << "<b>#{cell}</b><br>#{annotation[:name]}: #{annotation_value}<br>#{y_axis_title}: #{expression_value}"
-          values[:all][:annotations] << "#{annotation[:name]}: #{annotation_value}"
+          values[:all][:text] << "<b>#{cell}</b><br>#{annotation_value}<br>#{y_axis_title}: #{expression_value}"
+          values[:all][:annotations] << annotation_value
           values[:all][:x] << annotation_value
           values[:all][:y] << expression_value
           values[:all][:cells] << cell
