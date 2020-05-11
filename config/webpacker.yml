@@ -38,7 +38,10 @@ development:
 
   # Reference: https://webpack.js.org/configuration/dev-server/
   dev_server:
-    https: false
+    https:
+      # use the cert/key from config/certs
+      cert: './config/certs/localhost.crt'
+      key: './config/certs/localhost.key'
     host: localhost
     port: 3035
     public: localhost:3035

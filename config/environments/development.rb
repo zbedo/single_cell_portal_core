@@ -40,7 +40,7 @@ Rails.application.configure do
   # config.action_view.raise_on_missing_translations = true
 
   # Mitigate X-Forwarded-Host injection attacks
-  config.action_controller.default_url_options = { :host => 'localhost', protocol: ENV['NOT_DOCKERIZED'] ? 'http' : 'https'}
+  config.action_controller.default_url_options = { :host => 'localhost', protocol: 'https'}
   config.action_controller.asset_host = ENV['NOT_DOCKERIZED'] ? 'localhost:3000' : 'localhost'
 
   # Use an evented file watcher to asynchronously detect changes in source code,
@@ -76,4 +76,13 @@ Rails.application.configure do
     SwaggerUiEngine::SwaggerDocsController.send(:include, Api::V1::Concerns::CspHeaderBypass)
     SwaggerUiEngine::SwaggerDocsController.send(:layout, 'swagger_ui_engine/layouts/swagger')
   end
+
+
+  if ENV['NOT_DOCKERIZED']
+    config.force_ssl = true
+    config.ssl_options = {
+      hsts: false # tell the browser NOT to cache this site a a mandatory https, for easier switching
+    }
+  end
+
 end
