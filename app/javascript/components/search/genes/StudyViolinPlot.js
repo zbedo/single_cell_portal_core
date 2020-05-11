@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDna } from '@fortawesome/free-solid-svg-icons'
-import Plotly from 'plotly.js-dist'
 
 import { fetchExpressionViolin } from 'lib/scp-api'
 import createTracesAndLayout from 'lib/kernel-functions'
+import { plot } from 'lib/plot'
 
 /** gets a unique id for a study gene graph to be rendered at */
 function getGraphElementId(study, gene) {
@@ -51,11 +51,8 @@ export default function StudyViolinPlot({ study, gene }) {
     )
     const expressionData = [].concat.apply([], traceData[0])
     const expressionLayout = traceData[1]
-    Plotly.newPlot(
-      getGraphElementId(study, gene),
-      expressionData,
-      expressionLayout
-    )
+    const graphElementId = getGraphElementId(study, gene)
+    plot(graphElementId, expressionData, expressionLayout)
   }
 
   /** gets expression data from the server */
