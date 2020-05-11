@@ -5,7 +5,7 @@ var selectedAnnotation = selectedAnnotationElement.val();
 var selectedSubsampleElement = $("#<%= @target %>subsample");
 selectedAnnotationElement.html("<%= escape_javascript(select_tag :annotation, grouped_options_for_select(@cluster_annotations, params[:annotation]), class: 'form-control' )%>");
 // also reload subsampling options as they may have changed
-selectedSubsampleElement.html("<%= escape_javascript(select_tag :subsample, options_for_select(subsampling_options(@cluster.points), params[:subsample]), {include_blank: 'All Cells', class: 'form-control'}) %>");
+selectedSubsampleElement.html("<%= escape_javascript(select_tag :subsample, options_for_select(subsampling_options(@cluster), params[:subsample]), {include_blank: 'All Cells', class: 'form-control'}) %>");
 
 if (annotationData.includes(selectedAnnotation)) {
     selectedAnnotationElement.val(selectedAnnotation);
