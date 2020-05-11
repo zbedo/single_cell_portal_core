@@ -222,9 +222,10 @@ module ApplicationHelper
   end
 
   # return an array of values to use for subsampling dropdown scaled to number of cells in study
-  # only options allowed are 1000, 10000, 20000
-  def subsampling_options(max_cells)
-    ClusterGroup::SUBSAMPLE_THRESHOLDS.select {|sample| sample < max_cells}
+  # only options allowed are 1000, 10000, 20000, and 100000
+  # will only provide options if subsampling has completed for a cluster
+  def subsampling_options(cluster)
+    ExpressionRenderingService.subsampling_options(cluster)
   end
 
   # get a label for a workflow status code

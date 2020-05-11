@@ -10,5 +10,6 @@
 
 <div class="form-group">
   <%= label_tag "#{@target}-subsample".to_sym, 'Subsampling threshold' %>&nbsp;<i class='fas fa-question-circle' title="Take a representative subsample of the current cluster.  Choosing all cells may dramatically increase rendering time." data-toggle="tooltip"></i><br />
-  <%= select_tag "#{@target}-subsample".to_sym, options_for_select(subsampling_options(@cluster.points), set_subsample_value(params) ), {include_blank: @cluster.points < ClusterGroup::MAX_THRESHOLD ? 'All Cells' : false, class: 'form-control subsample-select global-gene-subsample'} %>
+  <%= select_tag "#{@target}-subsample".to_sym, options_for_select(subsampling_options(@cluster), set_subsample_value(params) ), {include_blank: @cluster.points < ClusterGroup::MAX_THRESHOLD ? 'All Cells' : false, class: 'form-control subsample-select global-gene-subsample'} %>
+  <%= render partial: 'subsample_warning', locals: {cluster: @cluster} %>
 </div>

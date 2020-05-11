@@ -17,7 +17,7 @@ class ExpressionRenderingService
     end
     render_data[:options] = load_cluster_group_options(study)
     render_data[:cluster_annotations] = load_cluster_group_annotations(study, cluster, current_user)
-    render_data[:subsampling_options] = subsampling_options(cluster.points)
+    render_data[:subsampling_options] = subsampling_options(cluster)
 
     render_data[:rendered_cluster] = cluster.name
     render_data[:rendered_annotation] = "#{selected_annotation[:name]}--#{selected_annotation[:type]}--#{selected_annotation[:scope]}"
@@ -151,8 +151,13 @@ class ExpressionRenderingService
   end
 
   # return an array of values to use for subsampling dropdown scaled to number of cells in study
-  # only options allowed are 1000, 10000, 20000
-  def self.subsampling_options(max_cells)
-    ClusterGroup::SUBSAMPLE_THRESHOLDS.select {|sample| sample < max_cells}
+  # only options allowed are 1000, 10000, 20000, and 100000
+  # will only provide options if subsampling has completed for a cluster
+  def self.subsampling_options(cluster)
+    if cluster.is_subsampling?
+      []
+    else
+      ClusterGroup::SUBSAMPLE_THRESHOLDS.select {|sample| sample < cluster.points}
+    end
   end
 end
