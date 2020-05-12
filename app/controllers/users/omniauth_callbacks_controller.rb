@@ -6,6 +6,32 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
   #
   ###
 
+
+
+  def merge_identities
+    # Can definition be moved outside ?
+    # @user = User.from_omniauth(request.env["omniauth.auth"])
+
+    Rails.logger.info "Merging user identity in Mixpanel via Bard"
+
+    bard_domains_by_env = {
+      'development': 'https://terra-bard-dev.appspot.com',
+      'staging': 'https://terra-bard-alpha.appspot.com',
+      'production': 'https://terra-bard-prod.appspot.com'
+    }
+
+    bard_domain = bard_domains_by_env[Rails.env.to_sym]
+    bard_path = bard_domain + '/api/identify'
+    Rails.logger.info bard_path
+    headers = {'Authorization' => "Bearer #{@user.access_token['access_token']}"}
+    response = RestClient::Request.execute(
+      method: 'GET',
+      url: bard_path,
+      headers: headers,
+      payload: {'anonId': 'foo'}
+    )
+  end
+
 	def google_oauth2
 		# You need to implement the method below in your model (e.g. app/models/user.rb)
 		@user = User.from_omniauth(request.env["omniauth.auth"])
@@ -16,11 +42,12 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
 			# update a user's FireCloud status
 			@user.delay.update_firecloud_status
 			sign_in(@user)
-			if TosAcceptance.accepted?(@user)
+      if TosAcceptance.accepted?(@user)
+        self.merge_identities
 				redirect_to request.env['omniauth.origin'] || site_path
 			else
 				redirect_to accept_tos_path(@user.id)
-			end
+      end
 		else
 			redirect_to new_user_session_path
 		end
