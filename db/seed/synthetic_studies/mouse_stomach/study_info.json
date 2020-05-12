@@ -8,7 +8,8 @@
      {"type": "Metadata", "filename": "metadata.tsv", "use_metadata_convention": true},
     {
       "type": "Expression Matrix",
-      "filename": "expression_matrix.tsv"
+      "filename": "expression_matrix.tsv",
+      "species_scientific_name": "Mus musculus"
     },
     {
       "type": "Cluster",
