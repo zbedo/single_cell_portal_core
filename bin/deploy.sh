@@ -20,7 +20,7 @@ function main {
     PASSENGER_APP_ENV="production"
     BOOT_COMMAND="bin/remote_deploy.sh"
     SCP_REPO="https://github.com/broadinstitute/single_cell_portal_core.git"
-    ROLLBACK=false
+    ROLLBACK="false"
     TAG_OFFSET=1
 
     while getopts "p:s:r:e:b:d:h:S:u:H:t:R" OPTION; do
@@ -53,7 +53,7 @@ function main {
                 SSH_USER="$OPTARG"
                 ;;
             R)
-                ROLLBACK=true
+                ROLLBACK="true"
                 ;;
             t)
                 TAG_OFFSET="$OPTARG"
@@ -119,7 +119,7 @@ function main {
     run_remote_command "git checkout $GIT_BRANCH && git pull" || exit_with_error_message "could not checkout $GIT_BRANCH"
     echo "### COMPLETED ###"
 
-    if [[ $ROLLBACK ]]; then
+    if [[ $ROLLBACK == "true" ]]; then
         # checkout the requested tag (usually current release - 1)
         echo "### ROLLING BACK DEPLOYMENT BY $TAG_OFFSET RELEASE TAG ###"
         echo "### determining requested release rollback tag on $GIT_BRANCH ###"
