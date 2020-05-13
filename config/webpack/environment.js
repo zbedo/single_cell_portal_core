@@ -9,6 +9,7 @@ environment.loaders.delete('nodeModules')
 //      is applied through webpacker
 if (environment.config.optimization) {
   environment.config.optimization.minimizer.find(m => m.constructor.name === 'TerserPlugin').options.terserOptions.parallel = 4
+  environment.config.optimization.minimizer.find(m => m.constructor.name === 'TerserPlugin').options.parallel = 4
 }
 
 
