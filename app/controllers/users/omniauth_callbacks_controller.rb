@@ -39,7 +39,7 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
       )
     rescue RestClient::ExceptionWithResponse => e
       Rails.logger.error "Bard error: #{e.message}"
-      # Rails.logger.error e.response.to_yaml
+      Rails.logger.error e
     end
 
   end
