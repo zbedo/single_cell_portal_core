@@ -104,6 +104,7 @@ else
                     test/models/user_test.rb
                     test/integration/lib/search_facet_populator_test.rb
                     test/integration/lib/summary_stats_utils_test.rb
+                    test/integration/lib/user_asset_service_test.rb
                     test/models/big_query_client_test.rb
   )
   for test_name in ${tests[*]}; do
