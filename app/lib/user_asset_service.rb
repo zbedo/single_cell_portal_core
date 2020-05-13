@@ -19,8 +19,8 @@ class UserAssetService
   }.with_indifferent_access
   ASSET_TYPES = ASSET_PATHS_BY_TYPE.keys.freeze
 
-  # Bucket info
-  STORAGE_BUCKET_NAME = (COMPUTE_PROJECT.dup + '-asset-storage').freeze
+  # Bucket info; each Rails environment per project has a bucket
+  STORAGE_BUCKET_NAME = (COMPUTE_PROJECT.dup + "-#{Rails.env}-asset-storage").freeze
 
   # initialize GCS driver with same credentials as FireCloudClient
   #
@@ -38,6 +38,30 @@ class UserAssetService
     @@storage_service ||= initialize_storage_service
   end
 
+  # get storage driver access token
+  #
+  # * *return*
+  #   - +String+ access token
+  def self.access_token
+    storage_service.service.credentials.client.access_token
+  end
+
+  # get storage driver issue timestamp
+  #
+  # * *return*
+  #   - +DateTime+ issue timestamp
+  def self.issued_at
+    storage_service.service.credentials.client.issued_at
+  end
+
+  # get issuer of storage credentials
+  #
+  # * *return*
+  #   - +String+ of issuer email
+  def self.issuer
+    storage_service.service.credentials.issuer
+  end
+
   # getter for storage bucket where assets are stored long-term
   # if bucket is not found, it will create the bucket and return
   #
@@ -50,11 +74,11 @@ class UserAssetService
   # get all entries in a directory, ignoring hidden files
   #
   # * *params*
-  #   - +pathname+ (String) => Absolute path to a directory
+  #   - +pathname+ (Pathname, String) => Absolute or relative path to directory
   #
   # * *returns*
-  #   - (Array<String>) => Array of filenames
-  def self.get_directory_entries(pathname: Dir.pwd)
+  #   - +Array<String>+ => Array of filenames
+  def self.get_directory_entries(pathname = Dir.pwd)
     Dir.entries(pathname).keep_if {|entry| !entry.start_with?('.')}
   end
   
@@ -64,19 +88,19 @@ class UserAssetService
   #   - +asset_type+ (String, Symbol) => type of asset as declared by ASSET_PATHS_BY_TYPE.keys
   #
   # * *returns*
-  #   - (Array<Pathname>) => Array of Pathname objects
+  #   - +Array<Pathname>+ => Array of Pathname objects
   #
   # * *raises*
-  #   - TypeError => invalid asset type
+  #   - +TypeError+ => invalid asset type
   def self.get_local_assets(asset_type: nil)
     verify_asset_type(asset_type)
     local_files = []
     asset_paths = asset_type.present? ? [ASSET_PATHS_BY_TYPE[asset_type]] : ASSET_PATHS_BY_TYPE.values
     asset_paths.each do |asset_path|
-      sub_dirs = get_directory_entries(pathname: asset_path)
+      sub_dirs = get_directory_entries(asset_path)
       sub_dirs.each do |sub_dir|
         current_dir = asset_path.join(sub_dir)
-        files = get_directory_entries(pathname: current_dir)
+        files = get_directory_entries(current_dir)
         local_files += files.map {|file| Pathname.new(current_dir).join(file)}
       end
     end
@@ -89,10 +113,10 @@ class UserAssetService
   #   - +asset_type+ (String, Symbol) => type of asset as declared by ASSET_PATHS_BY_TYPE.keys
   #
   # * *returns*
-  #   - (Google::Cloud::Storage::Bucket::List) => Array of GCS File objects
+  #   - +Google::Cloud::Storage::Bucket::List+ => Array of GCS File objects
   #
   # * *raises*
-  #   - TypeError => invalid asset type
+  #   - +TypeError+ => invalid asset type
   # get a list of remote assets; can scope by asset type
   def self.get_remote_assets(asset_type: nil)
     verify_asset_type(asset_type)
@@ -108,12 +132,12 @@ class UserAssetService
   #   - +asset_type+ (String, Symbol) => Type of assets to push; defaults to all
   #
   # * *returns*
-  #   - (TrueClass) => true upon completion
+  #   - +TrueClass+ => true upon completion
   #
   # * *raises*
-  #   - (TypeError) => Invalid asset type
-  #   - (ArgumentError) => Invalid path to local file
-  #   - (Google::Cloud::Error) => Error pushing file to bucket
+  #   - +TypeError+ => Invalid asset type
+  #   - +ArgumentError+ => Invalid path to local file
+  #   - +Google::Cloud::Error+ => Error pushing file to bucket
   def self.push_assets_to_remote(asset_type: nil)
     verify_asset_type(asset_type)
     bucket = get_storage_bucket
@@ -130,7 +154,7 @@ class UserAssetService
   #   - +pathname+ (Pathname) => Pathname of local file
   #
   # * *returns*
-  #   - (String) => String representation of remote filepath
+  #   - +String+ => String representation of remote filepath
   def self.get_remote_path(pathname)
     remote_path = pathname.to_s.split(RAILS_PUBLIC_PATH.to_s).last
     remote_path.slice!(0, 1) # trim off leading /
@@ -142,11 +166,11 @@ class UserAssetService
   #   - +asset_type+ (String, Symbol) => Type of assets to push; defaults to all
   #
   # * *returns*
-  #   - (Array<Pathname>) => Array of Pathnames pointing at files that were localized
+  #   - +Array<Pathname>+ => Array of Pathnames pointing at files that were localized
   #
   # * *raises*
-  #   - (TypeError) => Invalid asset type
-  #   - (Google::Cloud::Error) => Error retrieving file from bucket
+  #   - +TypeError+ => Invalid asset type
+  #   - +Google::Cloud::Error+ => Error retrieving file from bucket
   def self.localize_assets_from_remote(asset_type: nil)
     verify_asset_type(asset_type)
     localized_files = []
@@ -156,6 +180,8 @@ class UserAssetService
         # we need to first make the directory where the file will go, otherwise this will throw an error
         create_download_directory(remote_asset.name)
         remote_asset.download local_path
+        # make sure file is readable by all, writable only by owner
+        FileUtils.chmod 644, local_path
         localized_files << Pathname.new(local_path)
       end
     end
@@ -168,7 +194,7 @@ class UserAssetService
   #   - +pathname+ (Pathname) => Pathname of remote file
   #
   # * *returns*
-  #   - (String) => String representation of local filepath
+  #   - +String+ => String representation of local filepath
   def self.get_local_path(pathname)
     RAILS_PUBLIC_PATH.join(pathname).to_s
   end
@@ -178,7 +204,7 @@ class UserAssetService
   #   - +pathname+ (Pathname) => Pathname of remote file
   #
   # * *returns*
-  #   - (Pathname) => Pathname of local directory
+  #   - +Pathname+ => Pathname of local directory
   def self.create_download_directory(pathname)
     parent_dir = Pathname.new(pathname).parent
     fullpath = RAILS_PUBLIC_PATH.join(parent_dir)
@@ -194,7 +220,7 @@ class UserAssetService
   #   - +asset_type+ (String, Symbol) => type of asset as declared by ASSET_PATHS_BY_TYPE.keys
   #
   # * *raises*
-  #   - TypeError => invalid asset type
+  #   - +TypeError+ => invalid asset type
   def self.verify_asset_type(asset_type)
     if asset_type.present? && !ASSET_TYPES.include?(asset_type.to_s)
       raise TypeError.new("#{asset_type} is not a registered asset type: #{ASSET_TYPES.join(', ')}")
