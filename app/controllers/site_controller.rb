@@ -545,8 +545,7 @@ class SiteController < ApplicationController
     end
     # load expression scatter using main gene expression values
     @expression = load_gene_set_expression_data_arrays(@selected_annotation, params[:consensus], subsample)
-    color_minmax =  @expression[:all][:marker][:color].minmax
-    @expression[:all][:marker][:cmin], @expression[:all][:marker][:cmax] = color_minmax
+    @expression[:all][:marker][:cmin], @expression[:all][:marker][:cmax] = RequestUtils.get_minmax(@expression[:all][:marker][:color])
 
     # load static cluster reference plot
     @coordinates = load_cluster_group_data_array_points(@selected_annotation, subsample)
@@ -1583,6 +1582,8 @@ class SiteController < ApplicationController
       end
       # if we didn't assign anything to the color array, we know the annotation_array is good to use
       color_array.empty? ? color_array = annotation_array : nil
+      # account for NaN when computing min/max
+      min, max = RequestUtils.get_minmax(annotation_array)
       coordinates[:all] = {
           x: x_array,
           y: y_array,
@@ -1591,8 +1592,8 @@ class SiteController < ApplicationController
           cells: cells,
           name: annotation[:name],
           marker: {
-              cmax: annotation_array.max,
-              cmin: annotation_array.min,
+              cmax: max,
+              cmin: min,
               color: color_array,
               size: @study.default_cluster_point_size,
               line: { color: 'rgb(40,40,40)', width: @study.show_cluster_point_borders? ? 0.5 : 0},
@@ -1610,7 +1611,7 @@ class SiteController < ApplicationController
     else
       # assemble containers for each trace
       annotation[:values].each do |value|
-        coordinates[value] = {x: [], y: [], text: [], cells: [], annotations: [], name: "#{annotation[:name]}: #{value}",
+        coordinates[value] = {x: [], y: [], text: [], cells: [], annotations: [], name: value,
                               marker: {size: @study.default_cluster_point_size, line: { color: 'rgb(40,40,40)', width: @study.show_cluster_point_borders? ? 0.5 : 0}}}
         if @cluster.is_3d?
           coordinates[value][:z] = []
@@ -1619,8 +1620,8 @@ class SiteController < ApplicationController
 
       if annotation[:scope] == 'cluster' || annotation[:scope] == 'user'
         annotation_array.each_with_index do |annotation_value, index|
-          coordinates[annotation_value][:text] << "<b>#{cells[index]}</b><br>#{annotation[:name]}: #{annotation_value}"
-          coordinates[annotation_value][:annotations] << "#{annotation[:name]}: #{annotation_value}"
+          coordinates[annotation_value][:text] << "<b>#{cells[index]}</b><br>#{annotation_value}"
+          coordinates[annotation_value][:annotations] << annotation_value
           coordinates[annotation_value][:cells] << cells[index]
           coordinates[annotation_value][:x] << x_array[index]
           coordinates[annotation_value][:y] << y_array[index]
@@ -1635,8 +1636,8 @@ class SiteController < ApplicationController
         cells.each_with_index do |cell, index|
           if annotation_hash.has_key?(cell)
             annotation_value = annotation_hash[cell]
-            coordinates[annotation_value][:text] << "<b>#{cell}</b><br>#{annotation[:name]}: #{annotation_value}"
-            coordinates[annotation_value][:annotations] << "#{annotation[:name]}: #{annotation_value}"
+            coordinates[annotation_value][:text] << "<b>#{cell}</b><br>#{annotation_value}"
+            coordinates[annotation_value][:annotations] << annotation_value
             coordinates[annotation_value][:x] << x_array[index]
             coordinates[annotation_value][:y] << y_array[index]
             coordinates[annotation_value][:cells] << cell
@@ -1686,8 +1687,8 @@ class SiteController < ApplicationController
         cell_name = cells[index]
         expression_value = @gene['scores'][cell_name].to_f.round(4)
 
-        values[:all][:text] << "<b>#{cell_name}</b><br>#{annotation[:name]}: #{annotation_value}<br>#{@y_axis_title}: #{expression_value}"
-        values[:all][:annotations] << "#{annotation[:name]}: #{annotation_value}"
+        values[:all][:text] << "<b>#{cell_name}</b><br>#{annotation_value}<br>#{@y_axis_title}: #{expression_value}"
+        values[:all][:annotations] << annotation_value
         values[:all][:x] << annotation_value
         values[:all][:y] << expression_value
         values[:all][:cells] << cell_name
@@ -1697,8 +1698,8 @@ class SiteController < ApplicationController
         if annotation_hash.has_key?(cell)
           annotation_value = annotation_hash[cell]
           expression_value = @gene['scores'][cell].to_f.round(4)
-          values[:all][:text] << "<b>#{cell}</b><br>#{annotation[:name]}: #{annotation_value}<br>#{@y_axis_title}: #{expression_value}"
-          values[:all][:annotations] << "#{annotation[:name]}: #{annotation_value}"
+          values[:all][:text] << "<b>#{cell}</b><br>#{annotation_value}<br>#{@y_axis_title}: #{expression_value}"
+          values[:all][:annotations] << annotation_value
           values[:all][:x] << annotation_value
           values[:all][:y] << expression_value
           values[:all][:cells] << cell
@@ -1742,8 +1743,8 @@ class SiteController < ApplicationController
           else
             expression_value = calculate_mean(@genes, cell)
         end
-        values[:all][:text] << "<b>#{cell}</b><br>#{annotation[:name]}: #{annotation_value}<br>#{@y_axis_title}: #{expression_value}"
-        values[:all][:annotations] << "#{annotation[:name]}: #{annotation_value}"
+        values[:all][:text] << "<b>#{cell}</b><br>#{annotation_value}<br>#{@y_axis_title}: #{expression_value}"
+        values[:all][:annotations] << annotation_value
         values[:all][:x] << annotation_value
         values[:all][:y] << expression_value
         values[:all][:cells] << cell
@@ -1835,14 +1836,13 @@ class SiteController < ApplicationController
       expression_score = @gene['scores'][cell].to_f.round(4)
       # load correct annotation value based on scope
       annotation_value = annotation[:scope] == 'cluster' ? annotation_array[index] : annotation_hash[cell]
-      text_value = "#{cell} (#{annotation[:name]}: #{annotation_value})<br />#{@y_axis_title}: #{expression_score}"
-      expression[:all][:annotations] << "#{annotation[:name]}: #{annotation_value}"
+      text_value = "#{cell} (#{annotation_value})<br />#{@y_axis_title}: #{expression_score}"
+      expression[:all][:annotations] << annotation_value
       expression[:all][:text] << text_value
       expression[:all][:marker][:color] << expression_score
     end
     expression[:all][:marker][:line] = { color: 'rgb(255,255,255)', width: @study.show_cluster_point_borders? ? 0.5 : 0}
-    color_minmax =  expression[:all][:marker][:color].minmax
-    expression[:all][:marker][:cmin], expression[:all][:marker][:cmax] = color_minmax
+    expression[:all][:marker][:cmin], expression[:all][:marker][:cmax] = RequestUtils.get_minmax(expression[:all][:marker][:color])
     expression[:all][:marker][:colorscale] = params[:colorscale].blank? ? 'Reds' : params[:colorscale]
     expression
   end
@@ -1965,15 +1965,14 @@ class SiteController < ApplicationController
 
       # load correct annotation value based on scope
       annotation_value = annotation[:scope] == 'cluster' ? annotation_array[index] : annotation_hash[cell]
-      text_value = "#{cell} (#{annotation[:name]}: #{annotation_value})<br />#{@y_axis_title}: #{expression_score}"
-      expression[:all][:annotations] << "#{annotation[:name]}: #{annotation_value}"
+      text_value = "#{cell} (#{annotation_value})<br />#{@y_axis_title}: #{expression_score}"
+      expression[:all][:annotations] << annotation_value
       expression[:all][:text] << text_value
       expression[:all][:marker][:color] << expression_score
 
     end
     expression[:all][:marker][:line] = { color: 'rgb(40,40,40)', width: @study.show_cluster_point_borders? ? 0.5 : 0}
-    color_minmax =  expression[:all][:marker][:color].minmax
-    expression[:all][:marker][:cmin], expression[:all][:marker][:cmax] = color_minmax
+    expression[:all][:marker][:cmin], expression[:all][:marker][:cmax] = RequestUtils.get_minmax(expression[:all][:marker][:color])
     expression[:all][:marker][:colorscale] = params[:colorscale].blank? ? 'Reds' : params[:colorscale]
     expression
   end
@@ -2036,7 +2035,7 @@ class SiteController < ApplicationController
       range = @cluster.domain_ranges
     else
       # take the minmax of each domain across all groups, then the global minmax
-      @vals = inputs.map {|v| domain_keys.map {|k| v[k].minmax}}.flatten.minmax
+      @vals = inputs.map {|v| domain_keys.map {|k| RequestUtils.get_minmax(v[k])}}.flatten.minmax
       # add 2% padding to range
       scope = (@vals.first - @vals.last) * 0.02
       raw_range = [@vals.first + scope, @vals.last - scope]
@@ -2063,7 +2062,7 @@ class SiteController < ApplicationController
     end
     aspect
   end
-
+  
   ###
   #
   # SEARCH SUB METHODS

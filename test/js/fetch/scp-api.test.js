@@ -2,7 +2,7 @@
 /* eslint-disable*/
 
 const fetch = require('node-fetch')
-import scpApi, { fetchAuthCode, fetchFacetFilters } from 'lib/scp-api'
+import { fetchAuthCode, fetchFacetFilters } from 'lib/scp-api'
 
 describe('JavaScript client for SCP REST API', () => {
   beforeAll(() => {

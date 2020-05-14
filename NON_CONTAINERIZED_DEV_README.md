@@ -11,12 +11,13 @@ Developing on SCP without a Docker container, while less robust, opens up some f
 5.  Run `yarn install`
 6.  Run `ruby rails_local_setup.rb $BROAD_USERNAME`, where $BROAD_USERNAME is a something like eweitz -- this creates a file in config/secrets with commands to export needed environment variables
 7.  Run the source command the script outputs -- this will export those needed variables into the current shell
+8.  Add config/local_ssl/localhost.crt to your systems trusted certificates (on macOS, you can drag this file into the keychain access app, use the 'System' keychain, and the 'Certificates' category)
 8.  Run `rails s`
 9.  (optional, for live reload) In a separate terminal, run bin/webpack-dev-server
 10. (needed if you are working on functionality that involves delayed jobs).
     * In another terminal, run the source command output in step 7
     * run `rails jobs:work`
-11.  You're all set!  You can now go to localhost:3000 and see the website.
+11.  You're all set!  You can now go to https://localhost:3000 and see the website.
 
 ## REGULAR DEVELOPMENT
 Adding `source <<path-to-single-cell-portal-core>>/config/secrets/.source_env.bash` to your .bash_profile will source the secrets read from vault to each new shell, saving you the trouble of rerunning the setup process every time you open a new shell.

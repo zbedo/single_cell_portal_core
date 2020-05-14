@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 
 # extract secrets from vault, copy to remote host, and launch boot script for deployment
+# can also roll back a broken deployment by calling with -R, and optionally -t OFFSET
+# to increase the amount of releases to roll back to
 
 THIS_DIR="$(cd "$(dirname "$0")"; pwd)"
 
 # common libraries
 . $THIS_DIR/bash_utils.sh
+. $THIS_DIR/github_releases.sh
 . $THIS_DIR/extract_vault_secrets.sh
 
 function main {
@@ -17,8 +20,10 @@ function main {
     PASSENGER_APP_ENV="production"
     BOOT_COMMAND="bin/remote_deploy.sh"
     SCP_REPO="https://github.com/broadinstitute/single_cell_portal_core.git"
+    ROLLBACK="false"
+    TAG_OFFSET=1
 
-    while getopts "p:s:r:e:b:d:h:S:u:H" OPTION; do
+    while getopts "p:s:r:e:b:d:h:S:u:H:t:R" OPTION; do
         case $OPTION in
             p)
                 PORTAL_SECRETS_VAULT_PATH="$OPTARG"
@@ -46,6 +51,12 @@ function main {
                 ;;
             u)
                 SSH_USER="$OPTARG"
+                ;;
+            R)
+                ROLLBACK="true"
+                ;;
+            t)
+                TAG_OFFSET="$OPTARG"
                 ;;
             H)
                 echo "$usage"
@@ -103,17 +114,26 @@ function main {
 
     # update source on remote host to pull in changes before deployment
     echo "### pulling updated source from git on branch $GIT_BRANCH ###"
-    run_remote_command "git fetch" || exit_with_error_message "could not checkout $GIT_BRANCH"
+    run_remote_command "git fetch --all --tags" || exit_with_error_message "could not checkout $GIT_BRANCH"
     run_remote_command "git checkout yarn.lock" || exit_with_error_message "could not reset yarn.lock file"
     run_remote_command "git checkout $GIT_BRANCH && git pull" || exit_with_error_message "could not checkout $GIT_BRANCH"
     echo "### COMPLETED ###"
+
+    if [[ $ROLLBACK == "true" ]]; then
+        # checkout the requested tag (usually current release - 1)
+        echo "### ROLLING BACK DEPLOYMENT BY $TAG_OFFSET RELEASE TAG ###"
+        echo "### determining requested release rollback tag on $GIT_BRANCH ###"
+        ROLLBACK_TAG=$(extract_release_tag $TAG_OFFSET) || exit_with_error_message "could not get rollback tag in $GIT_BRANCH"
+        echo "### rolling back release to tag: $ROLLBACK_TAG on $GIT_BRANCH ###"
+        run_remote_command "git checkout tags/$ROLLBACK_TAG" || exit_with_error_message "could not checkout tags/$ROLLBACK_TAG on $GIT_BRANCH"
+        echo "### COMPLETED ###"
+    fi
 
     echo "### running remote deploy script ###"
     run_remote_command "$(set_remote_environment_vars) $BOOT_COMMAND" || exit_with_error_message "could not run $(set_remote_environment_vars) $BOOT_COMMAND on $DESTINATION_HOST:$DESTINATION_BASE_DIR"
     echo "### COMPLETED ###"
 }
 
-# TODO: Although I made minimum changes to clarify required vs optional parameters, this may now need rewording...
 usage=$(
 cat <<EOF
 USAGE:
@@ -122,17 +142,19 @@ USAGE:
 ### extract secrets from vault, copy to remote host, build/stop/remove docker container and launch boot script for deployment ###
 
 [REQUIRED PARAMETERS]
--p VALUE	set the path to configuration secrets in vault
--s VALUE	set the path to the main service account json in vault
--r VALUE	set the path to the read-only service account json in vault
+-p VALUE    set the path to configuration secrets in vault
+-s VALUE    set the path to the main service account json in vault
+-r VALUE    set the path to the read-only service account json in vault
 
 [OPTIONS]
--e VALUE	set the environment to boot the portal in
--b VALUE	set the branch to pull from git (defaults to master)
--d VALUE	set the target directory to deploy from (defaults to $DESTINATION_BASE_DIR)
--S VALUE	set the path to SSH_KEYFILE (private key for SSH auth, no default, not needing except for manual testing)
--h VALUE	set the DESTINATION_HOST (remote GCP VM to SSH into, no default)
--H COMMAND	print this text
+-e VALUE    set the environment to boot the portal in (defaults to production)
+-b VALUE    set the branch to pull from git (defaults to master)
+-d VALUE    set the target directory to deploy from (defaults to $DESTINATION_BASE_DIR)
+-S VALUE    set the path to SSH_KEYFILE (private key for SSH auth, no default, not needing except for manual testing)
+-h VALUE    set the DESTINATION_HOST (remote GCP VM to SSH into, no default)
+-R          set ROLLBACK to true to revert release to last known good release
+-t VALUE    set the TAG_OFFSET value for rolling back a release (defaults to 1, meaning release previous to the current)
+-H COMMAND  print this text
 EOF
 )
 

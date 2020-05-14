@@ -201,6 +201,16 @@ class User
     self.send(token_method)[:expires_at].zone
   end
 
+  # determine which access token is best to use for a FireCloud API request
+  # once an api_access_token expires/times out, it is unset, so checking .present? will ensure a valid token
+  def token_for_api_call
+    if self.refresh_token.nil? && self.api_access_token.present?
+      self.api_access_token
+    else
+      self.valid_access_token
+    end
+  end
+
   ###
   #
   # OTHER AUTHENTICATION METHODS

@@ -12,7 +12,8 @@
     },
     {
       "type": "Expression Matrix",
-      "filename": "expression_matrix.tsv"
+      "filename": "expression_matrix.tsv",
+      "species_scientific_name": "Homo sapiens"
     },
     {
       "type": "Cluster",

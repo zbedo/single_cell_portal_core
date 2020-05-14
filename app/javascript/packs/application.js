@@ -31,6 +31,7 @@ import ClassicEditor from '@ckeditor/ckeditor5-build-classic'
 import HomePageContent from 'components/HomePageContent'
 import Covid19PageContent from 'components/covid19/Covid19PageContent'
 import { logPageView, logClick } from 'lib/metrics-api'
+import createTracesAndLayout from 'lib/kernel-functions'
 
 document.addEventListener('DOMContentLoaded', () => {
   if (document.getElementById('home-page-content')) {
@@ -72,6 +73,7 @@ window.Spinner = Spinner
 window.morpheus = morpheus
 window.igv = igv
 window.Ideogram = Ideogram
+window.createTracesAndLayout = createTracesAndLayout
 
 /*
  * For down the road, when we use ES6 imports in SCP JS app code

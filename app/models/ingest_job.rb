@@ -250,6 +250,7 @@ class IngestJob
     when 'Cluster'
       self.set_study_default_options
       self.launch_subsample_jobs
+      self.set_subsampling_flags
     end
     self.set_study_initialized
   end
@@ -306,9 +307,9 @@ class IngestJob
       cluster_ingested = self.action.to_sym == :ingest_cluster
       cluster = ClusterGroup.find_by(study_id: self.study.id, study_file_id: self.study_file.id)
       metadata_parsed = self.study.metadata_file.present? && self.study.metadata_file.parsed?
-      if cluster_ingested && cluster.can_subsample? && metadata_parsed
-        # immediately set cluster.subsampled = true to gate race condition if metadata file just finished parsing
-        cluster.update(subsampled: true)
+      if cluster_ingested && metadata_parsed && cluster.can_subsample? && !cluster.is_subsampling?
+        # immediately set cluster.is_subsampling = true to gate race condition if metadata file just finished parsing
+        cluster.update(is_subsampling: true)
         file_identifier = "#{self.study_file.bucket_location}:#{self.study_file.id}"
         Rails.logger.info "Launching subsampling ingest run for #{file_identifier} after #{self.action}"
         submission = ApplicationController.papi_client.run_pipeline(study_file: self.study_file, user: self.user,
@@ -323,9 +324,9 @@ class IngestJob
       metadata_identifier = "#{self.study_file.bucket_location}:#{self.study_file.id}"
       self.study.study_files.where(file_type: 'Cluster', parse_status: 'parsed').each do |cluster_file|
         cluster = ClusterGroup.find_by(study_id: self.study.id, study_file_id: cluster_file.id)
-        if cluster.can_subsample?
-          # set cluster.subsampled = true to avoid future race conditions
-          cluster.update(subsampled: true)
+        if cluster.can_subsample? && !cluster.is_subsampling?
+          # set cluster.is_subsampling = true to avoid future race conditions
+          cluster.update(is_subsampling: true)
           file_identifier = "#{cluster_file.bucket_location}:#{cluster_file.id}"
           Rails.logger.info "Launching subsampling ingest run for #{file_identifier} after #{self.action} of #{metadata_identifier}"
           submission = ApplicationController.papi_client.run_pipeline(study_file: cluster_file, user: self.user,
@@ -334,6 +335,17 @@ class IngestJob
           IngestJob.new(pipeline_name: submission.name, study: self.study, study_file: cluster_file,
                         user: self.user, action: :ingest_subsample).poll_for_completion
         end
+      end
+    end
+  end
+
+  # Set correct subsampling flags on a cluster after job completion
+  def set_subsampling_flags
+    case self.action
+    when :ingest_subsample
+      cluster_group = ClusterGroup.find_by(study_id: self.study.id, study_file_id: self.study_file.id)
+      if cluster_group.is_subsampling? && cluster_group.find_subsampled_data_arrays.any?
+        cluster_group.update(subsampled: true, is_subsampling: false)
       end
     end
   end

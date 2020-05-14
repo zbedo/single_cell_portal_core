@@ -29,10 +29,11 @@
                     data-toggle="tooltip"></i>
                   <br />
                   <% if /view_gene_(set_)?expression$/.match(action_name) %>
-                  <%= select_tag :subsample, options_for_select(subsampling_options(@cluster.points), set_subsample_value(params) ), {include_blank: @cluster.points < ClusterGroup::MAX_THRESHOLD ? 'All Cells' : false, class: 'form-control'} %>
+                  <%= select_tag :subsample, options_for_select(subsampling_options(@cluster), set_subsample_value(params) ), {include_blank: @cluster.points < ClusterGroup::MAX_THRESHOLD ? 'All Cells' : false, class: 'form-control'} %>
                   <% else %>
-                  <%= select_tag :subsample, options_for_select(subsampling_options(@cluster.points), set_subsample_value(params) ), include_blank: 'All Cells', class: 'form-control' %>
+                  <%= select_tag :subsample, options_for_select(subsampling_options(@cluster), set_subsample_value(params) ), include_blank: 'All Cells', class: 'form-control' %>
                   <% end %>
+                  <%= render partial: 'subsample_warning', locals: {cluster: @cluster} %>
                 </div>
                 <!-- end -->
             </div>
