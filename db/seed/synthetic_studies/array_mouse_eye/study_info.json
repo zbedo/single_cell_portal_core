@@ -1,7 +1,7 @@
 {
   "study": {
     "name": "Murine vision and HIV with arrays",
-    "description": "<p>HIV and optical conditions in mouse (BA). Jean Chang, Eric Weitz, Jon Bistline, Eno-Abasi Augustine-Akpan, Devon Bush, Vicky Horst.  Journal of SCP Synthetic Studies.  Volume 1, p1, February 2020.  Adding synthetic study data to development and staging environments has been shown to improve testability of new code.  We extend those findings to the Single Cell Portal by adding this synthetic data.</p><p>{ 'sample_type': {'direct from donor - fresh': 130}, 'disease': {'MONDO_0005041': 60, 'MONDO_0005129': 40, 'MONDO_0011284': 10, 'MONDO_0005109': 50}, 'disease__ontology_label': {'HIV infectious disease': 50, 'astigmatism (disease)': 40, 'cataract (disease)': 40, 'glaucoma (disease)': 60}, 'organ': {'UBERON_0000970': 130}, 'organ__ontology_label': {'eye': 130}, 'library_preparation_protocol': {'EFO_0008780': 130}, 'library_preparation_protocol__ontology_label': {'inDrop': 130},'species': {'NCBITaxon_10090': 130}, 'species__ontology_label': {'Mus musculus': 130}, 'sex': {'unknown': 130}, 'is_living': {'no': 130}}</p>",
+    "description": "<p>HIV and optical conditions in mouse (BA). Jean Chang, Eric Weitz, Jon Bistline, Eno-Abasi Augustine-Akpan, Devon Bush, Vicky Horst.  Journal of SCP Synthetic Studies.  Volume 1, p1, February 2020.  Adding synthetic study data to development and staging environments has been shown to improve testability of new code.  We extend those findings to the Single Cell Portal by adding this synthetic data.</p>",
     "data_dir": "test"
   },
   "files": [
@@ -12,7 +12,8 @@
     },
     {
       "type": "Expression Matrix",
-      "filename": "expression_matrix.tsv"
+      "filename": "expression_matrix.tsv",
+      "species_scientific_name": "Mus musculus"
     },
     {
       "type": "Cluster",

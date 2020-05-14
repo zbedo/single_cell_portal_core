@@ -1,132 +1,132 @@
-NAME	biosample_id	sample_type	disease	disease__ontology_label	organ	organ__ontology_label	library_preparation_protocol	library_preparation_protocol__ontology_label	donor_id	species	species__ontology_label	sex	is_living	organism_age	organism_age__unit	organism_age__unit_label
-TYPE	group	group	group	group	group	group	group	group	group	group	group	group	group	numeric	group	group
-AH_1	AH_D06_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D06	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_2	AH_D06_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D06	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_3	AH_D06_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D06	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_4	AH_D06_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D06	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_5	AH_D06_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D06	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_6	AH_D06_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D06	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_7	AH_D06_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D06	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_8	AH_D06_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D06	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_9	AH_D06_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D06	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_10	AH_D06_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D06	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_11	AH_D06_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D06	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_12	AH_D06_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D06	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_13	AH_D06_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D06	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_14	AH_D06_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D06	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_15	AH_D06_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D06	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_16	AH_D06_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D06	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_17	AH_D06_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D06	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_18	AH_D06_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D06	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_19	AH_D06_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D06	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_20	AH_D06_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D06	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_21	AH_D05_03	direct from donor - fresh	MONDO_0025082	helminthiasis, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_22	AH_D05_03	direct from donor - fresh	MONDO_0025082	helminthiasis, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_23	AH_D05_03	direct from donor - fresh	MONDO_0025082	helminthiasis, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_24	AH_D05_03	direct from donor - fresh	MONDO_0025082	helminthiasis, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_25	AH_D05_03	direct from donor - fresh	MONDO_0025082	helminthiasis, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_26	AH_D05_03	direct from donor - fresh	MONDO_0025082	helminthiasis, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_27	AH_D05_03	direct from donor - fresh	MONDO_0025082	helminthiasis, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_28	AH_D05_03	direct from donor - fresh	MONDO_0025082	helminthiasis, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_29	AH_D05_03	direct from donor - fresh	MONDO_0025082	helminthiasis, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_30	AH_D05_03	direct from donor - fresh	MONDO_0025082	helminthiasis, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_31	AH_D05_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_32	AH_D05_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_33	AH_D05_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_34	AH_D05_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_35	AH_D05_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_36	AH_D05_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_37	AH_D05_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_38	AH_D05_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_39	AH_D05_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_40	AH_D05_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_41	AH_D05_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_42	AH_D05_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_43	AH_D05_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_44	AH_D05_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_45	AH_D05_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_46	AH_D05_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_47	AH_D05_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_48	AH_D05_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_49	AH_D05_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_50	AH_D05_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_51	AH_D04_03	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_52	AH_D04_03	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_53	AH_D04_03	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_54	AH_D04_03	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_55	AH_D04_03	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_56	AH_D04_03	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_57	AH_D04_03	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_58	AH_D04_03	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_59	AH_D04_03	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_60	AH_D04_03	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_61	AH_D04_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_62	AH_D04_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_63	AH_D04_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_64	AH_D04_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_65	AH_D04_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_66	AH_D04_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_67	AH_D04_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_68	AH_D04_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_69	AH_D04_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_70	AH_D04_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_71	AH_D04_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_72	AH_D04_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_73	AH_D04_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_74	AH_D04_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_75	AH_D04_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_76	AH_D04_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_77	AH_D04_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_78	AH_D04_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_79	AH_D04_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_80	AH_D04_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day
-AH_81	AH_D03_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D03	NCBITaxon_10090	Mus musculus	male	no	180	UO_0000033	day
-AH_82	AH_D03_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D03	NCBITaxon_10090	Mus musculus	male	no	180	UO_0000033	day
-AH_83	AH_D03_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D03	NCBITaxon_10090	Mus musculus	male	no	180	UO_0000033	day
-AH_84	AH_D03_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D03	NCBITaxon_10090	Mus musculus	male	no	180	UO_0000033	day
-AH_85	AH_D03_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D03	NCBITaxon_10090	Mus musculus	male	no	180	UO_0000033	day
-AH_86	AH_D03_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D03	NCBITaxon_10090	Mus musculus	male	no	180	UO_0000033	day
-AH_87	AH_D03_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D03	NCBITaxon_10090	Mus musculus	male	no	180	UO_0000033	day
-AH_88	AH_D03_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D03	NCBITaxon_10090	Mus musculus	male	no	180	UO_0000033	day
-AH_89	AH_D03_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D03	NCBITaxon_10090	Mus musculus	male	no	180	UO_0000033	day
-AH_90	AH_D03_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D03	NCBITaxon_10090	Mus musculus	male	no	180	UO_0000033	day
-AH_91	AH_D02_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D02	NCBITaxon_10090	Mus musculus	male	no	28	UO_0000033	day
-AH_92	AH_D02_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D02	NCBITaxon_10090	Mus musculus	male	no	28	UO_0000033	day
-AH_93	AH_D02_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D02	NCBITaxon_10090	Mus musculus	male	no	28	UO_0000033	day
-AH_94	AH_D02_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D02	NCBITaxon_10090	Mus musculus	male	no	28	UO_0000033	day
-AH_95	AH_D02_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D02	NCBITaxon_10090	Mus musculus	male	no	28	UO_0000033	day
-AH_96	AH_D02_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D02	NCBITaxon_10090	Mus musculus	male	no	28	UO_0000033	day
-AH_97	AH_D02_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D02	NCBITaxon_10090	Mus musculus	male	no	28	UO_0000033	day
-AH_98	AH_D02_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D02	NCBITaxon_10090	Mus musculus	male	no	28	UO_0000033	day
-AH_99	AH_D02_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D02	NCBITaxon_10090	Mus musculus	male	no	28	UO_0000033	day
-AH_100	AH_D02_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D02	NCBITaxon_10090	Mus musculus	male	no	28	UO_0000033	day
-AH_101	AH_D02_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D02	NCBITaxon_10090	Mus musculus	male	no	28	UO_0000033	day
-AH_102	AH_D02_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D02	NCBITaxon_10090	Mus musculus	male	no	28	UO_0000033	day
-AH_103	AH_D02_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D02	NCBITaxon_10090	Mus musculus	male	no	28	UO_0000033	day
-AH_104	AH_D02_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D02	NCBITaxon_10090	Mus musculus	male	no	28	UO_0000033	day
-AH_105	AH_D02_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D02	NCBITaxon_10090	Mus musculus	male	no	28	UO_0000033	day
-AH_106	AH_D02_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D02	NCBITaxon_10090	Mus musculus	male	no	28	UO_0000033	day
-AH_107	AH_D02_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D02	NCBITaxon_10090	Mus musculus	male	no	28	UO_0000033	day
-AH_108	AH_D02_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D02	NCBITaxon_10090	Mus musculus	male	no	28	UO_0000033	day
-AH_109	AH_D02_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D02	NCBITaxon_10090	Mus musculus	male	no	28	UO_0000033	day
-AH_110	AH_D02_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D02	NCBITaxon_10090	Mus musculus	male	no	28	UO_0000033	day
-AH_111	AH_D01_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D01	NCBITaxon_10090	Mus musculus	male	no	1	UO_0000033	day
-AH_112	AH_D01_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D01	NCBITaxon_10090	Mus musculus	male	no	1	UO_0000033	day
-AH_113	AH_D01_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D01	NCBITaxon_10090	Mus musculus	male	no	1	UO_0000033	day
-AH_114	AH_D01_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D01	NCBITaxon_10090	Mus musculus	male	no	1	UO_0000033	day
-AH_115	AH_D01_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D01	NCBITaxon_10090	Mus musculus	male	no	1	UO_0000033	day
-AH_116	AH_D01_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D01	NCBITaxon_10090	Mus musculus	male	no	1	UO_0000033	day
-AH_117	AH_D01_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D01	NCBITaxon_10090	Mus musculus	male	no	1	UO_0000033	day
-AH_118	AH_D01_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D01	NCBITaxon_10090	Mus musculus	male	no	1	UO_0000033	day
-AH_119	AH_D01_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D01	NCBITaxon_10090	Mus musculus	male	no	1	UO_0000033	day
-AH_120	AH_D01_02	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D01	NCBITaxon_10090	Mus musculus	male	no	1	UO_0000033	day
-AH_121	AH_D01_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D01	NCBITaxon_10090	Mus musculus	male	no	1	UO_0000033	day
-AH_122	AH_D01_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D01	NCBITaxon_10090	Mus musculus	male	no	1	UO_0000033	day
-AH_123	AH_D01_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D01	NCBITaxon_10090	Mus musculus	male	no	1	UO_0000033	day
-AH_124	AH_D01_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D01	NCBITaxon_10090	Mus musculus	male	no	1	UO_0000033	day
-AH_125	AH_D01_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D01	NCBITaxon_10090	Mus musculus	male	no	1	UO_0000033	day
-AH_126	AH_D01_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D01	NCBITaxon_10090	Mus musculus	male	no	1	UO_0000033	day
-AH_127	AH_D01_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D01	NCBITaxon_10090	Mus musculus	male	no	1	UO_0000033	day
-AH_128	AH_D01_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D01	NCBITaxon_10090	Mus musculus	male	no	1	UO_0000033	day
-AH_129	AH_D01_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D01	NCBITaxon_10090	Mus musculus	male	no	1	UO_0000033	day
-AH_130	AH_D01_01	direct from donor - fresh	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D01	NCBITaxon_10090	Mus musculus	male	no	1	UO_0000033	day
+NAME	biosample_id	biosample_type	disease	disease__ontology_label	organ	organ__ontology_label	library_preparation_protocol	library_preparation_protocol__ontology_label	donor_id	species	species__ontology_label	sex	is_living	organism_age	organism_age__unit	organism_age__unit_label	preservation_method
+TYPE	group	group	group	group	group	group	group	group	group	group	group	group	group	numeric	group	group	group
+AH_1	AH_D06_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D06	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_2	AH_D06_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D06	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_3	AH_D06_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D06	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_4	AH_D06_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D06	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_5	AH_D06_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D06	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_6	AH_D06_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D06	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_7	AH_D06_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D06	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_8	AH_D06_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D06	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_9	AH_D06_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D06	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_10	AH_D06_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D06	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_11	AH_D06_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D06	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_12	AH_D06_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D06	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_13	AH_D06_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D06	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_14	AH_D06_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D06	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_15	AH_D06_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D06	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_16	AH_D06_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D06	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_17	AH_D06_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D06	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_18	AH_D06_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D06	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_19	AH_D06_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D06	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_20	AH_D06_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D06	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_21	AH_D05_03	PrimaryBioSample	MONDO_0025082	helminthiasis, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_22	AH_D05_03	PrimaryBioSample	MONDO_0025082	helminthiasis, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_23	AH_D05_03	PrimaryBioSample	MONDO_0025082	helminthiasis, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_24	AH_D05_03	PrimaryBioSample	MONDO_0025082	helminthiasis, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_25	AH_D05_03	PrimaryBioSample	MONDO_0025082	helminthiasis, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_26	AH_D05_03	PrimaryBioSample	MONDO_0025082	helminthiasis, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_27	AH_D05_03	PrimaryBioSample	MONDO_0025082	helminthiasis, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_28	AH_D05_03	PrimaryBioSample	MONDO_0025082	helminthiasis, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_29	AH_D05_03	PrimaryBioSample	MONDO_0025082	helminthiasis, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_30	AH_D05_03	PrimaryBioSample	MONDO_0025082	helminthiasis, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_31	AH_D05_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_32	AH_D05_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_33	AH_D05_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_34	AH_D05_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_35	AH_D05_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_36	AH_D05_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_37	AH_D05_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_38	AH_D05_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_39	AH_D05_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_40	AH_D05_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_41	AH_D05_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_42	AH_D05_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_43	AH_D05_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_44	AH_D05_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_45	AH_D05_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_46	AH_D05_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_47	AH_D05_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_48	AH_D05_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_49	AH_D05_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_50	AH_D05_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D05	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_51	AH_D04_03	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_52	AH_D04_03	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_53	AH_D04_03	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_54	AH_D04_03	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_55	AH_D04_03	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_56	AH_D04_03	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_57	AH_D04_03	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_58	AH_D04_03	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_59	AH_D04_03	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_60	AH_D04_03	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_61	AH_D04_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_62	AH_D04_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_63	AH_D04_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_64	AH_D04_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_65	AH_D04_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_66	AH_D04_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_67	AH_D04_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_68	AH_D04_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_69	AH_D04_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_70	AH_D04_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_71	AH_D04_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_72	AH_D04_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_73	AH_D04_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_74	AH_D04_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_75	AH_D04_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_76	AH_D04_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_77	AH_D04_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_78	AH_D04_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_79	AH_D04_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_80	AH_D04_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D04	NCBITaxon_10090	Mus musculus	male	no	7	UO_0000033	day	Fresh
+AH_81	AH_D03_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D03	NCBITaxon_10090	Mus musculus	male	no	180	UO_0000033	day	Fresh
+AH_82	AH_D03_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D03	NCBITaxon_10090	Mus musculus	male	no	180	UO_0000033	day	Fresh
+AH_83	AH_D03_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D03	NCBITaxon_10090	Mus musculus	male	no	180	UO_0000033	day	Fresh
+AH_84	AH_D03_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D03	NCBITaxon_10090	Mus musculus	male	no	180	UO_0000033	day	Fresh
+AH_85	AH_D03_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D03	NCBITaxon_10090	Mus musculus	male	no	180	UO_0000033	day	Fresh
+AH_86	AH_D03_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D03	NCBITaxon_10090	Mus musculus	male	no	180	UO_0000033	day	Fresh
+AH_87	AH_D03_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D03	NCBITaxon_10090	Mus musculus	male	no	180	UO_0000033	day	Fresh
+AH_88	AH_D03_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D03	NCBITaxon_10090	Mus musculus	male	no	180	UO_0000033	day	Fresh
+AH_89	AH_D03_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D03	NCBITaxon_10090	Mus musculus	male	no	180	UO_0000033	day	Fresh
+AH_90	AH_D03_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D03	NCBITaxon_10090	Mus musculus	male	no	180	UO_0000033	day	Fresh
+AH_91	AH_D02_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D02	NCBITaxon_10090	Mus musculus	male	no	28	UO_0000033	day	Fresh
+AH_92	AH_D02_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D02	NCBITaxon_10090	Mus musculus	male	no	28	UO_0000033	day	Fresh
+AH_93	AH_D02_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D02	NCBITaxon_10090	Mus musculus	male	no	28	UO_0000033	day	Fresh
+AH_94	AH_D02_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D02	NCBITaxon_10090	Mus musculus	male	no	28	UO_0000033	day	Fresh
+AH_95	AH_D02_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D02	NCBITaxon_10090	Mus musculus	male	no	28	UO_0000033	day	Fresh
+AH_96	AH_D02_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D02	NCBITaxon_10090	Mus musculus	male	no	28	UO_0000033	day	Fresh
+AH_97	AH_D02_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D02	NCBITaxon_10090	Mus musculus	male	no	28	UO_0000033	day	Fresh
+AH_98	AH_D02_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D02	NCBITaxon_10090	Mus musculus	male	no	28	UO_0000033	day	Fresh
+AH_99	AH_D02_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D02	NCBITaxon_10090	Mus musculus	male	no	28	UO_0000033	day	Fresh
+AH_100	AH_D02_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D02	NCBITaxon_10090	Mus musculus	male	no	28	UO_0000033	day	Fresh
+AH_101	AH_D02_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D02	NCBITaxon_10090	Mus musculus	male	no	28	UO_0000033	day	Fresh
+AH_102	AH_D02_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D02	NCBITaxon_10090	Mus musculus	male	no	28	UO_0000033	day	Fresh
+AH_103	AH_D02_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D02	NCBITaxon_10090	Mus musculus	male	no	28	UO_0000033	day	Fresh
+AH_104	AH_D02_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D02	NCBITaxon_10090	Mus musculus	male	no	28	UO_0000033	day	Fresh
+AH_105	AH_D02_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D02	NCBITaxon_10090	Mus musculus	male	no	28	UO_0000033	day	Fresh
+AH_106	AH_D02_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D02	NCBITaxon_10090	Mus musculus	male	no	28	UO_0000033	day	Fresh
+AH_107	AH_D02_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D02	NCBITaxon_10090	Mus musculus	male	no	28	UO_0000033	day	Fresh
+AH_108	AH_D02_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D02	NCBITaxon_10090	Mus musculus	male	no	28	UO_0000033	day	Fresh
+AH_109	AH_D02_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D02	NCBITaxon_10090	Mus musculus	male	no	28	UO_0000033	day	Fresh
+AH_110	AH_D02_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D02	NCBITaxon_10090	Mus musculus	male	no	28	UO_0000033	day	Fresh
+AH_111	AH_D01_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D01	NCBITaxon_10090	Mus musculus	male	no	1	UO_0000033	day	Fresh
+AH_112	AH_D01_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D01	NCBITaxon_10090	Mus musculus	male	no	1	UO_0000033	day	Fresh
+AH_113	AH_D01_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D01	NCBITaxon_10090	Mus musculus	male	no	1	UO_0000033	day	Fresh
+AH_114	AH_D01_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D01	NCBITaxon_10090	Mus musculus	male	no	1	UO_0000033	day	Fresh
+AH_115	AH_D01_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D01	NCBITaxon_10090	Mus musculus	male	no	1	UO_0000033	day	Fresh
+AH_116	AH_D01_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D01	NCBITaxon_10090	Mus musculus	male	no	1	UO_0000033	day	Fresh
+AH_117	AH_D01_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D01	NCBITaxon_10090	Mus musculus	male	no	1	UO_0000033	day	Fresh
+AH_118	AH_D01_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D01	NCBITaxon_10090	Mus musculus	male	no	1	UO_0000033	day	Fresh
+AH_119	AH_D01_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D01	NCBITaxon_10090	Mus musculus	male	no	1	UO_0000033	day	Fresh
+AH_120	AH_D01_02	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D01	NCBITaxon_10090	Mus musculus	male	no	1	UO_0000033	day	Fresh
+AH_121	AH_D01_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D01	NCBITaxon_10090	Mus musculus	male	no	1	UO_0000033	day	Fresh
+AH_122	AH_D01_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D01	NCBITaxon_10090	Mus musculus	male	no	1	UO_0000033	day	Fresh
+AH_123	AH_D01_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D01	NCBITaxon_10090	Mus musculus	male	no	1	UO_0000033	day	Fresh
+AH_124	AH_D01_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D01	NCBITaxon_10090	Mus musculus	male	no	1	UO_0000033	day	Fresh
+AH_125	AH_D01_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D01	NCBITaxon_10090	Mus musculus	male	no	1	UO_0000033	day	Fresh
+AH_126	AH_D01_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D01	NCBITaxon_10090	Mus musculus	male	no	1	UO_0000033	day	Fresh
+AH_127	AH_D01_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D01	NCBITaxon_10090	Mus musculus	male	no	1	UO_0000033	day	Fresh
+AH_128	AH_D01_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D01	NCBITaxon_10090	Mus musculus	male	no	1	UO_0000033	day	Fresh
+AH_129	AH_D01_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D01	NCBITaxon_10090	Mus musculus	male	no	1	UO_0000033	day	Fresh
+AH_130	AH_D01_01	PrimaryBioSample	MONDO_0024982	salmonella infections, animal	UBERON_0001155	colon	EFO_0008722	Drop-seq	AH_D01	NCBITaxon_10090	Mus musculus	male	no	1	UO_0000033	day	Fresh

@@ -1,6 +1,6 @@
 language: ruby
 rvm:
-  - 2.5.7
+  - 2.5.8
 install:
   - gem install travis
 branches:

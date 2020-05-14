@@ -833,7 +833,7 @@ class StudyFile
     cache_key = self.cache_removal_key
     unless cache_key.nil?
       # clear matching caches in background
-      CacheRemovalJob.new(cache_key).delay.perform
+      CacheRemovalJob.new(cache_key).delay(queue: :cache).perform
     end
   end
 

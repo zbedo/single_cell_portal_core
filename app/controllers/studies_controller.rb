@@ -365,7 +365,7 @@ class StudiesController < ApplicationController
         end
         if @study.previous_changes.keys.include?('name')
           # if user renames a study, invalidate all caches
-          CacheRemovalJob.new(@study.accession).delay.perform
+          CacheRemovalJob.new(@study.accession).delay(queue: :cache).perform
         end
         if @study.study_shares.any?
           SingleCellMailer.share_update_notification(@study, changes, current_user).deliver_now
@@ -411,7 +411,7 @@ class StudiesController < ApplicationController
       end
 
       # queue jobs to delete study caches & study itself
-      CacheRemovalJob.new(@study.accession).delay.perform
+      CacheRemovalJob.new(@study.accession).delay(queue: :cache).perform
       DeleteQueueJob.new(@study).delay.perform
 
       # notify users of deletion before removing shares & owner
@@ -452,32 +452,38 @@ class StudiesController < ApplicationController
     if study_file.nil?
       # don't use helper as we're about to mass-assign params
       study_file = @study.study_files.build
-      if study_file.update(study_file_params)
-        # determine if we need to create a study_file_bundle for the new study_file
-        if StudyFileBundle::BUNDLE_TYPES.include?(study_file.file_type) && study_file.file_type != 'Cluster'
-          matching_bundle = @study.study_file_bundles.detect {|bundle| bundle.bundle_type == study_file.file_type && bundle.parent == study_file}
-          if matching_bundle.nil?
-            study_file_bundle = @study.study_file_bundles.build(bundle_type: study_file.file_type)
-            bundle_payload = StudyFileBundle.generate_file_list(study_file)
-            study_file_bundle.original_file_list = bundle_payload
-            study_file_bundle.save! # saving the study_file_bundle will create new placeholder entries for the bundled study_files
-          end
-        end
-        # we need to add this file to a study_file_bundle if it was assigned
-        if study_file_params[:study_file_bundle_id].present?
-          # we're processing a bundled upload, which means there might be a placeholder file entry we need to find
-          study_file_bundle = StudyFileBundle.find_by(study_id: @study.id, id: study_file_params[:study_file_bundle_id])
-          file_type = study_file.file_type
-          # ignore if this is the parent file
-          unless file_type == study_file_bundle.bundle_type
-            study_file_bundle.add_files(study_file)
-          end
-        end
-        render json: { file: { name: study_file.upload_file_name,size: upload.size } } and return
-      else
+      begin
+        study_file.update!(study_file_params)
+      rescue => e
         logger.error "#{Time.zone.now} #{study_file.errors.full_messages.join(", ")}"
+        existing_file = StudyFile.find(study_file.id)
+        if existing_file
+          ErrorTracker.report_exception(e, current_user, params)
+          logger.error("do_upload Failed: Existing file for #{study_file.id} -- type:#{existing_file.type} name:#{existing_file.name}")
+        end
         render json: { file: { name: study_file.upload_file_name, errors: study_file.errors.full_messages.join(", ") } }, status: 422 and return
       end
+      # determine if we need to create a study_file_bundle for the new study_file
+      if StudyFileBundle::BUNDLE_TYPES.include?(study_file.file_type) && study_file.file_type != 'Cluster'
+        matching_bundle = @study.study_file_bundles.detect {|bundle| bundle.bundle_type == study_file.file_type && bundle.parent == study_file}
+        if matching_bundle.nil?
+          study_file_bundle = @study.study_file_bundles.build(bundle_type: study_file.file_type)
+          bundle_payload = StudyFileBundle.generate_file_list(study_file)
+          study_file_bundle.original_file_list = bundle_payload
+          study_file_bundle.save! # saving the study_file_bundle will create new placeholder entries for the bundled study_files
+        end
+      end
+      # we need to add this file to a study_file_bundle if it was assigned
+      if study_file_params[:study_file_bundle_id].present?
+        # we're processing a bundled upload, which means there might be a placeholder file entry we need to find
+        study_file_bundle = StudyFileBundle.find_by(study_id: @study.id, id: study_file_params[:study_file_bundle_id])
+        file_type = study_file.file_type
+        # ignore if this is the parent file
+        unless file_type == study_file_bundle.bundle_type
+          study_file_bundle.add_files(study_file)
+        end
+      end
+      render json: { file: { name: study_file.upload_file_name,size: upload.size } } and return
     else
       current_size = study_file.upload_file_size
       content_range = request.headers['CONTENT-RANGE']

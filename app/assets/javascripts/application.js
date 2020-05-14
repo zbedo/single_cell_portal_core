@@ -27,7 +27,6 @@
 //= require tsne
 //= require StackBlur
 //= require morpheus-external-r
-//= require kernel-functions
 //= require jquery.stickyPanel
 //= require clipboard.min
 //= require scp-igv

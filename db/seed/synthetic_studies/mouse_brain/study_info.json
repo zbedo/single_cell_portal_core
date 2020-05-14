@@ -1,7 +1,7 @@
 {
   "study": {
     "name": "Male Mouse brain",
-    "description": "<p>Investigating male mouse brain from healthy specimens. Jean Chang, Eric Weitz, Jon Bistline, Eno-Abasi Augustine-Akpan, Devon Bush, Vicky Horst.  Journal of SCP Synthetic Studies.  Volume 1, p1, February 2020.  Adding synthetic study data to development and staging environments has been shown to improve testability of new code.  We extend those findings to the Single Cell Portal by adding this synthetic data.</p><p> {'sample_type': {'direct from donor - frozen': 130}, 'disease': {'MONDO_0001678': 10, 'MONDO_0005887': 120}, 'disease__ontology_label': {'intestinal tuberculosis': 10, 'oral tuberculosis': 120}, 'organ': {'UBERON_0000955': 130}, 'organ__ontology_label': {'brain': 130}, 'library_preparation_protocol': {'EFO_0008722': 130}, 'library_preparation_protocol__ontology_label': {'Drop-seq': 130}, 'species': {'NCBITaxon_10090': 130}, 'species__ontology_label': {'Mus musculus': 130}, 'sex': {'male': 130}, 'is_living': {'no': 130}, 'cell_type': {'CL_0000103': 73, 'CL_0000236': 16, 'CL_0000561': 20, 'CL_0000573': 1, 'CL_0000748': 20}, 'cell_type__ontology_label': {'B cell': 16, 'amacrine cell': 20, 'bipolar neuron': 73, 'retinal bipolar neuron': 20, 'retinal cone cell': 1}}</p>",
+    "description": "<p>Investigating male mouse brain from healthy specimens. Jean Chang, Eric Weitz, Jon Bistline, Eno-Abasi Augustine-Akpan, Devon Bush, Vicky Horst.  Journal of SCP Synthetic Studies.  Volume 1, p1, February 2020.  Adding synthetic study data to development and staging environments has been shown to improve testability of new code.  We extend those findings to the Single Cell Portal by adding this synthetic data.</p>",
     "data_dir": "test"
   },
   "files": [
@@ -12,7 +12,8 @@
     },
     {
       "type": "Expression Matrix",
-      "filename": "expression_matrix.tsv"
+      "filename": "expression_matrix.tsv",
+      "species_scientific_name": "Mus musculus"
     },
     {
       "type": "Cluster",

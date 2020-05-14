@@ -424,7 +424,7 @@ class UserAnnotation
 
         # queue jobs to delete annotation caches & annotation itself
         cache_key = self.cache_removal_key
-        CacheRemovalJob.new(cache_key).delay.perform
+        CacheRemovalJob.new(cache_key).delay(queue: :cache).perform
         DeleteQueueJob.new(self).delay.perform
 
         # revoke all user annotation shares

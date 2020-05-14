@@ -200,7 +200,7 @@ module Api
         if @study.update(study_params)
           if @study.previous_changes.keys.include?('name')
             # if user renames a study, invalidate all caches
-            CacheRemovalJob.new(@study.accession).delay.perform
+            CacheRemovalJob.new(@study.accession).delay(queue: :cache).perform
           end
           render :show
         else
@@ -273,7 +273,7 @@ module Api
           end
 
           # queue jobs to delete study caches & study itself
-          CacheRemovalJob.new(@study.accession).delay.perform
+          CacheRemovalJob.new(@study.accession).delay(queue: :cache).perform
           DeleteQueueJob.new(@study).delay.perform
 
           # revoke all study_shares

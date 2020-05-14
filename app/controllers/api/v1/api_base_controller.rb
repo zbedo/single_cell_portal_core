@@ -14,6 +14,18 @@ module Api
         render json: {error: exception.message}, status: 500
       end
 
+      # this is needed to get stack traces of view errors on the console in development
+      # otherwise, e.g. errors in study_search_results_objects.rb would just be swallowed and returned as 500
+      rescue_from StandardError do |exception|
+        ErrorTracker.report_exception(exception, current_user, params)
+        logger.error ([exception.message] + exception.backtrace).join($/)
+        if Rails.env.production?
+          render json: {error: "An unexpected error has occurred"}, status: 500
+        else
+          render json: {error: exception.message}, status: 500
+        end
+      end
+
       ##
       # Generic message formatters to use in Swagger responses
       ##

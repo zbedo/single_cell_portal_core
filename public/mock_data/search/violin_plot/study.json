@@ -1,0 +1,101 @@
+{
+  "accession": "SCP25",
+  "name": "Small intestinal epithelium",
+  "description": "<p>Test data. &nbsp;Manual copy of full production study, manually copied from staging (https: //single-cell-staging.broadinstitute.org/single_cell/study/SCP41).</p>",
+  "public": false,
+  "detached": false,
+  "cell_count": 28723,
+  "gene_count": 0,
+  "study_url": "/single_cell/study/SCP25/small-intestinal-epithelium",
+  "gene_matches": [
+    "gad2"
+  ],
+  "can_visualize_clusters": true,
+  "study_files": {
+    "Expression": [
+      {
+        "name": "AtlasFullLength_log2TPM.txt.gz",
+        "file_type": "Expression Matrix",
+        "description": "Expression matrix for cells sampled from the whole gut with full-length scRNA-seq (Figure ED2).",
+        "bucket_location": "AtlasFullLength_log2TPM.txt.gz",
+        "upload_file_size": 64624457,
+        "download_url": "http://localhost:3000/single_cell/api/v1/site/studies/SCP25/download?filename=AtlasFullLength_log2TPM.txt.gz"
+      },
+      {
+        "name": "atlas_Log2Tpm_round2.txt",
+        "file_type": "Expression Matrix",
+        "description": "Expression matrix for cells sampled from the whole gut (Figure 1).",
+        "bucket_location": "atlas_Log2Tpm_round2.txt",
+        "upload_file_size": 268188665,
+        "download_url": "http://localhost:3000/single_cell/api/v1/site/studies/SCP25/download?filename=atlas_Log2Tpm_round2.txt"
+      },
+      {
+        "name": "infected_samples_Log2TPM.txt.gz",
+        "file_type": "Expression Matrix",
+        "description": "Log 2 TPM expression from cells sampled from infected mice (Figure 6).",
+        "bucket_location": "infected_samples_Log2TPM.txt.gz",
+        "upload_file_size": 59488253,
+        "download_url": "http://localhost:3000/single_cell/api/v1/site/studies/SCP25/download?filename=infected_samples_Log2TPM.txt.gz"
+      },
+      {
+        "name": "regional_sampling_Log2TPM.txt.gz",
+        "file_type": "Expression Matrix",
+        "description": "Expression matrix, log2(TPM+1), for cells sampled from distinct regions of small intestine (Figure 2).",
+        "bucket_location": "regional_sampling_Log2TPM.txt.gz",
+        "upload_file_size": 177604712,
+        "download_url": "http://localhost:3000/single_cell/api/v1/site/studies/SCP25/download?filename=regional_sampling_Log2TPM.txt.gz"
+      }
+    ],
+    "Metadata": [
+      {
+        "name": "atlas_metadata.txt",
+        "file_type": "Metadata",
+        "description": "",
+        "bucket_location": "atlas_metadata.txt",
+        "upload_file_size": 2252147,
+        "download_url": "http://localhost:3000/single_cell/api/v1/site/studies/SCP25/download?filename=atlas_metadata.txt"
+      }
+    ],
+    "Cluster": [
+      {
+        "name": "Atlas of epithelial cells (Figure 1)",
+        "file_type": "Cluster",
+        "description": "Figure 1b: A single-cell expression survey of IECs, n=6 mice",
+        "bucket_location": "atlas_tSNE_PCA_update.txt",
+        "upload_file_size": 762337,
+        "download_url": "http://localhost:3000/single_cell/api/v1/site/studies/SCP25/download?filename=atlas_tSNE_PCA_update.txt"
+      },
+      {
+        "name": "Infection with enteric pathogens (Figure 6)",
+        "file_type": "Cluster",
+        "description": "Figure 6a: Epithelial response to pathogen infections (changes in composition).",
+        "bucket_location": "Fig6_tSNE.txt",
+        "upload_file_size": 720152,
+        "download_url": "http://localhost:3000/single_cell/api/v1/site/studies/SCP25/download?filename=Fig6_tSNE.txt"
+      },
+      {
+        "name": "Regional diversity of IECs (Figure 2)",
+        "file_type": "Cluster",
+        "description": "Figure 2a: Regional variation in cell type and differentiation.",
+        "bucket_location": "Fig2_tSNE.txt",
+        "upload_file_size": 769603,
+        "download_url": "http://localhost:3000/single_cell/api/v1/site/studies/SCP25/download?filename=Fig2_tSNE.txt"
+      },
+      {
+        "name": "Regional diversity of IECs (Figure 2c)(DC)",
+        "file_type": "Cluster",
+        "description": "Figure 2c: Regional variation in cell type and differentiation (Diffusion components).",
+        "bucket_location": "Fig2_panel_c_rotated.txt",
+        "upload_file_size": 799939,
+        "download_url": "http://localhost:3000/single_cell/api/v1/site/studies/SCP25/download?filename=Fig2_panel_c_rotated.txt"
+      }
+    ],
+    "Coordinate Labels": [],
+    "Fastq": [],
+    "BAM": [],
+    "Documentation": [],
+    "Other": [],
+    "Analysis Output": [],
+    "Ideogram Annotations": []
+  }
+}

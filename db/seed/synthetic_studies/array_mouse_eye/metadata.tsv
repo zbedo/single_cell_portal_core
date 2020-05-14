@@ -1,132 +1,132 @@
-NAME	biosample_id	sample_type	disease	disease__ontology_label	organ	organ__ontology_label	library_preparation_protocol	library_preparation_protocol__ontology_label	donor_id	species	species__ontology_label	sex	is_living
-TYPE	group	group	group	group	group	group	group	group	group	group	group	group	group
-BA_1	BA_D06_16dpp_r3	direct from donor - fresh	MONDO_0011284	astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D06	NCBITaxon_10090	Mus musculus	unknown	no
-BA_2	BA_D06_16dpp_r3	direct from donor - fresh	MONDO_0011284	astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D06	NCBITaxon_10090	Mus musculus	unknown	no
-BA_3	BA_D06_16dpp_r3	direct from donor - fresh	MONDO_0011284	astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D06	NCBITaxon_10090	Mus musculus	unknown	no
-BA_4	BA_D06_16dpp_r3	direct from donor - fresh	MONDO_0011284	astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D06	NCBITaxon_10090	Mus musculus	unknown	no
-BA_5	BA_D06_16dpp_r3	direct from donor - fresh	MONDO_0011284	astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D06	NCBITaxon_10090	Mus musculus	unknown	no
-BA_6	BA_D06_16dpp_r3	direct from donor - fresh	MONDO_0011284	astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D06	NCBITaxon_10090	Mus musculus	unknown	no
-BA_7	BA_D06_16dpp_r3	direct from donor - fresh	MONDO_0011284	astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D06	NCBITaxon_10090	Mus musculus	unknown	no
-BA_8	BA_D06_16dpp_r3	direct from donor - fresh	MONDO_0011284	astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D06	NCBITaxon_10090	Mus musculus	unknown	no
-BA_9	BA_D06_16dpp_r3	direct from donor - fresh	MONDO_0011284	astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D06	NCBITaxon_10090	Mus musculus	unknown	no
-BA_10	BA_D06_16dpp_r3	direct from donor - fresh	MONDO_0011284	astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D06	NCBITaxon_10090	Mus musculus	unknown	no
-BA_11	BA_D06_5dpp_r1	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D06	NCBITaxon_10090	Mus musculus	unknown	no
-BA_12	BA_D06_5dpp_r1	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D06	NCBITaxon_10090	Mus musculus	unknown	no
-BA_13	BA_D06_5dpp_r1	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D06	NCBITaxon_10090	Mus musculus	unknown	no
-BA_14	BA_D06_5dpp_r1	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D06	NCBITaxon_10090	Mus musculus	unknown	no
-BA_15	BA_D06_5dpp_r1	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D06	NCBITaxon_10090	Mus musculus	unknown	no
-BA_16	BA_D06_5dpp_r1	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D06	NCBITaxon_10090	Mus musculus	unknown	no
-BA_17	BA_D06_5dpp_r1	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D06	NCBITaxon_10090	Mus musculus	unknown	no
-BA_18	BA_D06_5dpp_r1	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D06	NCBITaxon_10090	Mus musculus	unknown	no
-BA_19	BA_D06_5dpp_r1	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D06	NCBITaxon_10090	Mus musculus	unknown	no
-BA_20	BA_D06_5dpp_r1	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D06	NCBITaxon_10090	Mus musculus	unknown	no
-BA_21	BA_D05_10dpp_r1	direct from donor - fresh	MONDO_0005041|MONDO_0005129	glaucoma (disease)|cataract (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no
-BA_22	BA_D05_10dpp_r1	direct from donor - fresh	MONDO_0005041|MONDO_0005129	glaucoma (disease)|cataract (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no
-BA_23	BA_D05_10dpp_r1	direct from donor - fresh	MONDO_0005041|MONDO_0005129	glaucoma (disease)|cataract (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no
-BA_24	BA_D05_10dpp_r1	direct from donor - fresh	MONDO_0005041|MONDO_0005129	glaucoma (disease)|cataract (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no
-BA_25	BA_D05_10dpp_r1	direct from donor - fresh	MONDO_0005041|MONDO_0005129	glaucoma (disease)|cataract (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no
-BA_26	BA_D05_10dpp_r1	direct from donor - fresh	MONDO_0005041|MONDO_0005129	glaucoma (disease)|cataract (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no
-BA_27	BA_D05_10dpp_r1	direct from donor - fresh	MONDO_0005041|MONDO_0005129	glaucoma (disease)|cataract (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no
-BA_28	BA_D05_10dpp_r1	direct from donor - fresh	MONDO_0005041|MONDO_0005129	glaucoma (disease)|cataract (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no
-BA_29	BA_D05_10dpp_r1	direct from donor - fresh	MONDO_0005041|MONDO_0005129	glaucoma (disease)|cataract (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no
-BA_30	BA_D05_10dpp_r1	direct from donor - fresh	MONDO_0005041|MONDO_0005129	glaucoma (disease)|cataract (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no
-BA_31	BA_D05_14dpp_r1	direct from donor - fresh	MONDO_0005041|MONDO_0005129	glaucoma (disease)|cataract (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no
-BA_32	BA_D05_14dpp_r1	direct from donor - fresh	MONDO_0005041|MONDO_0005129	glaucoma (disease)|cataract (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no
-BA_33	BA_D05_14dpp_r1	direct from donor - fresh	MONDO_0005041|MONDO_0005129	glaucoma (disease)|cataract (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no
-BA_34	BA_D05_14dpp_r1	direct from donor - fresh	MONDO_0005041|MONDO_0005129	glaucoma (disease)|cataract (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no
-BA_35	BA_D05_14dpp_r1	direct from donor - fresh	MONDO_0005041|MONDO_0005129	glaucoma (disease)|cataract (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no
-BA_36	BA_D05_14dpp_r1	direct from donor - fresh	MONDO_0005041|MONDO_0005129	glaucoma (disease)|cataract (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no
-BA_37	BA_D05_14dpp_r1	direct from donor - fresh	MONDO_0005041|MONDO_0005129	glaucoma (disease)|cataract (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no
-BA_38	BA_D05_14dpp_r1	direct from donor - fresh	MONDO_0005041|MONDO_0005129	glaucoma (disease)|cataract (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no
-BA_39	BA_D05_14dpp_r1	direct from donor - fresh	MONDO_0005041|MONDO_0005129	glaucoma (disease)|cataract (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no
-BA_40	BA_D05_14dpp_r1	direct from donor - fresh	MONDO_0005041|MONDO_0005129	glaucoma (disease)|cataract (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no
-BA_41	BA_D05_5dpp_r1	direct from donor - fresh	MONDO_0005041|MONDO_0005129|MONDO_0011284	glaucoma (disease)|cataract (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no
-BA_42	BA_D05_5dpp_r1	direct from donor - fresh	MONDO_0005041|MONDO_0005129|MONDO_0011284	glaucoma (disease)|cataract (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no
-BA_43	BA_D05_5dpp_r1	direct from donor - fresh	MONDO_0005041|MONDO_0005129|MONDO_0011284	glaucoma (disease)|cataract (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no
-BA_44	BA_D05_5dpp_r1	direct from donor - fresh	MONDO_0005041|MONDO_0005129|MONDO_0011284	glaucoma (disease)|cataract (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no
-BA_45	BA_D05_5dpp_r1	direct from donor - fresh	MONDO_0005041|MONDO_0005129|MONDO_0011284	glaucoma (disease)|cataract (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no
-BA_46	BA_D05_5dpp_r1	direct from donor - fresh	MONDO_0005041|MONDO_0005129|MONDO_0011284	glaucoma (disease)|cataract (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no
-BA_47	BA_D05_5dpp_r1	direct from donor - fresh	MONDO_0005041|MONDO_0005129|MONDO_0011284	glaucoma (disease)|cataract (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no
-BA_48	BA_D05_5dpp_r1	direct from donor - fresh	MONDO_0005041|MONDO_0005129|MONDO_0011284	glaucoma (disease)|cataract (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no
-BA_49	BA_D05_5dpp_r1	direct from donor - fresh	MONDO_0005041|MONDO_0005129|MONDO_0011284	glaucoma (disease)|cataract (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no
-BA_50	BA_D05_5dpp_r1	direct from donor - fresh	MONDO_0005041|MONDO_0005129|MONDO_0011284	glaucoma (disease)|cataract (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no
-BA_51	BA_D04_10dpp_r1	direct from donor - fresh	MONDO_0005129|MONDO_0011284	cataract (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no
-BA_52	BA_D04_10dpp_r1	direct from donor - fresh	MONDO_0005129|MONDO_0011284	cataract (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no
-BA_53	BA_D04_10dpp_r1	direct from donor - fresh	MONDO_0005129|MONDO_0011284	cataract (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no
-BA_54	BA_D04_10dpp_r1	direct from donor - fresh	MONDO_0005129|MONDO_0011284	cataract (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no
-BA_55	BA_D04_10dpp_r1	direct from donor - fresh	MONDO_0005129|MONDO_0011284	cataract (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no
-BA_56	BA_D04_10dpp_r1	direct from donor - fresh	MONDO_0005129|MONDO_0011284	cataract (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no
-BA_57	BA_D04_10dpp_r1	direct from donor - fresh	MONDO_0005129|MONDO_0011284	cataract (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no
-BA_58	BA_D04_10dpp_r1	direct from donor - fresh	MONDO_0005129|MONDO_0011284	cataract (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no
-BA_59	BA_D04_10dpp_r1	direct from donor - fresh	MONDO_0005129|MONDO_0011284	cataract (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no
-BA_60	BA_D04_10dpp_r1	direct from donor - fresh	MONDO_0005129|MONDO_0011284	cataract (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no
-BA_61	BA_D04_15dpp_r1	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no
-BA_62	BA_D04_15dpp_r1	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no
-BA_63	BA_D04_15dpp_r1	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no
-BA_64	BA_D04_15dpp_r1	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no
-BA_65	BA_D04_15dpp_r1	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no
-BA_66	BA_D04_15dpp_r1	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no
-BA_67	BA_D04_15dpp_r1	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no
-BA_68	BA_D04_15dpp_r1	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no
-BA_69	BA_D04_15dpp_r1	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no
-BA_70	BA_D04_15dpp_r1	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no
-BA_71	BA_D04_5dpp_r1	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no
-BA_72	BA_D04_5dpp_r1	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no
-BA_73	BA_D04_5dpp_r1	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no
-BA_74	BA_D04_5dpp_r1	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no
-BA_75	BA_D04_5dpp_r1	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no
-BA_76	BA_D04_5dpp_r1	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no
-BA_77	BA_D04_5dpp_r1	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no
-BA_78	BA_D04_5dpp_r1	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no
-BA_79	BA_D04_5dpp_r1	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no
-BA_80	BA_D04_5dpp_r1	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no
-BA_81	BA_D03_t1_r2	direct from donor - fresh	MONDO_0005041|MONDO_0011284	glaucoma (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D03	NCBITaxon_10090	Mus musculus	unknown	no
-BA_82	BA_D03_t1_r2	direct from donor - fresh	MONDO_0005041|MONDO_0011284	glaucoma (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D03	NCBITaxon_10090	Mus musculus	unknown	no
-BA_83	BA_D03_t1_r2	direct from donor - fresh	MONDO_0005041|MONDO_0011284	glaucoma (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D03	NCBITaxon_10090	Mus musculus	unknown	no
-BA_84	BA_D03_t1_r2	direct from donor - fresh	MONDO_0005041|MONDO_0011284	glaucoma (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D03	NCBITaxon_10090	Mus musculus	unknown	no
-BA_85	BA_D03_t1_r2	direct from donor - fresh	MONDO_0005041|MONDO_0011284	glaucoma (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D03	NCBITaxon_10090	Mus musculus	unknown	no
-BA_86	BA_D03_t1_r2	direct from donor - fresh	MONDO_0005041|MONDO_0011284	glaucoma (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D03	NCBITaxon_10090	Mus musculus	unknown	no
-BA_87	BA_D03_t1_r2	direct from donor - fresh	MONDO_0005041|MONDO_0011284	glaucoma (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D03	NCBITaxon_10090	Mus musculus	unknown	no
-BA_88	BA_D03_t1_r2	direct from donor - fresh	MONDO_0005041|MONDO_0011284	glaucoma (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D03	NCBITaxon_10090	Mus musculus	unknown	no
-BA_89	BA_D03_t1_r2	direct from donor - fresh	MONDO_0005041|MONDO_0011284	glaucoma (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D03	NCBITaxon_10090	Mus musculus	unknown	no
-BA_90	BA_D03_t1_r2	direct from donor - fresh	MONDO_0005041|MONDO_0011284	glaucoma (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D03	NCBITaxon_10090	Mus musculus	unknown	no
-BA_91	BA_D02_02	direct from donor - fresh	MONDO_0005041	glaucoma (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D02	NCBITaxon_10090	Mus musculus	unknown	no
-BA_92	BA_D02_02	direct from donor - fresh	MONDO_0005041	glaucoma (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D02	NCBITaxon_10090	Mus musculus	unknown	no
-BA_93	BA_D02_02	direct from donor - fresh	MONDO_0005041	glaucoma (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D02	NCBITaxon_10090	Mus musculus	unknown	no
-BA_94	BA_D02_02	direct from donor - fresh	MONDO_0005041	glaucoma (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D02	NCBITaxon_10090	Mus musculus	unknown	no
-BA_95	BA_D02_02	direct from donor - fresh	MONDO_0005041	glaucoma (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D02	NCBITaxon_10090	Mus musculus	unknown	no
-BA_96	BA_D02_02	direct from donor - fresh	MONDO_0005041	glaucoma (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D02	NCBITaxon_10090	Mus musculus	unknown	no
-BA_97	BA_D02_02	direct from donor - fresh	MONDO_0005041	glaucoma (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D02	NCBITaxon_10090	Mus musculus	unknown	no
-BA_98	BA_D02_02	direct from donor - fresh	MONDO_0005041	glaucoma (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D02	NCBITaxon_10090	Mus musculus	unknown	no
-BA_99	BA_D02_02	direct from donor - fresh	MONDO_0005041	glaucoma (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D02	NCBITaxon_10090	Mus musculus	unknown	no
-BA_100	BA_D02_02	direct from donor - fresh	MONDO_0005041	glaucoma (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D02	NCBITaxon_10090	Mus musculus	unknown	no
-BA_101	BA_D02_01	direct from donor - fresh	MONDO_0005041	glaucoma (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D02	NCBITaxon_10090	Mus musculus	unknown	no
-BA_102	BA_D02_01	direct from donor - fresh	MONDO_0005041	glaucoma (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D02	NCBITaxon_10090	Mus musculus	unknown	no
-BA_103	BA_D02_01	direct from donor - fresh	MONDO_0005041	glaucoma (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D02	NCBITaxon_10090	Mus musculus	unknown	no
-BA_104	BA_D02_01	direct from donor - fresh	MONDO_0005041	glaucoma (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D02	NCBITaxon_10090	Mus musculus	unknown	no
-BA_105	BA_D02_01	direct from donor - fresh	MONDO_0005041	glaucoma (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D02	NCBITaxon_10090	Mus musculus	unknown	no
-BA_106	BA_D02_01	direct from donor - fresh	MONDO_0005041	glaucoma (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D02	NCBITaxon_10090	Mus musculus	unknown	no
-BA_107	BA_D02_01	direct from donor - fresh	MONDO_0005041	glaucoma (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D02	NCBITaxon_10090	Mus musculus	unknown	no
-BA_108	BA_D02_01	direct from donor - fresh	MONDO_0005041	glaucoma (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D02	NCBITaxon_10090	Mus musculus	unknown	no
-BA_109	BA_D02_01	direct from donor - fresh	MONDO_0005041	glaucoma (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D02	NCBITaxon_10090	Mus musculus	unknown	no
-BA_110	BA_D02_01	direct from donor - fresh	MONDO_0005041	glaucoma (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D02	NCBITaxon_10090	Mus musculus	unknown	no
-BA_111	BA_D01_02	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D01	NCBITaxon_10090	Mus musculus	unknown	no
-BA_112	BA_D01_02	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D01	NCBITaxon_10090	Mus musculus	unknown	no
-BA_113	BA_D01_02	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D01	NCBITaxon_10090	Mus musculus	unknown	no
-BA_114	BA_D01_02	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D01	NCBITaxon_10090	Mus musculus	unknown	no
-BA_115	BA_D01_02	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D01	NCBITaxon_10090	Mus musculus	unknown	no
-BA_116	BA_D01_02	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D01	NCBITaxon_10090	Mus musculus	unknown	no
-BA_117	BA_D01_02	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D01	NCBITaxon_10090	Mus musculus	unknown	no
-BA_118	BA_D01_02	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D01	NCBITaxon_10090	Mus musculus	unknown	no
-BA_119	BA_D01_02	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D01	NCBITaxon_10090	Mus musculus	unknown	no
-BA_120	BA_D01_02	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D01	NCBITaxon_10090	Mus musculus	unknown	no
-BA_121	BA_D01_01	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D01	NCBITaxon_10090	Mus musculus	unknown	no
-BA_122	BA_D01_01	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D01	NCBITaxon_10090	Mus musculus	unknown	no
-BA_123	BA_D01_01	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D01	NCBITaxon_10090	Mus musculus	unknown	no
-BA_124	BA_D01_01	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D01	NCBITaxon_10090	Mus musculus	unknown	no
-BA_125	BA_D01_01	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D01	NCBITaxon_10090	Mus musculus	unknown	no
-BA_126	BA_D01_01	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D01	NCBITaxon_10090	Mus musculus	unknown	no
-BA_127	BA_D01_01	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D01	NCBITaxon_10090	Mus musculus	unknown	no
-BA_128	BA_D01_01	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D01	NCBITaxon_10090	Mus musculus	unknown	no
-BA_129	BA_D01_01	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D01	NCBITaxon_10090	Mus musculus	unknown	no
-BA_130	BA_D01_01	direct from donor - fresh	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D01	NCBITaxon_10090	Mus musculus	unknown	no
+NAME	biosample_id	biosample_type	disease	disease__ontology_label	organ	organ__ontology_label	library_preparation_protocol	library_preparation_protocol__ontology_label	donor_id	species	species__ontology_label	sex	is_living	preservation_method
+TYPE	group	group	group	group	group	group	group	group	group	group	group	group	group	group
+BA_1	BA_D06_16dpp_r3	PrimaryBioSample	MONDO_0011284	astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D06	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_2	BA_D06_16dpp_r3	PrimaryBioSample	MONDO_0011284	astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D06	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_3	BA_D06_16dpp_r3	PrimaryBioSample	MONDO_0011284	astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D06	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_4	BA_D06_16dpp_r3	PrimaryBioSample	MONDO_0011284	astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D06	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_5	BA_D06_16dpp_r3	PrimaryBioSample	MONDO_0011284	astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D06	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_6	BA_D06_16dpp_r3	PrimaryBioSample	MONDO_0011284	astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D06	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_7	BA_D06_16dpp_r3	PrimaryBioSample	MONDO_0011284	astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D06	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_8	BA_D06_16dpp_r3	PrimaryBioSample	MONDO_0011284	astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D06	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_9	BA_D06_16dpp_r3	PrimaryBioSample	MONDO_0011284	astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D06	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_10	BA_D06_16dpp_r3	PrimaryBioSample	MONDO_0011284	astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D06	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_11	BA_D06_5dpp_r1	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D06	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_12	BA_D06_5dpp_r1	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D06	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_13	BA_D06_5dpp_r1	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D06	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_14	BA_D06_5dpp_r1	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D06	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_15	BA_D06_5dpp_r1	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D06	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_16	BA_D06_5dpp_r1	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D06	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_17	BA_D06_5dpp_r1	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D06	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_18	BA_D06_5dpp_r1	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D06	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_19	BA_D06_5dpp_r1	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D06	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_20	BA_D06_5dpp_r1	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D06	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_21	BA_D05_10dpp_r1	PrimaryBioSample	MONDO_0005041|MONDO_0005129	glaucoma (disease)|cataract (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_22	BA_D05_10dpp_r1	PrimaryBioSample	MONDO_0005041|MONDO_0005129	glaucoma (disease)|cataract (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_23	BA_D05_10dpp_r1	PrimaryBioSample	MONDO_0005041|MONDO_0005129	glaucoma (disease)|cataract (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_24	BA_D05_10dpp_r1	PrimaryBioSample	MONDO_0005041|MONDO_0005129	glaucoma (disease)|cataract (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_25	BA_D05_10dpp_r1	PrimaryBioSample	MONDO_0005041|MONDO_0005129	glaucoma (disease)|cataract (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_26	BA_D05_10dpp_r1	PrimaryBioSample	MONDO_0005041|MONDO_0005129	glaucoma (disease)|cataract (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_27	BA_D05_10dpp_r1	PrimaryBioSample	MONDO_0005041|MONDO_0005129	glaucoma (disease)|cataract (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_28	BA_D05_10dpp_r1	PrimaryBioSample	MONDO_0005041|MONDO_0005129	glaucoma (disease)|cataract (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_29	BA_D05_10dpp_r1	PrimaryBioSample	MONDO_0005041|MONDO_0005129	glaucoma (disease)|cataract (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_30	BA_D05_10dpp_r1	PrimaryBioSample	MONDO_0005041|MONDO_0005129	glaucoma (disease)|cataract (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_31	BA_D05_14dpp_r1	PrimaryBioSample	MONDO_0005041|MONDO_0005129	glaucoma (disease)|cataract (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_32	BA_D05_14dpp_r1	PrimaryBioSample	MONDO_0005041|MONDO_0005129	glaucoma (disease)|cataract (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_33	BA_D05_14dpp_r1	PrimaryBioSample	MONDO_0005041|MONDO_0005129	glaucoma (disease)|cataract (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_34	BA_D05_14dpp_r1	PrimaryBioSample	MONDO_0005041|MONDO_0005129	glaucoma (disease)|cataract (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_35	BA_D05_14dpp_r1	PrimaryBioSample	MONDO_0005041|MONDO_0005129	glaucoma (disease)|cataract (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_36	BA_D05_14dpp_r1	PrimaryBioSample	MONDO_0005041|MONDO_0005129	glaucoma (disease)|cataract (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_37	BA_D05_14dpp_r1	PrimaryBioSample	MONDO_0005041|MONDO_0005129	glaucoma (disease)|cataract (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_38	BA_D05_14dpp_r1	PrimaryBioSample	MONDO_0005041|MONDO_0005129	glaucoma (disease)|cataract (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_39	BA_D05_14dpp_r1	PrimaryBioSample	MONDO_0005041|MONDO_0005129	glaucoma (disease)|cataract (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_40	BA_D05_14dpp_r1	PrimaryBioSample	MONDO_0005041|MONDO_0005129	glaucoma (disease)|cataract (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_41	BA_D05_5dpp_r1	PrimaryBioSample	MONDO_0005041|MONDO_0005129|MONDO_0011284	glaucoma (disease)|cataract (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_42	BA_D05_5dpp_r1	PrimaryBioSample	MONDO_0005041|MONDO_0005129|MONDO_0011284	glaucoma (disease)|cataract (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_43	BA_D05_5dpp_r1	PrimaryBioSample	MONDO_0005041|MONDO_0005129|MONDO_0011284	glaucoma (disease)|cataract (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_44	BA_D05_5dpp_r1	PrimaryBioSample	MONDO_0005041|MONDO_0005129|MONDO_0011284	glaucoma (disease)|cataract (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_45	BA_D05_5dpp_r1	PrimaryBioSample	MONDO_0005041|MONDO_0005129|MONDO_0011284	glaucoma (disease)|cataract (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_46	BA_D05_5dpp_r1	PrimaryBioSample	MONDO_0005041|MONDO_0005129|MONDO_0011284	glaucoma (disease)|cataract (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_47	BA_D05_5dpp_r1	PrimaryBioSample	MONDO_0005041|MONDO_0005129|MONDO_0011284	glaucoma (disease)|cataract (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_48	BA_D05_5dpp_r1	PrimaryBioSample	MONDO_0005041|MONDO_0005129|MONDO_0011284	glaucoma (disease)|cataract (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_49	BA_D05_5dpp_r1	PrimaryBioSample	MONDO_0005041|MONDO_0005129|MONDO_0011284	glaucoma (disease)|cataract (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_50	BA_D05_5dpp_r1	PrimaryBioSample	MONDO_0005041|MONDO_0005129|MONDO_0011284	glaucoma (disease)|cataract (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D05	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_51	BA_D04_10dpp_r1	PrimaryBioSample	MONDO_0005129|MONDO_0011284	cataract (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_52	BA_D04_10dpp_r1	PrimaryBioSample	MONDO_0005129|MONDO_0011284	cataract (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_53	BA_D04_10dpp_r1	PrimaryBioSample	MONDO_0005129|MONDO_0011284	cataract (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_54	BA_D04_10dpp_r1	PrimaryBioSample	MONDO_0005129|MONDO_0011284	cataract (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_55	BA_D04_10dpp_r1	PrimaryBioSample	MONDO_0005129|MONDO_0011284	cataract (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_56	BA_D04_10dpp_r1	PrimaryBioSample	MONDO_0005129|MONDO_0011284	cataract (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_57	BA_D04_10dpp_r1	PrimaryBioSample	MONDO_0005129|MONDO_0011284	cataract (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_58	BA_D04_10dpp_r1	PrimaryBioSample	MONDO_0005129|MONDO_0011284	cataract (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_59	BA_D04_10dpp_r1	PrimaryBioSample	MONDO_0005129|MONDO_0011284	cataract (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_60	BA_D04_10dpp_r1	PrimaryBioSample	MONDO_0005129|MONDO_0011284	cataract (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_61	BA_D04_15dpp_r1	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_62	BA_D04_15dpp_r1	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_63	BA_D04_15dpp_r1	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_64	BA_D04_15dpp_r1	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_65	BA_D04_15dpp_r1	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_66	BA_D04_15dpp_r1	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_67	BA_D04_15dpp_r1	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_68	BA_D04_15dpp_r1	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_69	BA_D04_15dpp_r1	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_70	BA_D04_15dpp_r1	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_71	BA_D04_5dpp_r1	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_72	BA_D04_5dpp_r1	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_73	BA_D04_5dpp_r1	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_74	BA_D04_5dpp_r1	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_75	BA_D04_5dpp_r1	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_76	BA_D04_5dpp_r1	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_77	BA_D04_5dpp_r1	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_78	BA_D04_5dpp_r1	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_79	BA_D04_5dpp_r1	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_80	BA_D04_5dpp_r1	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D04	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_81	BA_D03_t1_r2	PrimaryBioSample	MONDO_0005041|MONDO_0011284	glaucoma (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D03	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_82	BA_D03_t1_r2	PrimaryBioSample	MONDO_0005041|MONDO_0011284	glaucoma (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D03	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_83	BA_D03_t1_r2	PrimaryBioSample	MONDO_0005041|MONDO_0011284	glaucoma (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D03	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_84	BA_D03_t1_r2	PrimaryBioSample	MONDO_0005041|MONDO_0011284	glaucoma (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D03	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_85	BA_D03_t1_r2	PrimaryBioSample	MONDO_0005041|MONDO_0011284	glaucoma (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D03	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_86	BA_D03_t1_r2	PrimaryBioSample	MONDO_0005041|MONDO_0011284	glaucoma (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D03	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_87	BA_D03_t1_r2	PrimaryBioSample	MONDO_0005041|MONDO_0011284	glaucoma (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D03	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_88	BA_D03_t1_r2	PrimaryBioSample	MONDO_0005041|MONDO_0011284	glaucoma (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D03	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_89	BA_D03_t1_r2	PrimaryBioSample	MONDO_0005041|MONDO_0011284	glaucoma (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D03	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_90	BA_D03_t1_r2	PrimaryBioSample	MONDO_0005041|MONDO_0011284	glaucoma (disease)|astigmatism (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D03	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_91	BA_D02_02	PrimaryBioSample	MONDO_0005041	glaucoma (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D02	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_92	BA_D02_02	PrimaryBioSample	MONDO_0005041	glaucoma (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D02	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_93	BA_D02_02	PrimaryBioSample	MONDO_0005041	glaucoma (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D02	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_94	BA_D02_02	PrimaryBioSample	MONDO_0005041	glaucoma (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D02	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_95	BA_D02_02	PrimaryBioSample	MONDO_0005041	glaucoma (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D02	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_96	BA_D02_02	PrimaryBioSample	MONDO_0005041	glaucoma (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D02	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_97	BA_D02_02	PrimaryBioSample	MONDO_0005041	glaucoma (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D02	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_98	BA_D02_02	PrimaryBioSample	MONDO_0005041	glaucoma (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D02	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_99	BA_D02_02	PrimaryBioSample	MONDO_0005041	glaucoma (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D02	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_100	BA_D02_02	PrimaryBioSample	MONDO_0005041	glaucoma (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D02	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_101	BA_D02_01	PrimaryBioSample	MONDO_0005041	glaucoma (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D02	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_102	BA_D02_01	PrimaryBioSample	MONDO_0005041	glaucoma (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D02	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_103	BA_D02_01	PrimaryBioSample	MONDO_0005041	glaucoma (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D02	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_104	BA_D02_01	PrimaryBioSample	MONDO_0005041	glaucoma (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D02	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_105	BA_D02_01	PrimaryBioSample	MONDO_0005041	glaucoma (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D02	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_106	BA_D02_01	PrimaryBioSample	MONDO_0005041	glaucoma (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D02	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_107	BA_D02_01	PrimaryBioSample	MONDO_0005041	glaucoma (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D02	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_108	BA_D02_01	PrimaryBioSample	MONDO_0005041	glaucoma (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D02	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_109	BA_D02_01	PrimaryBioSample	MONDO_0005041	glaucoma (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D02	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_110	BA_D02_01	PrimaryBioSample	MONDO_0005041	glaucoma (disease)	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D02	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_111	BA_D01_02	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D01	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_112	BA_D01_02	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D01	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_113	BA_D01_02	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D01	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_114	BA_D01_02	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D01	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_115	BA_D01_02	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D01	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_116	BA_D01_02	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D01	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_117	BA_D01_02	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D01	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_118	BA_D01_02	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D01	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_119	BA_D01_02	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D01	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_120	BA_D01_02	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D01	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_121	BA_D01_01	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D01	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_122	BA_D01_01	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D01	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_123	BA_D01_01	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D01	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_124	BA_D01_01	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D01	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_125	BA_D01_01	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D01	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_126	BA_D01_01	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D01	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_127	BA_D01_01	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D01	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_128	BA_D01_01	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D01	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_129	BA_D01_01	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D01	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
+BA_130	BA_D01_01	PrimaryBioSample	MONDO_0005109	HIV infectious disease	UBERON_0000970	eye	EFO_0008780	inDrop	BA_D01	NCBITaxon_10090	Mus musculus	unknown	no	Fresh
