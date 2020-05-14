@@ -15,11 +15,10 @@ class UserAssetServiceTest < ActiveSupport::TestCase
       end
       entries = UserAssetService.get_directory_entries(asset_path)
       if entries.empty?
-        TEST_FILES.each do |test_file|
-          object_id = Mongo::Operation::ObjectIdGenerator.new.generate.to_s
-          upload_dir = asset_path.join(object_id)
+        TEST_FILES.each_with_index do |test_file, index|
+          upload_dir = asset_path.join(index.to_s)
           FileUtils.mkdir_p(upload_dir)
-          new_path = asset_path.join(object_id, test_file)
+          new_path = upload_dir.join(test_file)
           source_file = TEST_DATA_DIR.join(test_file)
           FileUtils.copy_file(source_file, new_path, preserve: true)
         end
