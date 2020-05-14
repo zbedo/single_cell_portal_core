@@ -8,16 +8,23 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
 
 
 
-  def merge_identities
+  # Merges unauth’d and auth’d user identities in Mixpanel via Bard
+  #
+  # Bard is a DSP service that mediates writes to Mixpanel. To enable tracking
+  # users when they are signed in and not, Bard provides an endpoint
+  # `/api/identify` to merge identities.  In SCP's case, the anonynmous ID
+  # (`anonId`) is a random UUIDv4 string set as a cookie for all users --
+  # auth'd or not -- upon visiting SCP.
 
-    #Rails.logger.info '************* in merge_identities ************'
+  # This call links that anonId to the user's bearer token used by DSP's Sam
+  # service.  That bearer token is in turn linked to a deidentified
+  # "distinct ID" used to track users across auth states in Mixpanel.
+  def merge_identities
 
     # Skip merge_identities on production until Mixpanel is ready
     if Rails.env == 'production'
       return nil
     end
-
-    #Rails.logger.info 'test'
 
     Rails.logger.info "Merging user identity in Mixpanel via Bard"
 
