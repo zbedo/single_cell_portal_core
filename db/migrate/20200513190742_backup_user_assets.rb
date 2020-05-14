@@ -4,7 +4,5 @@ class BackupUserAssets < Mongoid::Migration
   end
 
   def self.down
-    bucket = UserAssetService.get_storage_bucket
-    bucket.delete
   end
 end
