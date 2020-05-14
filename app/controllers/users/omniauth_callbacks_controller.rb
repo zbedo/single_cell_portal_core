@@ -28,14 +28,9 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
 
     Rails.logger.info "Merging user identity in Mixpanel via Bard"
 
-    bard_domains_by_env = {
-      'development': 'https://terra-bard-dev.appspot.com',
-      'staging': 'https://terra-bard-alpha.appspot.com',
-      'production': 'https://terra-bard-prod.appspot.com'
-    }
+    bard_host_url = Rails.application.config.bard_host_url
 
-    bard_domain = bard_domains_by_env[Rails.env.to_sym]
-    bard_path = bard_domain + '/api/identify'
+    bard_path = bard_host_url + '/api/identify'
     headers = {
       'Authorization' => "Bearer #{@user.access_token['access_token']}",
       'Content-Type': 'application/asdf'
