@@ -20,22 +20,15 @@ class UserAssetService
   ASSET_TYPES = ASSET_PATHS_BY_TYPE.keys.freeze
 
   # Bucket info; each Rails environment per project has a bucket
-  STORAGE_BUCKET_NAME = (COMPUTE_PROJECT.dup + "-#{Rails.env}-asset-storage").freeze
+  STORAGE_BUCKET_NAME = "#{COMPUTE_PROJECT}-#{Rails.env}-asset-storage".freeze
 
   # initialize GCS driver with same credentials as FireCloudClient
+  # will return existing instance after first call is made (does not re-instantiate)
   #
   # * *yields*
   #   - +Google::Cloud::Storage+
-  def self.initialize_storage_service
-    Google::Cloud::Storage.new(keyfile: SERVICE_ACCOUNT_KEY)
-  end
-
-  # getter for storage service object
-  #
-  # * *returns*
-  #   - +Google::Cloud::Storage+
   def self.storage_service
-    @@storage_service ||= initialize_storage_service
+    @@storage_service ||= Google::Cloud::Storage.new(keyfile: SERVICE_ACCOUNT_KEY)
   end
 
   # get storage driver access token
