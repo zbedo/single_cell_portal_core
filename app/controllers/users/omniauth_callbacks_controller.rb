@@ -38,22 +38,23 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
     bard_path = bard_domain + '/api/identify'
     headers = {
       'Authorization' => "Bearer #{@user.access_token['access_token']}",
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
+      'Content-Type': 'application/asdf'
     }
 
     post_body = {'anonId': cookies['user_id']}.to_json
 
+    params = {
+      method: 'POST',
+      url: bard_path,
+      headers: headers,
+      payload: post_body
+    }
+
     begin
-      response = RestClient::Request.execute(
-        method: 'POST',
-        url: bard_path,
-        headers: headers,
-        payload: post_body
-      )
+      response = RestClient::Request.execute(params)
     rescue RestClient::ExceptionWithResponse => e
-      Rails.logger.error "Bard error: #{e.message}"
-      Rails.logger.error e
+      Rails.logger.error "Bard error in call to #{bard_path}: #{e.message}"
+      ErrorTracker.report_exception(e, current_user, params)
     end
 
   end
