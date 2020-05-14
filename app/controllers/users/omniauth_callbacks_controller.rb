@@ -19,7 +19,7 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
   # This call links that anonId to the user's bearer token used by DSP's Sam
   # service.  That bearer token is in turn linked to a deidentified
   # "distinct ID" used to track users across auth states in Mixpanel.
-  def merge_identities
+  def self.merge_identities(user, cookies)
 
     # Skip merge_identities on production until Mixpanel is ready
     if Rails.env == 'production'
@@ -32,8 +32,8 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
 
     bard_path = bard_host_url + '/api/identify'
     headers = {
-      'Authorization' => "Bearer #{@user.access_token['access_token']}",
-      'Content-Type': 'application/asdf'
+      'Authorization' => "Bearer #{user.access_token['access_token']}",
+      'Content-Type': 'application/json'
     }
 
     post_body = {'anonId': cookies['user_id']}.to_json
@@ -49,7 +49,8 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
       response = RestClient::Request.execute(params)
     rescue RestClient::ExceptionWithResponse => e
       Rails.logger.error "Bard error in call to #{bard_path}: #{e.message}"
-      ErrorTracker.report_exception(e, current_user, params)
+      # Rails.logger.error e.to_yaml
+      ErrorTracker.report_exception(e, user, params)
     end
 
   end
@@ -65,7 +66,7 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
       @user.delay.update_firecloud_status
       sign_in(@user)
       if TosAcceptance.accepted?(@user)
-        self.merge_identities
+        self.class.merge_identities(@user, cookies)
         redirect_to request.env['omniauth.origin'] || site_path
       else
         redirect_to accept_tos_path(@user.id)
