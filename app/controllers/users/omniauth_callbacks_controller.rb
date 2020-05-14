@@ -9,8 +9,15 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
 
 
   def merge_identities
-    # Can definition be moved outside ?
-    # @user = User.from_omniauth(request.env["omniauth.auth"])
+
+    #Rails.logger.info '************* in merge_identities ************'
+
+    # Skip merge_identities on production until Mixpanel is ready
+    if Rails.env == 'production'
+      return nil
+    end
+
+    #Rails.logger.info 'test'
 
     Rails.logger.info "Merging user identity in Mixpanel via Bard"
 
