@@ -50,7 +50,7 @@ class SyntheticStudyPopulator
       if finfo['species_scientific_name'].present?
         taxon = Taxon.find_by(scientific_name: finfo['species_scientific_name'])
         if taxon.nil?
-          throw "You must populate the species #{finfo['species_scientific_name']} to ingest the file #{finfo['filename']}. Stopping populate")
+          throw "You must populate the species #{finfo['species_scientific_name']} to ingest the file #{finfo['filename']}. Stopping populate"
         end
         taxon_id = taxon.id
       elsif finfo['type'] == 'Expression Matrix'
