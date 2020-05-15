@@ -48,7 +48,11 @@ class SyntheticStudyPopulator
       infile = File.open("#{synthetic_study_folder}/#{finfo['filename']}")
       taxon_id = nil
       if finfo['species_scientific_name'].present?
-        taxon_id = Taxon.find_by(scientific_name: finfo['species_scientific_name']).id
+        taxon = Taxon.find_by(scientific_name: finfo['species_scientific_name'])
+        if taxon.nil?
+          throw "You must populate the species #{finfo['species_scientific_name']} to ingest the file #{finfo['filename']}. Stopping populate")
+        end
+        taxon_id = taxon.id
       end
 
       study_file = StudyFile.create!(file_type: finfo['type'],
