@@ -107,4 +107,6 @@ Rails.application.configure do
 
   # disable admin notification (like startup email)
   config.disable_admin_notifications = false
+
+  config.bard_host_url = 'https://terra-bard-prod.appspot.com'
 end
