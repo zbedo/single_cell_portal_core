@@ -53,6 +53,8 @@ class SyntheticStudyPopulator
           throw "You must populate the species #{finfo['species_scientific_name']} to ingest the file #{finfo['filename']}. Stopping populate")
         end
         taxon_id = taxon.id
+      elsif finfo['type'] == 'Expression Matrix'
+        throw "You must specify a species in the study_info.json for Expression Matrix files"
       end
 
       study_file = StudyFile.create!(file_type: finfo['type'],
