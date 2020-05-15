@@ -3,6 +3,7 @@ module Api
     module Concerns
       module Authenticator
         extend ActiveSupport::Concern
+        OAUTH_V3_TOKEN_INFO = 'https://www.googleapis.com/oauth2/v3/tokeninfo'
 
         def authenticate_api_user!
           head 401 unless api_user_signed_in?
@@ -24,8 +25,7 @@ module Api
             if user.nil?
               # extract user info from access_token
               begin
-                token_url = "https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=#{api_access_token}"
-                response = RestClient.get token_url
+                response = RestClient.get OAUTH_V3_TOKEN_INFO + "?access_token=#{api_access_token}"
                 credentials = JSON.parse response.body
                 now = Time.zone.now
                 token_values = {
@@ -40,16 +40,23 @@ module Api
                   # store api_access_token to speed up retrieval next time
                   user.update(api_access_token: token_values)
                 else
-                  Rails.logger.error "Unable to retrieve user info from access token: #{api_access_token}"
+                  Rails.logger.error "Unable to retrieve user info from access token; user not present: #{email}"
+                  return nil # no user is logged in because we don't have an account that matches the email
                 end
+              rescue RestClient::BadRequest => e
+                Rails.logger.info 'Access token expired, cannot decode user info'
+                return nil
               rescue => e
+                # we should only get here if a real error occurs, not if a token expires
                 error_context = {
                     auth_response_body: response.present? ? response.body : nil,
                     auth_response_code: response.present? ? response.code : nil,
-                    auth_response_headers: response.present? ? response.headers : nil
+                    auth_response_headers: response.present? ? response.headers : nil,
+                    token_present: api_access_token.present?
                 }
-                ErrorTracker.report_exception(e, user, error_context)
+                ErrorTracker.report_exception(e, nil, error_context)
                 Rails.logger.error "Error retrieving user api credentials: #{e.class.name}: #{e.message}"
+                return nil
               end
             end
             # check for token expiry and unset user && api_access_token if expired/timed out
@@ -80,7 +87,6 @@ module Api
             token
           end
         end
-
       end
     end
   end
