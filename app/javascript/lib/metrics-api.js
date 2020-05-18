@@ -41,6 +41,9 @@ export function logPageView() {
 
 /** Log click on page.  Delegates to more element-specific loggers. */
 export function logClick(event) {
+  // Don't log programmatically-triggered events
+  if (typeof event.isTrigger !== 'undefined') return
+
   const target = event.target
   const tag = target.localName.toLowerCase() // local tag name
 
