@@ -43,6 +43,10 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   # List of projects where computes are not permitted (sets canCompute to false for all users by default, can only be overridden
   # by PROJECT_OWNER)
   COMPUTE_BLACKLIST = %w(single-cell-portal)
+  # Name of user group to set as workspace owner for user-controlled billing projects.  Reduces the amount of
+  # groups the portal service account needs to be a member of
+  # defaults to the Terra billing project this instance is configured against, plus "-sa-owner-group"
+  WS_OWNER_GROUP_NAME = "#{PORTAL_NAMESPACE}-sa-owner-group"
 
   ##
   # SERVICE NAMES AND DESCRIPTIONS
