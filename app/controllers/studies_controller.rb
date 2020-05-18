@@ -580,8 +580,11 @@ class StudiesController < ApplicationController
   # method to download files if study is private, will create temporary signed_url after checking user quota
   def download_private_file
     @study = Study.find_by(accession: params[:accession])
-    # make sure user is signed in
-    if !user_signed_in? || !@study.can_view?(current_user)
+    # make study exists, then ensure user is signed in
+    if @study.nil?
+      redirect_to merge_default_redirect_params(site_path, scpbr: params[:scpbr]),
+                  alert: 'The study you requested was not found.' and return
+    elsif !user_signed_in? || !@study.can_view?(current_user)
       redirect_to merge_default_redirect_params(site_path, scpbr: params[:scpbr]),
                   alert: 'You do not have permission to perform that action.' and return
     elsif @study.detached?
