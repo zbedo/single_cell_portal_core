@@ -34,22 +34,21 @@ import { logPageView, logClick } from 'lib/metrics-api'
 import createTracesAndLayout from 'lib/kernel-functions'
 
 document.addEventListener('DOMContentLoaded', () => {
-  if (document.getElementById('home-page-content')) {
-    // Logs only page views for faceted search UI
-    //
-    // If/when Mixpanel is extended beyond home page, remove study name from
-    // appPath in metrics-api.js at least for non-public studies to align with
-    // Terra on identifiable data that we want to omit from this logging.
-    logPageView()
+  // Logs only page views for faceted search UI
+  //
+  // If/when Mixpanel is extended beyond home page, remove study name from
+  // appPath in metrics-api.js at least for non-public studies to align with
+  // Terra on identifiable data that we want to omit from this logging.
+  logPageView()
 
+  $(document).on('click', 'body', event => {
+    logClick(event)
+  })
+
+  if (document.getElementById('home-page-content')) {
     ReactDOM.render(
       <HomePageContent />, document.getElementById('home-page-content')
     )
-
-    // Only logs clicks for home page with faceted search UI
-    $(document).on('click', 'body', event => {
-      logClick(event)
-    })
   }
   if (document.getElementById('covid19-page-content')) {
     logPageView()
@@ -57,11 +56,6 @@ document.addEventListener('DOMContentLoaded', () => {
     ReactDOM.render(
       <Covid19PageContent />, document.getElementById('covid19-page-content')
     )
-
-    // Only logs clicks for home page with faceted search UI
-    $(document).on('click', 'body', event => {
-      logClick(event)
-    })
   }
 })
 
