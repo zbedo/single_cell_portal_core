@@ -30,7 +30,7 @@ import ClassicEditor from '@ckeditor/ckeditor5-build-classic'
 // Below import resolves to '/app/javascript/components/HomePageContent.js'
 import HomePageContent from 'components/HomePageContent'
 import Covid19PageContent from 'components/covid19/Covid19PageContent'
-import { logPageView, logClick } from 'lib/metrics-api'
+import { logPageView, logClick, log } from 'lib/metrics-api'
 import createTracesAndLayout from 'lib/kernel-functions'
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -68,6 +68,7 @@ window.morpheus = morpheus
 window.igv = igv
 window.Ideogram = Ideogram
 window.createTracesAndLayout = createTracesAndLayout
+window.log = log
 
 /*
  * For down the road, when we use ES6 imports in SCP JS app code

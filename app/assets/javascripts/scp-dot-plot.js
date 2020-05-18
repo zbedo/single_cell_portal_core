@@ -207,6 +207,7 @@ function renderMorpheusDotPlot(
   if (typeof window.dotPlot === 'undefined') {
     // Consistent with e.g. IGV, Ideogram
     ga('send', 'event', 'dot-plot', 'initialize')
+    log('dot-plot-initialize')
   }
 
   // Instantiate dot plot and embed in DOM element
