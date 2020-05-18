@@ -12,6 +12,7 @@ class BigQueryClient < Struct.new(:project, :service_account_credentials, :clien
     Google::Cloud::Bigquery.configure do |config|
       config.project_id  = COMPUTE_PROJECT
       config.credentials = SERVICE_ACCOUNT_KEY
+      config.timeout = 120
     end
     self.project = COMPUTE_PROJECT
     self.service_account_credentials = SERVICE_ACCOUNT_KEY
