@@ -10,7 +10,11 @@ REGISTRY=$(echo "${IMAGE}" | awk -F/ '{print $1}')
 echo "${BASE64_KEY}" | docker login -u _json_key_base64 --password-stdin "https://${REGISTRY}"
 
 # Start Burp container in the background
-docker run --rm -d -p 8080:8080 -p 8081:8081 --net host "${IMAGE}"
+CONTAINER="burp"
+docker run --rm -d --net host --name "${CONTAINER}" "${IMAGE}"
+
+# wait until startup
+( docker logs "${CONTAINER}" -f & ) | grep -q "Started BurpApplication"
 
 # Update iptables so all "under test" container traffic is proxied through the Burp container
 sudo iptables -t nat -A PREROUTING -p tcp -m multiport --dport 80,443 -j REDIRECT --to-ports 8080
