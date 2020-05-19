@@ -1,4 +1,4 @@
-# Backfilling persmisions on existing workspaces not in the 'default' portal project by adding a
+# Backfilling permissions on existing workspaces not in the 'default' portal project by adding a
 # Service Account owned user group to all workspaces
 # This is in preparation of revoking all direct SA ownerships on workspaces
 
