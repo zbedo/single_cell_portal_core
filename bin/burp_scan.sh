@@ -7,4 +7,5 @@ set -eu
 IMAGE="$1"
 
 # Scan collected traffic and report results (optional)
-docker run --rm -it --entrypoint python3 "${IMAGE}" BroadBurpScanner.py http://localhost --action scan
+docker run --rm -it --entrypoint /automation/BroadBurpScanner.py "${IMAGE}" \
+  http://localhost --action scan
