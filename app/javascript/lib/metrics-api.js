@@ -156,8 +156,6 @@ export function log(name, props={}) {
     appId: 'single-cell-portal',
     timestamp: Date.now(),
     appPath,
-    userId, // Required by Bard; perhaps Bard should handle distinct_id
-    distinct_id: userId, // Needed for Mixpanel "Distinct ID" (Bard papercut)
     env
   })
 
@@ -166,18 +164,26 @@ export function log(name, props={}) {
     props['featuredSpace'] = window.SCP.featuredSpace
   }
 
+  let init = Object.assign({}, defaultInit)
+
+  if (accessToken === '') {
+    // User is unauthenticated / unregistered / anonynmous
+    props['distinct_id'] = userId
+    delete init['headers']['Authorization']
+  }
+
   const body = {
     body: JSON.stringify({
       event: name,
       properties: props
     })
   }
-  const init = Object.assign(defaultInit, body)
+
+  init = Object.assign(init, body)
 
   // Remove once Bard and Mixpanel are ready for SCP
   if (
-    'SCP' in window && window.SCP.environment !== 'production' &&
-    accessToken !== '' // Remove once Bard supports unregistered users
+    'SCP' in window && window.SCP.environment !== 'production'
   ) {
     fetch(`${bardDomain}/api/event`, init)
   }
