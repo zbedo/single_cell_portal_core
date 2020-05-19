@@ -3313,8 +3313,7 @@ class Study
     # only perform check if this is not the default portal project
     if self.firecloud_project != FireCloudClient::PORTAL_NAMESPACE
       begin
-        groups = Study.firecloud_client.get_user_groups
-        sa_owner_group = groups.detect {|group| group['groupName'] == FireCloudClient::WS_OWNER_GROUP_NAME}
+        sa_owner_group = AdminConfiguration.find_or_create_ws_user_group!
         client = FireCloudClient.new(self.user, self.firecloud_project)
         group_email = sa_owner_group['groupEmail']
         acl = client.create_workspace_acl(group_email, 'OWNER', true, false)
