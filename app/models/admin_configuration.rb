@@ -224,7 +224,7 @@ class AdminConfiguration
   def self.find_or_create_ws_user_group!
     groups = Study.firecloud_client.get_user_groups
     ws_owner_group = groups.detect {|group| group['groupName'] == FireCloudClient::WS_OWNER_GROUP_NAME &&
-        group['role'].downcase == 'owner'}
+        group['role'] == 'Admin'}
     # create group if not found
     unless ws_owner_group.present?
       ws_owner_group = Study.firecloud_client.create_user_group(FireCloudClient::WS_OWNER_GROUP_NAME)
