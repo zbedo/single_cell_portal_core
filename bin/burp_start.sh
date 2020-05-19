@@ -7,7 +7,7 @@ BASE64_KEY="$2" # base64-encoded Service Account Key JSON to pull the image from
 
 # Authenticate with container registry
 REGISTRY=$(echo "${IMAGE}" | awk -F/ '{print $1}')
-docker login -u _json_key_base64 -p "${BASE64_KEY}" "https://${REGISTRY}"
+echo "${BASE64_KEY}" | docker login -u _json_key_base64 --password-stdin "https://${REGISTRY}"
 
 # Start Burp container in the background
 docker run --rm -d -p 8080:8080 -p 8081:8081 --net host "${IMAGE}"
