@@ -29,7 +29,7 @@ export default function StudyViolinPlot({ study, gene }) {
   /** copied from legacy application.js */
   function parseResultsToArray(results) {
     const keys = Object.keys(results.values)
-    return keys.map(key => {
+    return keys.sort().map(key => {
       return [key, results.values[key].y]
     })
   }
