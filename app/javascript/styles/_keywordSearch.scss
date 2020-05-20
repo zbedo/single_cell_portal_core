@@ -50,6 +50,9 @@
     svg {
       color: #aaa;
     }
+    &:focus {
+      outline: none;
+    }
   }
 }
 

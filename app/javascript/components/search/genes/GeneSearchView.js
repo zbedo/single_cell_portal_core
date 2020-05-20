@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from 'react'
+import React, { useContext, useState, useEffect, useRef } from 'react'
 import _clone from 'lodash/clone'
 import { faPlusSquare, faMinusSquare, faTimes, faSearch } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -16,6 +16,7 @@ import { FeatureFlagContext } from 'providers/FeatureFlagProvider'
 /** renders the gene text input
   * This is split into its own component both for modularity, and also because
   * having it inlined in GeneSearchView led to a mysterious infinite-repaint bug in StudyResults
+  * this shares a lot of UI/functionality with KeywordSearch.js, so it's a candidate for future refactoring
   */
 function GeneKeyword({placeholder}) {
   const featureFlagState = useContext(FeatureFlagContext)
@@ -25,7 +26,7 @@ function GeneKeyword({placeholder}) {
   const [showEmptySearchModal, setShowEmptySearchModal] = useState(false)
 
   const showClear = genes && genes.length
-
+  const inputField = useRef()
 
   /** handles a user submitting a gene search */
   function handleSubmit(event) {
@@ -37,10 +38,16 @@ function GeneKeyword({placeholder}) {
     }
   }
 
+  function handleClear() {
+    inputField.current.focus()
+    setGenes('')
+  }
+
   return  (
     <form className="gene-keyword-search form-horizontal" onSubmit={ handleSubmit }>
       <div className="input-group">
         <input type="text"
+          ref = { inputField }
           className="form-control"
           value={genes}
           size="50"
@@ -55,7 +62,7 @@ function GeneKeyword({placeholder}) {
         { showClear &&
           <Button className="keyword-clear"
                   type='button'
-                  onClick={ e => setGenes('') } >
+                  onClick={ handleClear } >
             <FontAwesomeIcon icon={ faTimes } />
           </Button> }
       </div>
