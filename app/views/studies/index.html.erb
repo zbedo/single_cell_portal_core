@@ -1,4 +1,4 @@
-<div class="terra-style">
+<div class="scp2-style">
 <h1>MY STUDIES <%= scp_link_to "<span class='fas fa-fw fa-lg fa-plus-circle'>".html_safe, new_study_path, class: 'action', id: 'create-new-study' %></h1>
 <div class="row">
 	<div class="col-md-12">
@@ -47,33 +47,23 @@
                       <li>
                         <%= scp_link_to "<span class='text-primary fas fa-edit'></span> Edit Study".html_safe, edit_study_path(study), class: "#{study.url_safe_name}-edit" %>
                       </li>
-                    </ul>
-                  </div>
-                  <% if study.can_delete?(current_user) %>
-                    <div class="btn-group">
-                      <button class="btn btn-default dropdown-toggle btn-circle btn-danger"
-                              type="button"
-                              data-toggle="dropdown"
-                              aria-haspopup="true"
-                              aria-expanded="false">
-                        <span class='fas fa-trash'></span>
-                      </button>
-                      <ul class="dropdown-menu">
-                        <li>
-                          <%= scp_link_to "<span class='text-danger fas fa-trash'></span> Delete Study & Workspace".html_safe, study_path(study),
-                                          class: "#{study.url_safe_name}-delete",
-                                          title: 'Delete everything, including Terra workspace' , method: :delete,
-                                          data: {toggle: 'tooltip', placement: 'top'} %>
-                        </li>
+                      <% if study.can_delete?(current_user) %>
                         <li>
                           <%= scp_link_to "<span class='text-danger fas fa-trash'></span> Delete Study Only".html_safe, study_path(id: study.id, workspace: 'persist'),
                                           class: "#{study.url_safe_name}-delete-local",
                                           title: 'Delete all database records but keep Terra workspace' , method: :delete,
                                           data: {toggle: 'tooltip', placement: 'top', workspace: 'persist'} %>
                         </li>
-                      </ul>
-                    </div>
-                  <% end %>
+                        <li>
+                          <%= scp_link_to "<span class='text-danger fas fa-trash'></span> Delete Study & Workspace".html_safe, study_path(study),
+                                          class: "#{study.url_safe_name}-delete",
+                                          title: 'Delete everything, including Terra workspace' , method: :delete,
+                                          data: {toggle: 'tooltip', placement: 'top'} %>
+                        </li>
+                      <% end %>
+                    </ul>
+                  </div>
+
                 <% end %>
               </td>
 						</tr>
@@ -115,7 +105,11 @@
         order: [[0, 'asc']],
         language: {
             search: "Filter Results By: "
-        }
+        },
+        // don't allow sorting by the 'actions' column
+        columnDefs: [
+          { "orderable": false, "targets": 4 }
+        ]
     });
 
     // ask user to confirm delete, then show modal
