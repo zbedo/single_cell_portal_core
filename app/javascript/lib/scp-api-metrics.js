@@ -98,7 +98,8 @@ export function logSearch(type, searchParams) {
 
   const simpleProps = {
     type, terms, page, preset,
-    numTerms, numFacets, numFilters, facetList
+    numTerms, numFacets, numFilters, facetList,
+    context: 'global'
   }
   const props = Object.assign(simpleProps, filterListByFacet)
 

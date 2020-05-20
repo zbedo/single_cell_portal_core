@@ -9,7 +9,11 @@ closeModalSpinner('#spinner_target', '#loading-modal', function () {
     ga('send', 'event', 'engaged_user_action', 'study_gene_search_single');
 
     var genes = $('#search_genes').val().split(' ');
-    log('gene-search:study', {genes: genes, numGenes: genes.length});
+    log('search', {
+      context: 'study',
+      terms: genes,
+      numTerms: genes.length
+    });
 
     gaTrack(encodedUrl, 'Single Cell Portal');
 });
