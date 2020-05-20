@@ -59,6 +59,7 @@
             requestUrl += '?genes=' + genes.join('+') + '&num_genes=' + numGenes;
             gaTrack(requestUrl, 'Single Cell Portal | Global Gene Search');
             ga('send', 'event', 'engaged_user_action', 'global_gene_search');
+            log('gene-search:global', {genes: genes, numGenes: numGenes});
             return true;
         }
     });

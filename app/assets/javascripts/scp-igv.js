@@ -157,7 +157,7 @@ function initializeIgv() {
 
   // Log igv.js initialization in Google Analytics
   ga('send', 'event', 'igv', 'initialize')
-  log('igv-initialize')
+  log('igv:initialize')
 }
 
 $(document).on('click', '#genome-tab-nav > a', event => {

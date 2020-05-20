@@ -8,5 +8,9 @@ closeModalSpinner('#spinner_target', '#loading-modal', function () {
     var requestUrl = "<%= request.fullpath %>";
     var encodedUrl = encodeURI(requestUrl);
     ga('send', 'event', 'engaged_user_action', 'study_gene_search_multiple')
+
+    var genes = $('#search_genes').val().split(' ');
+    log('gene-search:study', {genes: genes, numGenes: genes.length});
+
     gaTrack(encodedUrl, 'Single Cell Portal');
 });
