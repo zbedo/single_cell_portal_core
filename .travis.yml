@@ -23,4 +23,4 @@ script:
 after_success:
   - bin/burp_scan.sh "${BURP_DOCKER_IMAGE}"
   - docker logs burp --tail 10
-  - curl -s localhost:8081/burp/proxy/history
+  - curl -s localhost:8081/burp/proxy/history | jq '.messages[].url'
