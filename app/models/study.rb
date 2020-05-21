@@ -1106,11 +1106,7 @@ class Study
 
   # get all unique gene names for a study; leverage index on Gene model to improve performance
   def unique_genes
-    genes = []
-    self.expression_matrix_files.each do |file|
-      genes += Gene.where(study_id: self.id, study_file_id: file.id).pluck(:name)
-    end
-    genes.uniq
+    Gene.where(study_id: self.id, :study_file_id.in => self.expression_matrix_files.map(&:id)).pluck(:name).uniq
   end
 
   # return a count of the number of fastq files both uploaded and referenced via directory_listings for a study
