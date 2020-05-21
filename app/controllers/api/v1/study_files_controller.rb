@@ -309,11 +309,7 @@ module Api
               @study.default_options[:cluster] = @study_file.name
               @study.save
             end
-            old_name = @cluster.name.dup
             @cluster.update(name: @study_file.name)
-            # also update data_arrays, using declared indices rather than Mongoid association for better performance
-            DataArray.where(study_id: @study.id, study_file_id: @cluster.study_file.id, cluster_name: old_name,
-                            linear_data_type: 'ClusterGroup', linear_data_id: @cluster.id).update_all(cluster_name: @study_file.name)
           elsif ['Expression Matrix', 'MM Coordinate Matrix'].include?(study_file_params[:file_type]) && !study_file_params[:y_axis_label].blank?
             # if user is supplying an expression axis label, update default options hash
             @study.update(default_options: @study.default_options.merge(expression_label: study_file_params[:y_axis_label]))
