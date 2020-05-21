@@ -3313,12 +3313,13 @@ class Study
     # only perform check if this is not the default portal project
     if self.firecloud_project != FireCloudClient::PORTAL_NAMESPACE
       begin
+        sa_owner_group = AdminConfiguration.find_or_create_ws_user_group!
         client = FireCloudClient.new(self.user, self.firecloud_project)
-        service_account = Study.firecloud_client.issuer
-        acl = client.create_workspace_acl(service_account, 'OWNER', true, true)
+        group_email = sa_owner_group['groupEmail']
+        acl = client.create_workspace_acl(group_email, 'OWNER', true, false)
         client.update_workspace_acl(self.firecloud_project, self.firecloud_workspace, acl)
         updated = client.get_workspace_acl(self.firecloud_project, self.firecloud_workspace)
-        return updated['acl'][service_account]['accessLevel'] == 'OWNER'
+        return updated['acl'][group_email]['accessLevel'] == 'OWNER'
       rescue RuntimeError => e
         ErrorTracker.report_exception(e, self.user, {firecloud_project: self.firecloud_workspace})
         Rails.logger.error "#{Time.zone.now}: unable to add portal service account to #{self.firecloud_workspace}: #{e.message}"
