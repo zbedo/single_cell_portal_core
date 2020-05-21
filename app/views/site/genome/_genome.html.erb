@@ -13,10 +13,12 @@ See partials referenced below and scp-igv.js for larger bodies of code.
     // Intercept requests to add bearer token, enabling direct load of files from GCS
     var originalFetch = window.fetch;
     window.fetch = function () {
-      var myHeaders = new Headers({
-        'Authorization': 'Bearer ' + accessToken
-      });
-      arguments[1] = {headers: myHeaders};
+      if (arguments[0].includes('https://www.googleapis.com')) {
+        var myHeaders = new Headers({
+          'Authorization': 'Bearer ' + accessToken
+        });
+        arguments[1] = {headers: myHeaders};
+      }
       return originalFetch.apply(this, arguments)
     };
   </script>
