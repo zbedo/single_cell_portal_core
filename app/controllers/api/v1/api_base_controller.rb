@@ -77,6 +77,11 @@ module Api
           end
         end
       end
+
+      # HTTP 423 - Resource locked (e.g. StudyFile is parsing or being subsampled)
+      def self.resource_locked(resource)
+        "#{resource} is currently locked"
+      end
     end
   end
 end
