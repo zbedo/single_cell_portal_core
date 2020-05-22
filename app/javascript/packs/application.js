@@ -56,6 +56,8 @@ document.addEventListener('DOMContentLoaded', () => {
 })
 
 // SCP expects these variables to be global.
+//
+// If adding a new variable here, also add it to .eslintrc.js
 window.$ = $
 window.jQuery = $
 window.ClassicEditor = ClassicEditor

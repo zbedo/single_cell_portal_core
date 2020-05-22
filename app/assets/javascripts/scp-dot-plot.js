@@ -1,5 +1,3 @@
-/* eslint-disable no-undef */
-
 /**
  * @fileoverview Functions for rendering dot plots using Morpheus.js
  *

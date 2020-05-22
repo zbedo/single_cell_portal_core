@@ -1,94 +1,10 @@
-/* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
-
-//    Not used currently, but perhaps later.
-//   function getGenomicRange(annot) {
-//     var chr, start, stop, startString, stopString, genomicRange;
-//
-//     // Get genomic range
-//     chr = annot.chr;
-//     start = annot.start;
-//     stop = start + annot.length;
-//     startString = start.toLocaleString();
-//     stopString = stop.toLocaleString();
-//     genomicRange = 'chr' + chr + ':' + startString + '-' + stopString;
-//
-//     return genomicRange;
-//   }
-//
-//   function getEnsemblLink(annot) {
-//     var url, link;
-//     url = 'https://www.ensembl.org/' + annot.id;
-//     link = '<a target="_blank" href="' + url + '">' + annot.name + '</a>';
-//     return link;
-//   }
-//
-//   function writeAnnotsTable() {
-//
-//     var chr, annots, datum, row, header, table, annotsContainer, keys,
-//         genomicRange, ensemblLink, key, i, j, k, displayKeys;
-//
-//     rows = [];
-//
-//     annotsContainer = ideogram.annots;
-//
-//     keys = ideogram.rawAnnots.keys;
-//
-//     for (i = 0; i < annotsContainer.length; i++) {
-//       chr = annotsContainer[i].chr;
-//       annots = annotsContainer[i].annots;
-//       for (j = 0; j < annots.length; j++) {
-//         annot = annots[j];
-//         row = [];
-//
-//         genomicRange = getGenomicRange(annot);
-//         ensemblLink = getEnsemblLink(annot);
-//
-//         for (k = 0; k < keys.length; k++) {
-//           key = keys[k];
-//           if (key === 'name') {
-//             datum = ensemblLink;
-//           } else if (key === 'start') {
-//             datum = genomicRange;
-//           } else if (key === 'id') {
-//             continue;
-//           } else {
-//             datum = annot[key];
-//           }
-//           row.push(datum)
-//
-//         }
-//         row = '<tr><td>' + row.join('</td><td>') + '</td></tr>';
-//         rows.push(row);
-//       }
-//     }
-//
-//     displayKeys = [];
-//     for (i = 0; i < keys.length; i++) {
-//       key = keys[i];
-//       if (key == 'start') {
-//         key = 'Genomic range';
-//       } else if (key === 'id') {
-//         continue;
-//       } else {
-//         key = key[0].toUpperCase() + key.slice(1);
-//       }
-//       displayKeys.push(key)
-//     }
-//
-//     header = '<tr><th>' + displayKeys.join('</th><th>') + '</th></tr>';
-//
-//     table =
-//       '<table class="table table-striped table-sm">' +
-//         '<thead>' + header + '</thead>' +
-//         '<tbody>' + rows + '</tbody>' +
-//       '</table>';
-//
-//     $('#ideogram-container').append(table);
-//   }
 
 let ideogram
 let checkboxes
+let ideoConfig
+let adjustedExpressionThreshold
+let chrMargin
 
 const legend = [{
   name: 'Expression level',
@@ -121,7 +37,7 @@ function updateTracks() {
 
 /** Update space between chromosomes; called upon updating related slider */
 function updateMargin(event) {
-  window.chrMargin = parseInt(event.target.value)
+  chrMargin = parseInt(event.target.value)
   ideoConfig.chrMargin = chrMargin
   ideogram = new Ideogram(ideoConfig)
 }
@@ -129,7 +45,7 @@ function updateMargin(event) {
 /** Create a slider to adjust space between chromosomes */
 function addMarginControl() {
   chrMargin = (typeof chrMargin === 'undefined' ? 10 : chrMargin)
-  marginSlider =
+  const marginSlider =
       `<label
           id="chrMarginContainer"
           style="float:left; position: relative; top: 50px; left: -130px;">
@@ -159,9 +75,9 @@ function addMarginControl() {
 function updateThreshold(event) {
   let newThreshold
 
-  window.expressionThreshold = parseInt(event.target.value)
+  const expressionThreshold = parseInt(event.target.value)
 
-  window.adjustedExpressionThreshold = Math.round(expressionThreshold/10 - 4)
+  adjustedExpressionThreshold = Math.round(expressionThreshold/10 - 4)
   const thresholds = window.originalHeatmapThresholds
   const numThresholds = thresholds.length
   ideoConfig.heatmapThresholds = []
@@ -184,12 +100,12 @@ function updateThreshold(event) {
 /** Create slider to adjust expression threshold for "gain" or "loss" calls */
 function addThresholdControl() {
   if (typeof(expressionThreshold) === 'undefined') {
-    expressionThreshold = 50
+    window.expressionThreshold = 50
     window.originalHeatmapThresholds =
       ideogram.rawAnnots.metadata.heatmapThresholds
   }
 
-  expressionThresholdSlider =
+  const expressionThresholdSlider =
     `<label id="expressionThresholdContainer" style="float: left">
       <span
         class="glossary"
@@ -203,7 +119,7 @@ function addThresholdControl() {
         type="range"
         id="expressionThreshold"
         list="expressionThresholdList"
-        value="${expressionThreshold}"
+        value="${window.expressionThreshold}"
       >
       <datalist id="expressionThresholdList">
         <option value="0" label="0.">
@@ -305,11 +221,11 @@ function initializeIdeogram(url) {
 
   $('#ideogramWarning, #ideogramTitle').remove()
 
-  window.ideoConfig = {
+  ideoConfig = {
     container: '#ideogram-container',
-    organism: ideogramInferCnvSettings.organism.toLowerCase(),
-    assembly: ideogramInferCnvSettings.assembly,
-    dataDir: 'https://unpkg.com/ideogram@1.11.0/dist/data/bands/native/',
+    organism: window.ideogramInferCnvSettings.organism.toLowerCase(),
+    assembly: window.ideogramInferCnvSettings.assembly,
+    dataDir: 'https://unpkg.com/ideogram@1.20.0/dist/data/bands/native/',
     annotationsPath: url,
     annotationsLayout: 'heatmap',
     legend,
@@ -323,7 +239,7 @@ function initializeIdeogram(url) {
     orientation: 'horizontal'
   }
 
-  ideogram = new Ideogram(window.ideoConfig)
+  ideogram = new Ideogram(ideoConfig)
 
   // Log Ideogram.js initialization in Google Analytics
   ga('send', 'event', 'ideogram', 'initialize')

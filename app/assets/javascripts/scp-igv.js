@@ -1,4 +1,3 @@
-/* eslint-disable no-undef */
 /* eslint-disable no-invalid-this */
 /* eslint-disable guard-for-in */
 
@@ -12,10 +11,8 @@
 // default view, then searches a gene.
 window.hasDisplayedIgv = false
 
-window.bamsToViewInIgv = []
-window.selectedBams = {}
-
-window.genomeAssemblyInView = ''
+const bamsToViewInIgv = []
+const selectedBams = {}
 
 /**
  * Upon clicking 'Browse in genome', show selected BAM in igv.js in Genome tab.
@@ -72,7 +69,7 @@ function getBamTracks() {
     bamTrack = {
       url: bam.url,
       indexURL: bam.indexUrl,
-      oauthToken: accessToken,
+      oauthToken: window.accessToken,
       label: bamFileName
     }
     bamTracks.push(bamTrack)
@@ -99,7 +96,7 @@ function getGenesTrack(genome, genesTrackName) {
     order: 0,
     visibilityWindow: 300000000,
     displayMode: 'EXPANDED',
-    oauthToken: accessToken // Assigned in _genome.html.erb
+    oauthToken: window.accessToken // Assigned in _genome.html.erb
   }
 
   return genesTrack
