@@ -906,7 +906,8 @@ class StudyFile
       when 'Metadata'
         !self.study.cluster_groups.where(is_subsampling: true).any?
       when 'Cluster'
-        !ClusterGroup.where(study_file_id: self.id).is_subsampling?
+        cluster = ClusterGroup.find_by(study_file_id: self.id)
+        cluster.present? && !cluster.is_subsampling?
       else
         true
       end
