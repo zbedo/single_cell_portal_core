@@ -184,5 +184,7 @@ export function log(name, props={}) {
 
   init = Object.assign(init, body)
 
-  fetch(`${bardDomain}/api/event`, init)
+  if ('SCP' in window) { // Skips fetch during test
+    fetch(`${bardDomain}/api/event`, init)
+  }
 }
