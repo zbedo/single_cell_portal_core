@@ -41,7 +41,8 @@ export function logPageView() {
 
 /** Log click on page.  Delegates to more element-specific loggers. */
 export function logClick(event) {
-  // Don't log programmatically-triggered events
+  // Don't log programmatically-triggered events,
+  // e.g. trigger('click') via jQuery
   if (typeof event.isTrigger !== 'undefined') return
 
   const target = event.target
