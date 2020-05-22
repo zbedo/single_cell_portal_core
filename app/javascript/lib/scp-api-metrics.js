@@ -85,8 +85,6 @@ export function logSearch(type, searchParams) {
   }
 
   const terms = searchParams.terms.split(' ')
-  console.log('terms')
-  console.log(terms)
   const facets = searchParams.facets
   const page = searchParams.page
 
