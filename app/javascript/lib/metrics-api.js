@@ -184,10 +184,5 @@ export function log(name, props={}) {
 
   init = Object.assign(init, body)
 
-  // Remove once Bard and Mixpanel are ready for SCP
-  if (
-    'SCP' in window && window.SCP.environment !== 'production'
-  ) {
-    fetch(`${bardDomain}/api/event`, init)
-  }
+  fetch(`${bardDomain}/api/event`, init)
 }
