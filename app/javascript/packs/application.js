@@ -35,10 +35,6 @@ import createTracesAndLayout from 'lib/kernel-functions'
 
 document.addEventListener('DOMContentLoaded', () => {
   // Logs only page views for faceted search UI
-  //
-  // If/when Mixpanel is extended beyond home page, remove study name from
-  // appPath in metrics-api.js at least for non-public studies to align with
-  // Terra on identifiable data that we want to omit from this logging.
   logPageView()
 
   $(document).on('click', 'body', event => {
