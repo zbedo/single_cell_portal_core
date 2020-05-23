@@ -124,10 +124,6 @@ class Study
         merged_scores
       end
     end
-
-    def unique_genes
-      pluck(:name).uniq
-    end
   end
 
   has_many :precomputed_scores, dependent: :delete do
@@ -1095,15 +1091,22 @@ class Study
   # helper method to get number of unique single cells
   def set_cell_count
     cell_count = self.all_cells_array.size
-    self.update(cell_count: cell_count)
     Rails.logger.info "Setting cell count in #{self.name} to #{cell_count}"
+    self.update(cell_count: cell_count)
+    Rails.logger.info "Cell count set for #{self.name}"
   end
 
   # helper method to set the number of unique genes in this study
   def set_gene_count
-    gene_count = self.genes.pluck(:name).uniq.count
+    gene_count = self.unique_genes
     Rails.logger.info "Setting gene count in #{self.name} to #{gene_count}"
     self.update(gene_count: gene_count)
+    Rails.logger.info "Gene count set for #{self.name}"
+  end
+
+  # get all unique gene names for a study; leverage index on Gene model to improve performance
+  def unique_genes
+    Gene.where(study_id: self.id, :study_file_id.in => self.expression_matrix_files.map(&:id)).pluck(:name).uniq
   end
 
   # return a count of the number of fastq files both uploaded and referenced via directory_listings for a study
@@ -1707,13 +1710,15 @@ class Study
       # add processed cells to known cells
       cells.each_slice(DataArray::MAX_ENTRIES).with_index do |slice, index|
         Rails.logger.info "#{Time.zone.now}: Create known cells array ##{index + 1} for #{expression_file.name}:#{expression_file.id} in #{self.name}"
-        known_cells = self.data_arrays.build(name: "#{expression_file.name} Cells", cluster_name: expression_file.name,
-                                             array_type: 'cells', array_index: index + 1, values: slice,
-                                             study_file_id: expression_file.id, study_id: self.id)
+        # use DataArray model & indices directly for better performance; calling study.data_arrays can lead to collection walk
+        known_cells = DataArray.new(study_id: self.id, name: "#{expression_file.name} Cells", cluster_name: expression_file.name,
+                                    array_type: 'cells', array_index: index + 1, values: slice, study_file_id: expression_file.id,
+                                    linear_data_type: 'Study', linear_data_id: self.id)
         known_cells.save
       end
 
-      self.set_gene_count
+      # run in background to reduce load on job since setting gene count can be expensive both in RAM and execution time
+      self.delay.set_gene_count
 
       # set the default expression label if the user supplied one
       if !self.has_expression_label? && !expression_file.y_axis_label.blank?
