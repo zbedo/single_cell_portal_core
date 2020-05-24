@@ -246,7 +246,7 @@ class IngestJob
         SearchFacet.delay.update_all_facet_filters
       end
     when /Matrix/
-      self.study.set_gene_count
+      self.study.delay.set_gene_count
     when 'Cluster'
       self.set_study_default_options
       self.launch_subsample_jobs
