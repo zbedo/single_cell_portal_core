@@ -12,7 +12,7 @@ import FiltersSearchBar from './FiltersSearchBar'
 /**
  * Component for filter search and filter lists
  */
-export default function FiltersBoxSearchable({ facet, selection, setSelection, show, setShow }) {
+export default function FiltersBoxSearchable({ facet, selection, setSelection, show, setShow, hideApply }) {
   // State that is specific to FiltersBox
   const [matchingFilters, setMatchingFilters] = useState(facet.filters.slice(0, 15))
   const [hasFilterSearchResults, setHasFilterSearchResults] = useState(false)
@@ -25,8 +25,16 @@ export default function FiltersBoxSearchable({ facet, selection, setSelection, s
    * Form of IDs: <general name> <specific name(s)>
    * General: All lowercase, specified in app code (e.g. 'apply-facet')
    * Specific: Cased as specified in API (e.g. 'species', 'NCBItaxon9606')
-   *
+   * /single_cell/studies/5e9e07bd771a5b2caa140971/upload
    * UI code concatenates names in the ID.  Names in ID are hyphen-delimited.
+
+https://singlecell.broadinstitute.org/single_cell/study/SCP279/amp-phase-1/gene_expression/foxp3
+?annotation=Cluster--group--study
+&boxpoints=all
+&cluster=t-SNE%20coordinates%20RA&colorscale=Reds&
+consensus=&heatmap_row_centering=z-score&heatmap_size=NaN&plot_type=violin&subsample=1000
+
+
    *
    * Examples:
    *   * apply-facet-species (for calls-to-action use ID: <action> <component>)
@@ -73,7 +81,7 @@ export default function FiltersBoxSearchable({ facet, selection, setSelection, s
     setSelection(newSelections)
   }
 
-  const showSearchBar = facet.links.length > 0
+  const showSearchBar = facet.links.length > 0 || facet.filters.length > 10
   let selectedFilterBadges = <></>
   if (selection.length && facet.type != 'number') {
     selectedFilterBadges = (
@@ -134,6 +142,7 @@ export default function FiltersBoxSearchable({ facet, selection, setSelection, s
             setShow={setShow}
             selection={selection}
             setSelection={setSelection}
+            hideApply={hideApply}
           />
         </div>
       }

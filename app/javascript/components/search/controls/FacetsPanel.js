@@ -2,7 +2,7 @@ import React, { useContext } from 'react'
 import _find from 'lodash/find'
 
 import FacetControl from './FacetControl'
-import OrganFacetControl from './OrganFacetControl'
+import CombinedFacetControl from './CombinedFacetControl'
 import MoreFacetsButton from './MoreFacetsButton'
 import { SearchFacetContext } from 'providers/SearchFacetProvider'
 
@@ -20,7 +20,8 @@ export default function FacetsPanel() {
   const moreFacets = searchFacetContext.facets.filter(facet => moreFacetIds.includes(facet.id))
   return (
     <>
-      <OrganFacetControl/>
+      <CombinedFacetControl controlName="cell type" facetNames={ ['cell_type', 'cell_type__custom'] }/>
+      <CombinedFacetControl controlName="organ" facetNames={ ['organ', 'organ_region'] }/>
       {
         defaultFacets.map((facet, i) => {
           return <FacetControl facet={facet} key={i}/>

@@ -60,25 +60,24 @@ function ApplyButton(props) {
  * Currently, FiltersBox has to own a lot of logic about canApply and applyClick
  * handling that is probably better encapsulated in the individual controls
  */
-export default function FiltersBox(props) {
+export default function FiltersBox({facet, selection, setSelection, filters, setShow, hideApply}) {
   const searchContext = useContext(StudySearchContext)
   const selectionContext = useContext(SearchSelectionContext)
 
-  let appliedSelection = searchContext.params.facets[props.facet.id]
+  let appliedSelection = searchContext.params.facets[facet.id]
   appliedSelection = appliedSelection ? appliedSelection : []
-  const selection = props.selection
-  const setSelection = props.setSelection
+
   const showClear = selection.length > 0
-  const isSelectionValid = props.facet.type != 'number' ||
+  const isSelectionValid = facet.type != 'number' ||
                              (selection.length === 0 ||
                               !isNaN(parseInt(selection[0])) && !isNaN(parseInt(selection[1])))
 
   const canApply = isSelectionValid &&
                    (!_isEqual(selection, appliedSelection) ||
-                   props.facet.type === 'number' && appliedSelection.length === 0)
+                   facet.type === 'number' && appliedSelection.length === 0)
                    // allow application of number filters to default range
 
-  const facetId = props.facet.id
+  const facetId = facet.id
   const componentName = 'filters-box'
   const filtersBoxId = `${componentName}-${facetId}`
   const applyId = `apply-${filtersBoxId}`
@@ -88,21 +87,21 @@ export default function FiltersBox(props) {
    */
   function handleApplyClick() {
     if (!canApply) return
-    if (props.facet.type === 'number' &&
+    if (facet.type === 'number' &&
         appliedSelection.length === 0 &&
         selection.length === 0) {
       // case where a user clicks apply without changing the slider
       const defaultSelection = [
-        props.facet.min,
-        props.facet.max,
-        props.facet.unit
+        facet.min,
+        facet.max,
+        facet.unit
       ]
-      selectionContext.updateFacet(props.facet.id, defaultSelection, true)
+      selectionContext.updateFacet(facet.id, defaultSelection, true)
     } else {
       selectionContext.performSearch()
     }
-    if (props.setShow) {
-      props.setShow(false)
+    if (setShow) {
+      setShow(false)
     }
   }
 
@@ -113,23 +112,25 @@ export default function FiltersBox(props) {
   return (
     <div id={filtersBoxId}>
       <Filters
-        facet={props.facet}
-        filters={props.filters}
+        facet={facet}
+        filters={filters}
         selection={selection}
         setSelection={setSelection}
       />
       <div className='filters-box-footer'>
         {showClear &&
         <ClearFilters
-          facetId={props.facet.id}
+          facetId={facet.id}
           onClick={clearFilters}
         />
         }
-        <ApplyButton
+        {!hideApply &&
+          <ApplyButton
           id={applyId}
           className={`facet-apply-button ${canApply ? 'active' : 'disabled'}`}
           onClick={handleApplyClick}
-        />
+          />
+        }
       </div>
     </div>
   )
