@@ -896,6 +896,24 @@ class StudyFile
     Rails.logger.info "Removal of local copy of #{self.upload_file_name} complete"
   end
 
+  # check if this file can be deleted "safely"; e.g. not being used in any running parse jobs
+  # most files just need to check if they are still parsing; cluster/metadata files need to check for subsampling
+  def can_delete_safely?
+    if self.parsing?
+      false
+    else
+      case self.file_type
+      when 'Metadata'
+        !self.study.cluster_groups.where(is_subsampling: true).any?
+      when 'Cluster'
+        cluster = ClusterGroup.find_by(study_file_id: self.id)
+        cluster.present? && !cluster.is_subsampling?
+      else
+        true
+      end
+    end
+  end
+
   ##
   #
   # MISC METHODS

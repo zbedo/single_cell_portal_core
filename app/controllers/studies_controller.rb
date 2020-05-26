@@ -827,7 +827,7 @@ class StudiesController < ApplicationController
     @study_file = StudyFile.find(params[:study_file_id])
     @message = ""
     unless @study_file.nil?
-      if @study_file.parsing?
+      if !@study_file.can_delete_safely?
         render action: 'abort_delete_study_file'
       else
         human_data = @study_file.human_data # store this reference for later
@@ -1121,7 +1121,7 @@ class StudiesController < ApplicationController
     @form = "#study-file-#{@study_file.id}"
     @message = ""
     unless @study_file.nil?
-      if @study_file.parsing?
+      if !@study_file.can_delete_safely?
         render action: 'abort_delete_study_file'
       else
         begin
