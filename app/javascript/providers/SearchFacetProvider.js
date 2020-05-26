@@ -1,11 +1,6 @@
 import React, { useContext, useState } from 'react'
 import { fetchFacets } from 'lib/scp-api'
 
-const defaultFacetIds = ['disease', 'organ', 'species', 'cell_type']
-const moreFacetIds = [
-  'sex', 'race', 'library_preparation_protocol', 'organism_age'
-]
-
 /*
  * this may evolve into something more sophisticated, or with actual
  * message keys, but for now it just converts snake case to word case
@@ -16,8 +11,7 @@ export function getDisplayNameForFacet(facetId) {
 }
 
 export const SearchFacetContext = React.createContext({
-  defaultFacets: [],
-  moreFacets: [],
+  facets: [],
   isLoading: false,
   isLoaded: false
 })
@@ -28,24 +22,19 @@ export function useContextSearchFacet() {
 
 export default function SearchFacetProvider(props) {
   const [facetState, setFacetState] = useState({
-    defaultFacets: [],
-    moreFacets: [],
+    facets: [],
     isLoading: false,
     isLoaded: false
   })
   async function updateFacets() {
     setFacetState({
-      defaultFacets: [],
-      moreFacets: [],
+      facets: [],
       isLoading: true,
       isLoaded: false
     })
     const facets = await fetchFacets()
-    const df = facets.filter(facet => defaultFacetIds.includes(facet.id))
-    const mf = facets.filter(facet => moreFacetIds.includes(facet.id))
     setFacetState({
-      defaultFacets: df,
-      moreFacets: mf,
+      facets: facets,
       isLoading: false,
       isLoaded: true
     })
