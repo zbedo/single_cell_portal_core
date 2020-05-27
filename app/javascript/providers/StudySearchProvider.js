@@ -42,12 +42,8 @@ export const StudySearchContext = React.createContext(emptySearch)
 /**
  * Count terms, i.e. space-delimited strings, and consider [""] to have 0 terms
  */
-export function getNumberOfTerms(terms) {
+export function getNumberOfTerms(splitTerms) {
   let numTerms = 0
-  if (!terms) {
-    return numTerms
-  }
-  const splitTerms = terms.split(' ')
   if (splitTerms.length > 0 && splitTerms[0] !== '') {
     numTerms = splitTerms.length
   }

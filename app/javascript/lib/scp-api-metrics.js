@@ -84,7 +84,7 @@ export function logSearch(type, searchParams) {
     return
   }
 
-  const terms = searchParams.terms
+  const terms = searchParams.terms.split(' ')
   const facets = searchParams.facets
   const page = searchParams.page
 
@@ -98,7 +98,8 @@ export function logSearch(type, searchParams) {
 
   const simpleProps = {
     type, terms, page, preset,
-    numTerms, numFacets, numFilters, facetList
+    numTerms, numFacets, numFilters, facetList,
+    context: 'global'
   }
   const props = Object.assign(simpleProps, filterListByFacet)
 
