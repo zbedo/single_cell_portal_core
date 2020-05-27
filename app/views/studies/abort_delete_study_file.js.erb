@@ -1,6 +1,13 @@
-alert('This file is currently being used in an active parse job - please wait until that job has completed.  ' +
-      'Cluster & Metadata files must additionally wait until all required subsamples have been computed.')
-
-if (OPEN_MODAL !== '') {
-    $('#' + OPEN_MODAL).modal('hide');
+function closeOpenModal() {
+    if (OPEN_MODAL !== '') {
+        $('#' + OPEN_MODAL).modal('hide');
+    }
 }
+// delete modal may open before or after alert message, so check both times
+closeOpenModal();
+
+alert('This file is still being processed and cannot be deleted yet.  You will receive an email when all parsing and/or ' +
+    'optional subsampling has completed.'
+)
+
+closeOpenModal();
