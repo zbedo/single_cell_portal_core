@@ -44,7 +44,7 @@ export const StudySearchContext = React.createContext(emptySearch)
  */
 export function getNumberOfTerms(splitTerms) {
   let numTerms = 0
-  if (splitTerms.length > 0 && splitTerms[0] !== '') {
+  if (splitTerms && splitTerms.length > 0 && splitTerms[0] !== '') {
     numTerms = splitTerms.length
   }
   return numTerms

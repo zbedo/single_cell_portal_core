@@ -33,7 +33,7 @@ export default function KeywordSearch({ keywordPrompt }) {
 
   function handleClear() {
     inputField.current.focus()
-    selectionContext.updateSelection({ terms: '' })
+    selectionContext.updateSelection({ terms: '' }, true)
   }
 
   return (
