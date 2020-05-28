@@ -84,7 +84,7 @@ export function logSearch(type, searchParams) {
     return
   }
 
-  const terms = searchParams.terms ? searchParams.terms.split(' ') : undefined
+  const terms = searchParams.terms ? searchParams.terms.split(' ') : ''
   const facets = searchParams.facets
   const page = searchParams.page
   const genes = searchParams.genes
