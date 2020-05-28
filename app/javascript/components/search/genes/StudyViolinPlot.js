@@ -29,7 +29,7 @@ export default function StudyViolinPlot({ study, gene }) {
   /** copied from legacy application.js */
   function parseResultsToArray(results) {
     const keys = Object.keys(results.values)
-    return keys.map(key => {
+    return keys.sort().map(key => {
       return [key, results.values[key].y]
     })
   }
@@ -52,7 +52,11 @@ export default function StudyViolinPlot({ study, gene }) {
     const expressionData = [].concat.apply([], traceData[0])
     const expressionLayout = traceData[1]
     const graphElementId = getGraphElementId(study, gene)
-    plot(graphElementId, expressionData, expressionLayout)
+    // Check that the ID exists on the page to avoid errors in corner cases where users update search terms quickly
+    // or are toggling between study and gene view.
+    if (document.getElementById(graphElementId)) {
+      plot(graphElementId, expressionData, expressionLayout)
+    }
   }
 
   /** gets expression data from the server */

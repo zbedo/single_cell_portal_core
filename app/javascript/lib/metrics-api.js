@@ -16,9 +16,9 @@ const defaultInit = {
 }
 
 const bardDomainsByEnv = {
-  'development': 'https://terra-bard-dev.appspot.com',
-  'staging': 'https://terra-bard-alpha.appspot.com',
-  'production': 'https://terra-bard-prod.appspot.com'
+  development: 'https://terra-bard-dev.appspot.com',
+  staging: 'https://terra-bard-alpha.appspot.com',
+  production: 'https://terra-bard-prod.appspot.com'
 }
 let bardDomain = ''
 let env = ''
@@ -41,6 +41,10 @@ export function logPageView() {
 
 /** Log click on page.  Delegates to more element-specific loggers. */
 export function logClick(event) {
+  // Don't log programmatically-triggered events,
+  // e.g. trigger('click') via jQuery
+  if (typeof event.isTrigger !== 'undefined') return
+
   const target = event.target
   const tag = target.localName.toLowerCase() // local tag name
 
@@ -138,6 +142,27 @@ export function logError(text) {
 }
 
 /**
+ * Removes study name from URL, as it might have identifying information.
+ * Terra UI omits workspace name in logs; this follows that precedent.
+ *
+ * For example, for a path like
+ *    /single_cell/study/SCP123/private-study-with-sensitive-name
+ *
+ * This returns:
+ *    /single_cell/study/SCP123
+ *
+ * @param {String} appPath Path name in URL
+ */
+function trimStudyName(appPath) {
+  const studyOverviewMatch = appPath.match(/\/single_cell\/study\/SCP\d+/)
+  if (studyOverviewMatch) {
+    return studyOverviewMatch[0]
+  } else {
+    return appPath
+  }
+}
+
+/**
  * Log metrics to Mixpanel via Bard web service
  *
  * Bard docs:
@@ -147,17 +172,12 @@ export function logError(text) {
  * @param {Object} props
  */
 export function log(name, props={}) {
-  // If/when Mixpanel is extended beyond home page, remove study name from
-  // appPath at least for non-public studies to align with Terra's on
-  // identifiable data we want to omit this logging.
-  const appPath = window.location.pathname
+  const appPath = trimStudyName(window.location.pathname)
 
   props = Object.assign(props, {
     appId: 'single-cell-portal',
     timestamp: Date.now(),
     appPath,
-    userId, // Required by Bard; perhaps Bard should handle distinct_id
-    distinct_id: userId, // Needed for Mixpanel "Distinct ID" (Bard papercut)
     env
   })
 
@@ -166,19 +186,24 @@ export function log(name, props={}) {
     props['featuredSpace'] = window.SCP.featuredSpace
   }
 
+  let init = Object.assign({}, defaultInit)
+
+  if (accessToken === '') {
+    // User is unauthenticated / unregistered / anonynmous
+    props['distinct_id'] = userId
+    delete init['headers']['Authorization']
+  }
+
   const body = {
     body: JSON.stringify({
       event: name,
       properties: props
     })
   }
-  const init = Object.assign(defaultInit, body)
 
-  // Remove once Bard and Mixpanel are ready for SCP
-  if (
-    'SCP' in window && window.SCP.environment !== 'production' &&
-    accessToken !== '' // Remove once Bard supports unregistered users
-  ) {
+  init = Object.assign(init, body)
+
+  if ('SCP' in window) { // Skips fetch during test
     fetch(`${bardDomain}/api/event`, init)
   }
 }

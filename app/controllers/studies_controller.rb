@@ -579,9 +579,12 @@ class StudiesController < ApplicationController
 
   # method to download files if study is private, will create temporary signed_url after checking user quota
   def download_private_file
-    @study = Study.find_by(accession: params[:accession], url_safe_name: params[:study_name])
-    # make sure user is signed in
-    if !user_signed_in? || !@study.can_view?(current_user)
+    @study = Study.find_by(accession: params[:accession])
+    # make study exists, then ensure user is signed in
+    if @study.nil?
+      redirect_to merge_default_redirect_params(site_path, scpbr: params[:scpbr]),
+                  alert: 'The study you requested was not found.' and return
+    elsif !user_signed_in? || !@study.can_view?(current_user)
       redirect_to merge_default_redirect_params(site_path, scpbr: params[:scpbr]),
                   alert: 'You do not have permission to perform that action.' and return
     elsif @study.detached?
@@ -824,7 +827,7 @@ class StudiesController < ApplicationController
     @study_file = StudyFile.find(params[:study_file_id])
     @message = ""
     unless @study_file.nil?
-      if @study_file.parsing?
+      if !@study_file.can_delete_safely?
         render action: 'abort_delete_study_file'
       else
         human_data = @study_file.human_data # store this reference for later
@@ -1118,7 +1121,7 @@ class StudiesController < ApplicationController
     @form = "#study-file-#{@study_file.id}"
     @message = ""
     unless @study_file.nil?
-      if @study_file.parsing?
+      if !@study_file.can_delete_safely?
         render action: 'abort_delete_study_file'
       else
         begin

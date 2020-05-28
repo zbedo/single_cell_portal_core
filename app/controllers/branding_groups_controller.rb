@@ -32,6 +32,8 @@ class BrandingGroupsController < ApplicationController
 
     respond_to do |format|
       if @branding_group.save
+        # push all branding assets to remote to ensure consistency
+        UserAssetService.delay.push_assets_to_remote(asset_path: :branding_images)
         format.html { redirect_to merge_default_redirect_params(branding_group_path(@branding_group), scpbr: params[:scpbr]),
                                   notice: "Branding group '#{@branding_group.name}' was successfully created." }
         format.json { render :show, status: :created, location: @branding_group }

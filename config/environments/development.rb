@@ -85,4 +85,6 @@ Rails.application.configure do
     }
   end
 
+  config.bard_host_url = 'https://terra-bard-dev.appspot.com'
+
 end
