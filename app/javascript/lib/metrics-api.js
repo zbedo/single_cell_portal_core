@@ -15,20 +15,14 @@ const defaultInit = {
   }
 }
 
-const bardDomainsByEnv = {
-  development: 'https://terra-bard-dev.appspot.com',
-  staging: 'https://terra-bard-alpha.appspot.com',
-  production: 'https://terra-bard-prod.appspot.com'
-}
-let bardDomain = ''
-let env = ''
+console.log('process.env')
+console.log(process.env)
+
+const bardDomain = process.env.BARD_DOMAIN
+const env = process.env.NODE_ENV
 let userId = ''
 
-// TODO (SCP-2237): Use Node environment to get React execution context
-if ('SCP' in window) {
-  env = window.SCP.environment
-  bardDomain = bardDomainsByEnv[env]
-  // To consider: Replace SCP-specific userId with DSP-wide userId
+if (env !== 'test') {
   userId = window.SCP.userId
 }
 
