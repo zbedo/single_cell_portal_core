@@ -1549,6 +1549,11 @@
     webpack-cli "^3.3.10"
     webpack-sources "^1.4.3"
 
+"@ranfdev/deepobj@1.0.2":
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/@ranfdev/deepobj/-/deepobj-1.0.2.tgz#9dba923578fa24aed3d3961975037b6423a03771"
+  integrity sha512-FM3y6kfJaj5MCoAjdv24EDCTDbuFz+4+pgAunbjYfugwIE4O/xx8mPNji1n/ouG8pHCntSnBr1xwTOensF23Gg==
+
 "@reach/router@^1.3.3":
   version "1.3.3"
   resolved "https://registry.yarnpkg.com/@reach/router/-/router-1.3.3.tgz#58162860dce6c9449d49be86b0561b5ef46d80db"
@@ -4209,10 +4214,12 @@ cross-spawn@^7.0.0:
     shebang-command "^2.0.0"
     which "^2.0.1"
 
-crossfilter@1.3.12:
-  version "1.3.12"
-  resolved "https://registry.yarnpkg.com/crossfilter/-/crossfilter-1.3.12.tgz#147d7236a98c45c69f78bdc3a99d6fb00f70930c"
-  integrity sha1-FH1yNqmMRcafeL3DqZ1vsA9wkww=
+crossfilter2@1.5.1:
+  version "1.5.1"
+  resolved "https://registry.yarnpkg.com/crossfilter2/-/crossfilter2-1.5.1.tgz#d83715ec4bad916415994230be203d63ad7b28a2"
+  integrity sha512-dx9s8FbnUuaG8GvrdxkEa8i9vk61RDQFUir3X/Cdd7htpYG65vXOWRXtTLLnCbm/0RzZKqgXfk5aPrftqHLEBQ==
+  dependencies:
+    "@ranfdev/deepobj" "1.0.2"
 
 crypto-browserify@^3.11.0:
   version "3.12.0"
@@ -4580,7 +4587,7 @@ d3-fetch@^1.1.2:
   dependencies:
     d3-dsv "1"
 
-d3-format@1:
+d3-format@1, d3-format@^1.4.2:
   version "1.4.4"
   resolved "https://registry.yarnpkg.com/d3-format/-/d3-format-1.4.4.tgz#356925f28d0fd7c7983bfad593726fce46844030"
   integrity sha512-TWks25e7t8/cqctxCmxpUuzZN11QxIA7YrMbram94zMQ0PXjE4LVIMe/f6a4+xxL8HQ3OsAFULOINQi1pE62Aw==
@@ -7014,16 +7021,17 @@ identity-obj-proxy@3.0.0:
   dependencies:
     harmony-reflect "^1.4.6"
 
-ideogram@1.11.0:
-  version "1.11.0"
-  resolved "https://registry.yarnpkg.com/ideogram/-/ideogram-1.11.0.tgz#13fefd6d81f85f2d3f54684f0a13f4046cb837b1"
-  integrity sha512-0C3Jl3lKg6ZVAcLWXlNKhDEi8m2F8XUh/mhZDQa5vw/fzf8K1Ld/gX2fM8x/liHGm5lAzaFQL91Q/+UwQGVddg==
+ideogram@1.19.0:
+  version "1.19.0"
+  resolved "https://registry.yarnpkg.com/ideogram/-/ideogram-1.19.0.tgz#472066ccee7bec7db9b1eabb04a86c2a0b45bc8f"
+  integrity sha512-N6XUvXT6hP2+GJ0seANAtA5mlFdHkMhQ3N4wjYeEoZ0ZqL4QwQkdbtOUN4T23UiUIhMHGmJXkUecOsoqE9aJeA==
   dependencies:
-    crossfilter "1.3.12"
+    crossfilter2 "1.5.1"
     d3-array "^1.2.4"
     d3-brush "^1.0.6"
     d3-dispatch "^1.0.5"
     d3-fetch "^1.1.2"
+    d3-format "^1.4.2"
     d3-scale "^1.0.6"
     d3-selection "^1.3.2"
     d3-transition "^1.2.0"
@@ -12355,7 +12363,7 @@ react-scripts@^3.4.0:
   optionalDependencies:
     fsevents "2.1.2"
 
-react-table@7.1.0:
+react-table@^7.1.0:
   version "7.1.0"
   resolved "https://registry.yarnpkg.com/react-table/-/react-table-7.1.0.tgz#c975cd67e917c54190b6c9df29f085285b0c3f4e"
   integrity sha512-AZpgW0Xpo6Z7jxXZIBovzCGoYVkuBwATsJh7X4+JXwq9JtDaorOmxWC9gKx5Hui4d+n+I99enyyJS+LRtKydxA==
