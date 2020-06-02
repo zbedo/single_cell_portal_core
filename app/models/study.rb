@@ -1243,6 +1243,12 @@ class Study
   def expression_matrix_file(name)
     self.study_files.find_by(:file_type.in => ['Expression Matrix', 'MM Coordinate Matrix'], name: name)
   end
+
+  # quickly get expression matrix file ids
+  def expression_matrix_file_ids
+    StudyFile.where(study_id: self.id, :file_type.in => ['Expression Matrix', 'MM Coordinate Matrix']).pluck(:id)
+  end
+
   # helper method to directly access metadata file
   def metadata_file
     self.study_files.by_type('Metadata').first

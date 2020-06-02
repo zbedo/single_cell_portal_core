@@ -49,6 +49,13 @@ class Gene
     all_values
   end
 
+  # return an array of all cells observed in the matrix from which this gene was parsed
+  def cells_observed_from_matrix
+    arrays = DataArray.where(name: "#{self.study_file.name} Cells", array_type: 'cells', linear_data_type: 'Study',
+                             linear_data_id: self.study_id)
+    arrays.pluck(:values).inject(:+)
+  end
+
   def autocomplete_label
     self.gene_id.blank? ? self.name : "#{self.name} (#{self.gene_id})"
   end
@@ -65,9 +72,20 @@ class Gene
   # CLASS INSTANCE METHODS
   ##
 
+  # return a cursor mapping to all instances of a gene in a given study
+  def self.find_instances_from_study(study_id:, expr_matrix_ids:, gene_name:)
+    Gene.where(study_id: study_id, :study_file_id.in => expr_matrix_ids).any_of({name: gene_name},{searchable_name: gene_name.downcase})
+  end
+
   # find if a study has a given gene quickly for search gating
   def self.study_has_gene?(study_id:, expr_matrix_ids:, gene_name:)
-    Gene.where(study_id: study_id, :study_file_id.in => expr_matrix_ids).any_of({name: gene_name},{searchable_name: gene_name.downcase}).exists?
+    Gene.find_instances_from_study(study_id: study_id, expr_matrix_ids: expr_matrix_ids, gene_name: gene_name).exists?
+  end
+
+  # return all cells observed across all instances of a gene in a given study
+  def self.all_cells_observed_by_gene(study_id:, expr_matrix_ids:, gene_name:)
+    Gene.find_instances_from_study(study_id: study_id, expr_matrix_ids: expr_matrix_ids, gene_name: gene_name)
+        .map {|gene| gene.cells_observed_from_matrix}.inject(:+)
   end
 
   # calculate a mean value for a given gene based on merged expression scores hash

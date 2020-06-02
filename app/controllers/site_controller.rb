@@ -155,7 +155,7 @@ class SiteController < ApplicationController
     # if only one gene was searched for, make an attempt to load it and redirect to correct page
     if @terms.size == 1
       # do a quick presence check to make sure the gene exists before trying to load
-      file_ids = load_study_expression_matrix_ids(@study.id)
+      file_ids = @study.expression_matrix_file_ids
       if !Gene.study_has_gene?(study_id: @study.id, expr_matrix_ids: file_ids, gene_name: @terms.first)
         redirect_to merge_default_redirect_params(request.referrer, scpbr: params[:scpbr]),
                     alert: "No matches found for: #{@terms.first}." and return
@@ -2069,11 +2069,6 @@ class SiteController < ApplicationController
   #
   ###
 
-  # load expression matrix ids for optimized search speed
-  def load_study_expression_matrix_ids(study_id)
-    StudyFile.where(study_id: study_id, :file_type.in => ['Expression Matrix', 'MM Coordinate Matrix']).map(&:id)
-  end
-
   # generic search term parser
   def parse_search_terms(key)
     terms = params[:search][key]
@@ -2088,7 +2083,7 @@ class SiteController < ApplicationController
   # generic expression score getter, preserves order and discards empty matches
   def load_expression_scores(terms)
     genes = []
-    matrix_ids = load_study_expression_matrix_ids(@study.id)
+    matrix_ids = @study.expression_matrix_file_ids
     terms.each do |term|
       matches = @study.genes.by_name_or_id(term, matrix_ids)
       unless matches.empty?
@@ -2103,7 +2098,7 @@ class SiteController < ApplicationController
   def search_expression_scores(terms, study_id)
     genes = []
     not_found = []
-    file_ids = load_study_expression_matrix_ids(study_id)
+    file_ids = Study.find(study_id).expression_matrix_file_ids
     terms.each do |term|
       if Gene.study_has_gene?(study_id: study_id, expr_matrix_ids: file_ids, gene_name: term)
         genes << {'name' => term}
